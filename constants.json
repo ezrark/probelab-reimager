@@ -1,0 +1,22 @@
+{
+  "pointShoot": {
+    "files": {
+      "IMAGERAW": ".psref",
+      "POINTDATA": ".p_s"
+    },
+    "integrity": {
+      "SKIPARRAY": [
+        "title",
+        "livetime",
+        "realtime",
+        "#deadtime",
+        "#zerowidth",
+        "#detects",
+        "#converts",
+        "#stores",
+        "#peaklab"
+      ]
+    },
+    "MAGNIFICATIONKEY": "magcam"
+  }
+}
