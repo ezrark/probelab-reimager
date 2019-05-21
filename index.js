@@ -12,6 +12,16 @@ dirUri = dirUri.replace(/\\/gmi, '/');
 if (!dirUri.endsWith('/'))
 	dirUri = dirUri + '/';
 
+
+
+//const directory = fs.readdirSync(this.data.uri, {withFileTypes: true});
+
+//const entryFile = directory.filter(currentFile => {
+//	return currentFile.name.endsWith(constants.pointShoot.fileFormats.ENTRY)
+//});
+
+
+
 const directory = fs.readdirSync(dirUri, {withFileTypes: true});
 
 function processPointShootDirectory(uri, directory) {
@@ -25,11 +35,11 @@ function processPointShootDirectory(uri, directory) {
 
 	for (const file of directory) {
 		if (file.isFile())
-			if (file.name.endsWith(constants.pointShoot.files.IMAGERAW)) {
+			if (file.name.endsWith(constants.pointShoot.fileFormats.IMAGERAW)) {
 				file.uri = uri + file.name;
 				data.imageFile = file;
-			} else if (file.name.endsWith(constants.pointShoot.files.POINTDATA))
-				pointData = io.readPointDataFile(uri + file.name);
+			} else if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
+				pointData = io.readPSEntryFile(uri + file.name)[1];
 			else if (/_pt.\.psmsa$/gmi.test(file.name))
 				points[file.name] = io.readPSMSAFile(uri + file.name)
 	}
@@ -101,8 +111,8 @@ async function processPSData(psData) {
 	while (actualScaleBarLength < psData.scaleLength) {
 		prevActualScaleBarLength = actualScaleBarLength;
 
-		scaleBar += '_';
-		actualScaleBarLength = await Jimp.measureText(fonts.black.small, scaleBar);
+		scaleBar += '﹘';
+		actualScaleBarLength = await Jimp.measureText(fonts.black.normal, scaleBar);
 	}
 
 	if (Math.abs(prevActualScaleBarLength - psData.scaleLength) < Math.abs(actualScaleBarLength - psData.scaleLength))
@@ -128,7 +138,7 @@ async function processPSData(psData) {
 	}) / pixels.length) < .5;
 
 	await image.print(
-		isBlack ? fonts.white.small : fonts.black.small,
+		isBlack ? fonts.white.normal : fonts.black.normal,
 		10,
 		10,
 		scaleBar
@@ -188,7 +198,7 @@ function calculatePixelSize(magnification, width) {
 }
 
 async function writeImage(psData) {
-	return await psData.image.writeAsync(psData.imageFile.uri.substring(0, psData.imageFile.uri.length - (constants.pointShoot.files.IMAGERAW.length)) + '.tif')
+	return await psData.image.writeAsync(psData.imageFile.uri.substring(0, psData.imageFile.uri.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + '.tif')
 }
 
 const PSData = directory.map(dir =>

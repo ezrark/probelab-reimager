@@ -24,10 +24,11 @@ function readPSEntryFile(uri) {
 		if (set.startsWith('..2')) {
 			[, output[0].imageName, output[0].totalPoints] = set.split('\r\n');
 		} else {
-			const [, name, point] = set.split('\r\n');
+			const [typeLine, name, point] = set.split('\r\n');
 
 			output[1].push({
 				name,
+				type: typeLine.split(' ')[1],
 				values: point.split(',').map(num => parseInt(num))
 			});
 		}
@@ -38,5 +39,5 @@ function readPSEntryFile(uri) {
 
 module.exports = {
 	readPSMSAFile,
-	readPointDataFile: readPSEntryFile
+	readPSEntryFile
 };

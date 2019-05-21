@@ -1,8 +1,9 @@
 {
   "pointShoot": {
-    "files": {
+    "fileFormats": {
       "IMAGERAW": ".psref",
-      "POINTDATA": ".p_s"
+      "ENTRY": ".p_s",
+      "OUTPUTIMAGE": ".tif"
     },
     "integrity": {
       "SKIPARRAY": [
