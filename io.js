@@ -21,15 +21,19 @@ function readPSEntryFile(uri) {
 	const rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('#');
 
 	return rawData.reduce((output, set) => {
-		if (!set.startsWith('..2')) {
+		if (set.startsWith('..2')) {
+			[, output[0].imageName, output[0].totalPoints] = set.split('\r\n');
+		} else {
 			const [, name, point] = set.split('\r\n');
-			const [x1, y1, x2, y2] = point.split(',').map(num => parseInt(num))
 
-			output.push({name, x1, y1, x2, y2});
+			output[1].push({
+				name,
+				values: point.split(',').map(num => parseInt(num))
+			});
 		}
 
 		return output
-	}, [])
+	}, [{imageName: '', totalPoints: 0}, []])
 }
 
 module.exports = {
