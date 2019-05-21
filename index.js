@@ -5,7 +5,8 @@ const Jimp = require('jimp');
 const constants = require('./constants');
 const io = require('./io');
 
-let dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2018-11-14_Micrometeorites';
+//let dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2018-11-14_Micrometeorites';
+let  dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2019-02-22_Decker_Tiles';
 
 dirUri = dirUri.replace(/\\/gmi, '/');
 if (!dirUri.endsWith('/'))
@@ -77,63 +78,93 @@ async function processPSData(psData) {
 	const magnification = parseInt(psData.expectedData[constants.pointShoot.MAGNIFICATIONKEY].data);
 
 	psData.pixelSize = calculatePixelSize(magnification, psData.width);
-	[psData.scale, psData.scaleLength] = estimateScaleLength(magnification, psData.pixelSize);
+	[psData.scale, psData.scaleLength] = estimateScale(magnification, psData.width, psData.pixelSize);
 
-	const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-	let prevScaleBar = '';
-	let prevActualScaleBarLength = 0;
+	const fonts = {
+		white: {
+			small: await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE),
+			normal: await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE),
+			large: await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE)
+		},
+		black: {
+			small: await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK),
+			normal: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
+			large: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK)
+		}
+
+	};
 
 	let scaleBar = '';
 	let actualScaleBarLength = 0;
+	let prevActualScaleBarLength = 0;
 
 	while (actualScaleBarLength < psData.scaleLength) {
-		prevScaleBar = scaleBar;
 		prevActualScaleBarLength = actualScaleBarLength;
 
 		scaleBar += '_';
-		actualScaleBarLength = await Jimp.measureText(font, scaleBar);
+		actualScaleBarLength = await Jimp.measureText(fonts.black.small, scaleBar);
 	}
 
-	if (Math.abs(prevActualScaleBarLength - psData.scaleLength) < Math.abs(actualScaleBarLength - psData.scaleLength)) {
-		scaleBar = prevScaleBar;
-		actualScaleBarLength = prevActualScaleBarLength;
-	}
+	if (Math.abs(prevActualScaleBarLength - psData.scaleLength) < Math.abs(actualScaleBarLength - psData.scaleLength))
+		scaleBar = scaleBar.substring(1);
+
+	let pixels = [];
+
+	image.scan(0, 0, 100, 50, (x, y, index) => {
+		pixels.push({
+			x,
+			y,
+			color: {
+				r: index,
+				g: index + 1,
+				b: index + 2,
+				a: index + 3
+			}
+		})
+	});
+
+	const isBlack = (pixels.reduce((sum, pixel) => {
+		return sum += .2126 * pixel.color.r + .7152 * pixel.color.g + .0722 * pixel.color.b;
+	}) / pixels.length) < .5;
 
 	await image.print(
-		font,
+		isBlack ? fonts.white.small : fonts.black.small,
 		10,
 		10,
 		scaleBar
 	);
 
 	await image.print(
-		font,
+		isBlack ? fonts.white.normal : fonts.black.normal,
 		10,
-		50,
-		'' + psData.scale + 'µm',
-		psData.scaleLength
+		30,
+		'' + psData.scale + 'µm'
 	);
 
 	return psData;
 }
 
-function estimateScaleLength(magnification, pixelSize) {
-	let scale = 1000;
+function estimateScale(magnification, width, pixelSize) {
+	const scales = [1000, 500, 250, 100, 50, 25, 10];
+	let scaleIndex = 0;
 
 	if (40 < magnification && magnification <= 100)
-		scale = 500;
+		scaleIndex = 1;
 	if (100 < magnification && magnification <= 250)
-		scale = 250;
-	if (250 < magnification && magnification <= 500)
-		scale = 100;
+		scaleIndex = 2;
+	if (250 < magnification && magnification <= 400)
+		scaleIndex = 3;
 	if (500 < magnification && magnification <= 1000)
-		scale = 50;
+		scaleIndex = 4;
 	if (1000 < magnification && magnification <= 2000)
-		scale = 25;
+		scaleIndex = 5;
 	if (2000 < magnification && magnification <= 4000)
-		scale = 10;
+		scaleIndex = 6;
 
-	return [scale, Math.round(scale/pixelSize)];
+	if (Math.round(scales[scaleIndex] / pixelSize) > .3 * width)
+		scaleIndex += 1;
+
+	return [scales[scaleIndex], Math.round(scales[scaleIndex] / pixelSize)];
 }
 
 function calculatePixelSize(magnification, width) {
@@ -165,7 +196,7 @@ const PSData = directory.map(dir =>
 ).map(cleanupPS).filter(data => data).map(processPSData);
 
 Promise.all(PSData).then(data => {
-	Promise.all(data.map(writeImage)).then(console.log).catch(console.warn)
-}).catch(err => {
-	console.warn(err);
-});
+	Promise.all(data.map(writeImage)).then(() => {
+		console.log('All images written');
+	}).catch(console.warn);
+}).catch(console.warn);
