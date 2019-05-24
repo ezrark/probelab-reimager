@@ -3,8 +3,8 @@ const fs = require('fs');
 const constants = require('./constants');
 
 require('./pointshoot')().then(async Pointshoot => {
-	//let dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2018-11-14_Micrometeorites';
-	let  dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2019-02-22_Decker_Tiles';
+	let dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2018-11-14_Micrometeorites';
+	//let  dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2019-02-22_Decker_Tiles';
 
 	dirUri = dirUri.replace(/\\/gmi, '/');
 	if (!dirUri.endsWith('/'))
@@ -23,7 +23,7 @@ require('./pointshoot')().then(async Pointshoot => {
 	}).filter(i => i);
 
 	for (const point of ps)
-		await point.addScaleAndWrite();
+		await point.addScaleAndWrite(constants.scale.types.UPPERLEFT);
 
 	console.log('All images written');
 });

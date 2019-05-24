@@ -22,7 +22,11 @@
   },
   "scale": {
     "types": {
-      "BELOW": 0
+      "BELOW": 0,
+      "LOWERLEFT": 1,
+      "LOWERRIGHT": 2,
+      "UPPERLEFT": 3,
+      "UPPERRIGHT": 4
     },
     "sizes": {
       "TINY": "tiny",
@@ -36,5 +40,6 @@
     "RED": 0.2126,
     "GREEN": 0.7152,
     "BLUE": 0.0722
-  }
+  },
+  "PIXELSIZECONSTANT": 116.73
 }

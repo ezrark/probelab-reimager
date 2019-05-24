@@ -1,7 +1,7 @@
 const Jimp = require('jimp');
 
 const constants = require('./constants');
-const scales = [1000, 500, 250, 100, 50, 25, 10];
+const scales = [1000, 500, 250, 100, 50, 25, 10, 5, 1];
 
 const fonts = {
 	[constants.scale.sizes.TINY]: Jimp.FONT_SANS_8_WHITE,
@@ -19,14 +19,16 @@ function estimateVisualScale(magnification, width, pixelSize=calculatePixelSize(
 		scaleIndex = 1;
 	if (100 < magnification && magnification <= 250)
 		scaleIndex = 2;
-	if (250 < magnification && magnification <= 400)
+	if (250 < magnification && magnification <= 500)
 		scaleIndex = 3;
 	if (500 < magnification && magnification <= 1000)
 		scaleIndex = 4;
 	if (1000 < magnification && magnification <= 2000)
 		scaleIndex = 5;
-	if (2000 < magnification && magnification <= 4000)
+	if (2000 < magnification && magnification <= 3000)
 		scaleIndex = 6;
+	if (3000 < magnification)
+		scaleIndex = 7;
 
 	if (Math.round(scales[scaleIndex] / pixelSize) > .3 * width)
 		scaleIndex += 1;
@@ -51,7 +53,7 @@ function estimateScaleSize(width) {
 }
 
 function calculatePixelSize(magnification, width) {
-	const thousand = 116.73*Math.pow(magnification, -1);
+	const thousand = constants.PIXELSIZECONSTANT*Math.pow(magnification, -1);
 
 	if (width === 4096)
 		return thousand/4;
@@ -73,7 +75,7 @@ function calculatePixelSize(magnification, width) {
 function sumPixelLuminosity(pixels) {
 	return pixels.reduce((sum, pixel) => {
 		return sum + constants.luminosity.RED * pixel.color.r + constants.luminosity.GREEN * pixel.color.g + constants.luminosity.BLUE * pixel.color.b;
-	}) / pixels.length;
+	}, 0) / pixels.length;
 }
 
 async function calculateScale(startImage, magnification, scaleType) {
@@ -126,7 +128,7 @@ async function calculateScale(startImage, magnification, scaleType) {
 		startImage.scan(0, 0, startImage.bitmap.width, startImage.bitmap.height, (x, y, index) => {
 			imageBackground.push({
 				x, y,
-				color: {r: index, g: index + 1, b: index + 2, a: index + 3}
+				color: {r: startImage.bitmap.data[index], g: startImage.bitmap.data[index + 1], b: startImage.bitmap.data[index + 2], a: startImage.bitmap.data[index + 3]}
 			})
 		});
 
@@ -148,6 +150,22 @@ async function calculateScale(startImage, magnification, scaleType) {
 				else resolve(image);
 			});
 		});
+	} else if (scaleType === constants.scale.types.LOWERLEFT) {
+		// Position the scale
+		scale.x = 10;
+		scale.y = startImage.bitmap.height - 20;
+	} else if (scaleType === constants.scale.types.LOWERRIGHT) {
+		// Position the scale
+		scale.x = startImage.bitmap.width - 10;
+		scale.y = startImage.bitmap.height - 20;
+	} else if (scaleType === constants.scale.types.UPPERLEFT) {
+		// Position the scale
+		scale.x = 10;
+		scale.y = 20;
+	} else if (scaleType === constants.scale.types.UPPERRIGHT) {
+		// Position the scale
+		scale.x = startImage.bitmap.width - 10;
+		scale.y = 20;
 	}
 
 	// Return the new image and scale information

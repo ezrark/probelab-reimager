@@ -73,19 +73,13 @@ module.exports = async () => {
 			image.scan(scale.x, scale.y, scale.width, scale.height, (x, y, index) => {
 				textBackgroundPixels.push({
 					x, y,
-					color: {r: index, g: index + 1, b: index + 2, a: index + 3}
+					color: {r: image.bitmap.data[index], g: image.bitmap.data[index + 1], b: image.bitmap.data[index + 2], a: image.bitmap.data[index + 3]}
 				})
 			});
 
-			const isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .5;
+			const isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .7;
 
 			// Creates scale bar and scale text on image
-			await image.print(
-				isBlack ? fonts.white.small : fonts.black.small,
-				scale.x,
-				scale.y - 16,
-				scale.scaleBar
-			);
 			await image.print(
 				isBlack ? fonts.white.small : fonts.black.small,
 				scale.x,
