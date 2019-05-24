@@ -26,6 +26,7 @@ module.exports = async () => {
 		constructor(entryFile, uri=undefined) {
 			this.data = {
 				uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
+				name: entryFile.name.substring(0, entryFile.name.length - constants.pointShoot.fileFormats.ENTRY.length),
 				image: undefined,
 				integrity: true,
 				magnification: 1,
