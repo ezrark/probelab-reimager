@@ -37,9 +37,9 @@
     }
   },
   "luminosity": {
-    "RED": 0.2126,
-    "GREEN": 0.7152,
-    "BLUE": 0.0722
+    "RED": 0.299,
+    "GREEN": 0.587,
+    "BLUE": 0.114
   },
   "PIXELSIZECONSTANT": 116.73
 }

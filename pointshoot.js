@@ -77,7 +77,7 @@ module.exports = async () => {
 				})
 			});
 
-			const isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .7;
+			const isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .5;
 
 			// Creates scale bar and scale text on image
 			await image.print(
@@ -143,79 +143,4 @@ function checkPointIntegrity(points) {
 				if (expectedData[key].data !== point[key].data)
 					return false;
 	return true;
-}
-
-async function processPSData(psData) {
-	const image = await Jimp.read(psData.imageFile.uri);
-
-	psData.width = image.bitmap.width;
-	psData.height = image.bitmap.height;
-	psData.image = image;
-
-	const magnification = parseInt(psData.expectedData[constants.pointShoot.MAGNIFICATIONKEY].data);
-
-	psData.pixelSize = calculatePixelSize(magnification, psData.width);
-	[psData.scale, psData.scaleLength] = estimateVisualScale(magnification, psData.width, psData.pixelSize);
-
-	const fonts = {
-		white: {
-			small: await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE),
-			normal: await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE),
-			large: await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE)
-		},
-		black: {
-			small: await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK),
-			normal: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
-			large: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK)
-		}
-	};
-
-	let scaleBar = '';
-	let actualScaleBarLength = 0;
-	let prevActualScaleBarLength = 0;
-
-	while (actualScaleBarLength < psData.scaleLength) {
-		prevActualScaleBarLength = actualScaleBarLength;
-
-		scaleBar += '–';
-		actualScaleBarLength = await Jimp.measureText(fonts.black.small, scaleBar);
-	}
-
-	if (Math.abs(prevActualScaleBarLength - psData.scaleLength) < Math.abs(actualScaleBarLength - psData.scaleLength))
-		scaleBar = scaleBar.substring(1);
-
-	let pixels = [];
-
-	image.scan(0, 0, 100, 50, (x, y, index) => {
-		pixels.push({
-			x,
-			y,
-			color: {
-				r: index,
-				g: index + 1,
-				b: index + 2,
-				a: index + 3
-			}
-		})
-	});
-
-	const isBlack = (pixels.reduce((sum, pixel) => {
-		return sum + .2126 * pixel.color.r + .7152 * pixel.color.g + .0722 * pixel.color.b;
-	}) / pixels.length) < .5;
-
-	await image.print(
-		isBlack ? fonts.white.small : fonts.black.small,
-		10,
-		10,
-		scaleBar
-	);
-
-	await image.print(
-		isBlack ? fonts.white.normal : fonts.black.normal,
-		10,
-		30,
-		'' + psData.scale + 'µm'
-	);
-
-	return psData;
 }

@@ -73,9 +73,9 @@ function calculatePixelSize(magnification, width) {
 }
 
 function sumPixelLuminosity(pixels) {
-	return pixels.reduce((sum, pixel) => {
-		return sum + constants.luminosity.RED * pixel.color.r + constants.luminosity.GREEN * pixel.color.g + constants.luminosity.BLUE * pixel.color.b;
-	}, 0) / pixels.length;
+	return (pixels.reduce((sum, pixel) => {
+		return sum + (constants.luminosity.RED * pixel.color.r) + (constants.luminosity.GREEN * pixel.color.g) + (constants.luminosity.BLUE * pixel.color.b);
+	}, 0) / pixels.length)/255;
 }
 
 async function calculateScale(startImage, magnification, scaleType) {

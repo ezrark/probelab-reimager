@@ -1,6 +1,10 @@
 {
   "name": "thermo-reimager",
   "version": "1.0.0",
+  "main": "module.js",
+  "bin": {
+    "thermo-reimager": "index.js"
+  },
   "dependencies": {
     "@jimp/tiff": "^0.6.4",
     "jimp": "^0.6.4"
