@@ -2,33 +2,37 @@ const Jimp = require('jimp');
 
 const constants = require('./constants');
 const io = require('./io');
+const calculations = require('./calculations');
 
 module.exports = async () => {
 	const fonts = {
 		white: {
-			small: await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE),
-			normal: await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE),
-			large: await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE),
-			super: await Jimp.loadFont(Jimp.FONT_SANS_128_WHITE)
+			[constants.scale.sizes.TINY]: await Jimp.loadFont(Jimp.FONT_SANS_8_WHITE),
+			[constants.scale.sizes.SMALL]: await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE),
+			[constants.scale.sizes.NORMAL]: await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE),
+			[constants.scale.sizes.LARGE]: await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE),
+			[constants.scale.sizes.SUPER]: await Jimp.loadFont(Jimp.FONT_SANS_128_WHITE)
 		},
 		black: {
-			small: await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK),
-			normal: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
-			large: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK),
-			super: await Jimp.loadFont(Jimp.FONT_SANS_128_BLACK)
+			[constants.scale.sizes.TINY]: await Jimp.loadFont(Jimp.FONT_SANS_8_BLACK),
+			[constants.scale.sizes.SMALL]: await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK),
+			[constants.scale.sizes.NORMAL]: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
+			[constants.scale.sizes.LARGE]: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK),
+			[constants.scale.sizes.SUPER]: await Jimp.loadFont(Jimp.FONT_SANS_128_BLACK)
 		}
 	};
 
 	return class PointShoot {
 		constructor(entryFile, uri=undefined) {
 			this.data = {
-				uri: uri ? uri : entryFile.name.split('/').slice(0, -1).join('/') + '/',
+				uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 				image: undefined,
 				integrity: true,
+				magnification: 1,
 				points: {},
 				files: {
 					image: '',
-					entry: entryFile.name,
+					entry: entryFile.uri,
 					points: []
 				}
 			};
@@ -47,21 +51,74 @@ module.exports = async () => {
 				}
 
 				return points;
-			});
+			}, {});
 
-			this.data.files.points = this.data.points.keys();
-			this.data.files.image = expected.imageName;
+			this.data.files.points = Object.keys(this.data.points);
+			this.data.files.image = this.data.uri + expected.imageName;
+			this.data.magnification = parseInt(this.data.points[points[0].name].data[constants.pointShoot.MAGNIFICATIONKEY].data);
 
-			checkPointIntegrity(this.data.files.points.map(name => this.data.points[name].data));
+			this.data.integrity = checkPointIntegrity(this.data.files.points.map(name => this.data.points[name].data));
 
-			if (this.data.files.points.length !== expected.totalPoints)
+			if (this.data.integrity && this.data.files.points.length !== expected.totalPoints)
 				this.data.integrity = false;
-
-			this.data.image = Jimp.read(this.data.files.image);
 		}
 
-		async addScale() {
+		async addScale(type=constants.scale.types.BELOW) {
+			const initialImage = await Jimp.read(this.data.files.image);
 
+			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type);
+
+			// Finds general luminosity of text area
+			let textBackgroundPixels = [];
+			image.scan(scale.x, scale.y, scale.width, scale.height, (x, y, index) => {
+				textBackgroundPixels.push({
+					x, y,
+					color: {r: index, g: index + 1, b: index + 2, a: index + 3}
+				})
+			});
+
+			const isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .5;
+
+			// Creates scale bar and scale text on image
+			await image.print(
+				isBlack ? fonts.white.small : fonts.black.small,
+				scale.x,
+				scale.y - 16,
+				scale.scaleBar
+			);
+			await image.print(
+				isBlack ? fonts.white.small : fonts.black.small,
+				scale.x,
+				scale.y - 15,
+				scale.scaleBar
+			);
+			await image.print(
+				isBlack ? fonts.white.small : fonts.black.small,
+				scale.x,
+				scale.y - 14,
+				scale.scaleBar
+			);
+			await image.print(
+				isBlack ? fonts.white.small : fonts.black.small,
+				scale.x,
+				scale.y - 13,
+				scale.scaleBar
+			);
+			await image.print(
+				isBlack ? fonts.white.small : fonts.black.small,
+				scale.x,
+				scale.y - 12,
+				scale.scaleBar
+			);
+
+			await image.print(
+				isBlack ? fonts.white[scale.scaleSize] : fonts.black[scale.scaleSize],
+				scale.x,
+				scale.y + 10,
+				'' + scale.visualScale + 'µm'
+			);
+
+			this.data.image = image;
 		}
 
 		async writeImage(settings={}) {
@@ -70,9 +127,15 @@ module.exports = async () => {
 			if (!outputUri.endsWith('/'))
 				outputUri += '/';
 
-			let outputName = settings.name ? settings.name : this.data.files.image.name.substring(0, this.data.files.image.name.length - (constants.pointShoot.fileFormats.IMAGERAW.length));
+			const outputName = settings.name ? settings.name : this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length));
 
-			return await this.data.image.writeAsync(outputUri + outputName + outputName.endsWith(constants.pointShoot.fileFormats.OUTPUTIMAGE) ? '' : constants.pointShoot.fileFormats.OUTPUTIMAGE)
+			return await this.data.image.writeAsync(outputName + (outputName.endsWith(constants.pointShoot.fileFormats.OUTPUTIMAGE) ? '' : constants.pointShoot.fileFormats.OUTPUTIMAGE));
+		}
+
+		async addScaleAndWrite(type=undefined, settings={}) {
+			await this.addScale(type);
+			await this.writeImage(settings);
+			this.data.image = undefined;
 		}
 	}
 };
@@ -98,7 +161,7 @@ async function processPSData(psData) {
 	const magnification = parseInt(psData.expectedData[constants.pointShoot.MAGNIFICATIONKEY].data);
 
 	psData.pixelSize = calculatePixelSize(magnification, psData.width);
-	[psData.scale, psData.scaleLength] = estimateScale(magnification, psData.width, psData.pixelSize);
+	[psData.scale, psData.scaleLength] = estimateVisualScale(magnification, psData.width, psData.pixelSize);
 
 	const fonts = {
 		white: {
@@ -162,5 +225,3 @@ async function processPSData(psData) {
 
 	return psData;
 }
-
-module.exports = PointShoot;

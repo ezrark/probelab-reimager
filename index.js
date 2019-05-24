@@ -1,29 +1,34 @@
 const fs = require('fs');
 
-const Jimp = require('jimp');
-
 const constants = require('./constants');
-const io = require('./io');
 
-//let dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2018-11-14_Micrometeorites';
-let  dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2019-02-22_Decker_Tiles';
+require('./pointshoot')().then(async Pointshoot => {
+	//let dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2018-11-14_Micrometeorites';
+	let  dirUri = 'C:\\Users\\EPMA_Castaing\\work\\thermo imaging\\2019-02-22_Decker_Tiles';
 
-dirUri = dirUri.replace(/\\/gmi, '/');
-if (!dirUri.endsWith('/'))
-	dirUri = dirUri + '/';
+	dirUri = dirUri.replace(/\\/gmi, '/');
+	if (!dirUri.endsWith('/'))
+		dirUri = dirUri + '/';
 
+	const directory = fs.readdirSync(dirUri, {withFileTypes: true});
 
+	const ps = directory.flatMap(dir => {
+		if (dir.isDirectory()) {
+			const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
+			return files.filter(file => file.isFile() && file.name.endsWith(constants.pointShoot.fileFormats.ENTRY)).map(entryFile => {
+				entryFile.uri = dirUri + dir.name + '/' + entryFile.name;
+				return new Pointshoot(entryFile);
+			});
+		}
+	}).filter(i => i);
 
-//const directory = fs.readdirSync(this.data.uri, {withFileTypes: true});
+	for (const point of ps)
+		await point.addScaleAndWrite();
 
-//const entryFile = directory.filter(currentFile => {
-//	return currentFile.name.endsWith(constants.pointShoot.fileFormats.ENTRY)
-//});
+	console.log('All images written');
+});
 
-
-
-const directory = fs.readdirSync(dirUri, {withFileTypes: true});
-
+/*
 function processPointShootDirectory(uri, directory) {
 	let data = {
 		imageFile: {},
@@ -79,7 +84,22 @@ function cleanupPS(psData) {
 }
 
 async function processPSData(psData) {
-	const image = await Jimp.read(psData.imageFile.uri);
+	const initialImage = await Jimp.read(psData.imageFile.uri);
+	const test = Array.from(await initialImage.bitmap.data);
+
+	for (let i = 0; i < initialImage.bitmap.width * 50 * 4; i++)
+		test.push(0);
+
+	const image = await new Promise(async (resolve, reject) => {
+		new Jimp({
+			data: Buffer.from(test),
+			width: initialImage.bitmap.width,
+			height: initialImage.bitmap.height + 50
+		}, (err, image) => {
+			if (err) reject(err);
+			else resolve(image);
+		});
+	});
 
 	psData.width = image.bitmap.width;
 	psData.height = image.bitmap.height;
@@ -111,8 +131,8 @@ async function processPSData(psData) {
 	while (actualScaleBarLength < psData.scaleLength) {
 		prevActualScaleBarLength = actualScaleBarLength;
 
-		scaleBar += '﹘';
-		actualScaleBarLength = await Jimp.measureText(fonts.black.normal, scaleBar);
+		scaleBar += '_';
+		actualScaleBarLength = await Jimp.measureText(fonts.black.small, scaleBar);
 	}
 
 	if (Math.abs(prevActualScaleBarLength - psData.scaleLength) < Math.abs(actualScaleBarLength - psData.scaleLength))
@@ -134,20 +154,34 @@ async function processPSData(psData) {
 	});
 
 	const isBlack = (pixels.reduce((sum, pixel) => {
-		return sum += .2126 * pixel.color.r + .7152 * pixel.color.g + .0722 * pixel.color.b;
+		return sum + .2126 * pixel.color.r + .7152 * pixel.color.g + .0722 * pixel.color.b;
 	}) / pixels.length) < .5;
 
 	await image.print(
-		isBlack ? fonts.white.normal : fonts.black.normal,
+		isBlack ? fonts.white.small : fonts.black.small,
 		10,
+		psData.height - 53,
+		scaleBar
+	);
+
+	await image.print(
+		isBlack ? fonts.white.small : fonts.black.small,
 		10,
+		psData.height - 54,
+		scaleBar
+	);
+
+	await image.print(
+		isBlack ? fonts.white.small : fonts.black.small,
+		10,
+		psData.height - 55,
 		scaleBar
 	);
 
 	await image.print(
 		isBlack ? fonts.white.normal : fonts.black.normal,
 		10,
-		30,
+		psData.height - 35,
 		'' + psData.scale + 'µm'
 	);
 
@@ -210,3 +244,4 @@ Promise.all(PSData).then(data => {
 		console.log('All images written');
 	}).catch(console.warn);
 }).catch(console.warn);
+*/

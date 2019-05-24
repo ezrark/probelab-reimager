@@ -19,5 +19,22 @@
       ]
     },
     "MAGNIFICATIONKEY": "magcam"
+  },
+  "scale": {
+    "types": {
+      "BELOW": 0
+    },
+    "sizes": {
+      "TINY": "tiny",
+      "SMALL": "small",
+      "NORMAL": "normal",
+      "LARGE": "large",
+      "SUPER": "super"
+    }
+  },
+  "luminosity": {
+    "RED": 0.2126,
+    "GREEN": 0.7152,
+    "BLUE": 0.0722
   }
 }
