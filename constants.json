@@ -34,6 +34,11 @@
       "NORMAL": "normal",
       "LARGE": "large",
       "SUPER": "super"
+    },
+    "colors": {
+      "AUTO": "auto",
+      "BLACK": "black",
+      "WHITE": "white"
     }
   },
   "luminosity": {

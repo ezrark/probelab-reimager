@@ -5,9 +5,16 @@ const constants = require('./constants');
 function help() {
 	console.log('Usage: thermo-reimager [options] [directory]\n');
 	console.log('Options:');
-	console.log('-v, --version              \tDisplays the version information');
-	console.log('-h, --help                 \tProvides this text');
-	console.log('-p [pos], --position [pos] \tPosition to print the scale');
+	console.log('-v, --version                   \tDisplays the version information');
+	console.log('-h, --help                      \tProvides this text');
+	console.log('-p [pos], --position [pos]      \tPosition to print the scale');
+	console.log('-c [color], --color [color]     \tScale color');
+	console.log('-b [color], --background [color]\tIf \'Below\', background color');
+	console.log();
+	console.log('Colors (Scale and Background):');
+	console.log('a, auto \tSelects the color automatically');
+	console.log('b, black\t');
+	console.log('w, white\t');
 	console.log();
 	console.log('Positions:');
 	console.log('d, default    \tScale is Underneath the image');
@@ -23,7 +30,9 @@ require('./pointshoot')().then(async Pointshoot => {
 	let options = {
 		help: false,
 		version: false,
-		position: constants.scale.types.BELOW
+		position: constants.scale.types.BELOW,
+		scaleColor: constants.scale.colors.AUTO,
+		background: constants.scale.colors.AUTO
 	};
 
 	let dirUri = '';
@@ -36,6 +45,40 @@ require('./pointshoot')().then(async Pointshoot => {
 					break;
 				case '--help':
 					options.help = true;
+					break;
+				case '--color':
+					switch (process.argv[++i]) {
+						case 'a':
+						case 'auto':
+						default:
+							options.scaleColor = constants.scale.colors.AUTO;
+							break;
+						case 'b':
+						case 'black':
+							options.scaleColor = constants.scale.colors.BLACK;
+							break;
+						case 'w':
+						case 'white':
+							options.scaleColor = constants.scale.colors.WHITE;
+							break;
+					}
+					break;
+				case '--background':
+					switch (process.argv[++i]) {
+						case 'a':
+						case 'auto':
+						default:
+							options.background = constants.scale.colors.AUTO;
+							break;
+						case 'b':
+						case 'black':
+							options.background = constants.scale.colors.BLACK;
+							break;
+						case 'w':
+						case 'white':
+							options.background = constants.scale.colors.WHITE;
+							break;
+					}
 					break;
 				case '--position':
 					switch (process.argv[++i]) {
@@ -69,6 +112,40 @@ require('./pointshoot')().then(async Pointshoot => {
 			}
 		} else if (process.argv[i].startsWith('-')) {
 			switch (process.argv[i]) {
+				case '-c':
+					switch (process.argv[++i]) {
+						case 'a':
+						case 'auto':
+						default:
+							options.scaleColor = constants.scale.colors.AUTO;
+							break;
+						case 'b':
+						case 'black':
+							options.scaleColor = constants.scale.colors.BLACK;
+							break;
+						case 'w':
+						case 'white':
+							options.scaleColor = constants.scale.colors.WHITE;
+							break;
+					}
+					break;
+				case '-b':
+					switch (process.argv[++i]) {
+						case 'a':
+						case 'auto':
+						default:
+							options.background = constants.scale.colors.AUTO;
+							break;
+						case 'b':
+						case 'black':
+							options.background = constants.scale.colors.BLACK;
+							break;
+						case 'w':
+						case 'white':
+							options.background = constants.scale.colors.WHITE;
+							break;
+					}
+					break;
 				case '-p':
 					switch (process.argv[++i]) {
 						case 'd':
@@ -142,7 +219,7 @@ require('./pointshoot')().then(async Pointshoot => {
 		}).filter(i => i);
 
 		for (const point of ps)
-			await point.addScaleAndWrite(options.position);
+			await point.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background});
 
 		console.log('All images written');
 	}

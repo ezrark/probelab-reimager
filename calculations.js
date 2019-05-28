@@ -78,7 +78,7 @@ function sumPixelLuminosity(pixels) {
 	}, 0) / pixels.length)/255;
 }
 
-async function calculateScale(startImage, magnification, scaleType) {
+async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO) {
 	let scale = {
 		x: 0,
 		y: 0,
@@ -123,28 +123,36 @@ async function calculateScale(startImage, magnification, scaleType) {
 		scale.x = 10;
 		scale.y = startImage.bitmap.height + 5;
 
-		// Create a luminosity map
-		let imageBackground = [];
-		startImage.scan(0, 0, startImage.bitmap.width, startImage.bitmap.height, (x, y, index) => {
-			imageBackground.push({
-				x, y,
-				color: {r: startImage.bitmap.data[index], g: startImage.bitmap.data[index + 1], b: startImage.bitmap.data[index + 2], a: startImage.bitmap.data[index + 3]}
-			})
-		});
+		let imageIsBlack = belowColor === constants.scale.colors.BLACK;
+		if (belowColor === constants.scale.colors.AUTO) {
+			// Create a luminosity map
+			let imageBackground = [];
+			startImage.scan(0, 0, startImage.bitmap.width, startImage.bitmap.height, (x, y, index) => {
+				imageBackground.push({
+					x, y,
+					color: {
+						r: startImage.bitmap.data[index],
+						g: startImage.bitmap.data[index + 1],
+						b: startImage.bitmap.data[index + 2],
+						a: startImage.bitmap.data[index + 3]
+					}
+				})
+			});
 
-		// Check the luminosity and use white or black background to make it look nice
-		const imageIsBlack = sumPixelLuminosity(imageBackground) < .5;
+			// Check the luminosity and use white or black background to make it look nice
+			imageIsBlack = sumPixelLuminosity(imageBackground) < .5;
+		}
 
 		const tallBitmap = Array.from(await startImage.bitmap.data);
-		for (let i = 0; i < startImage.bitmap.width * (scale.height + 10) * 4; i++)
-			tallBitmap.push(imageIsBlack ? 255 : 0);
+		for (let i = 0; i < startImage.bitmap.width * (scale.height + 20); i++)
+			tallBitmap.push(imageIsBlack ? 0 : 255, imageIsBlack ? 0 : 255, imageIsBlack ? 0 : 255, 255);
 
 		// Resize the image with the new added scale bit
 		image = await new Promise(async (resolve, reject) => {
 			new Jimp({
 				data: Buffer.from(tallBitmap),
 				width: startImage.bitmap.width,
-				height: startImage.bitmap.height + (scale.height + 10)
+				height: startImage.bitmap.height + (scale.height + 20)
 			}, (err, image) => {
 				if (err) reject(err);
 				else resolve(image);
@@ -153,18 +161,18 @@ async function calculateScale(startImage, magnification, scaleType) {
 	} else if (scaleType === constants.scale.types.LOWERLEFT) {
 		// Position the scale
 		scale.x = 10;
-		scale.y = startImage.bitmap.height - 20;
+		scale.y = startImage.bitmap.height - scale.height - 20;
 	} else if (scaleType === constants.scale.types.LOWERRIGHT) {
 		// Position the scale
-		scale.x = startImage.bitmap.width - 10;
-		scale.y = startImage.bitmap.height - 20;
+		scale.x = startImage.bitmap.width - scale.width - 10;
+		scale.y = startImage.bitmap.height - scale.height - 20;
 	} else if (scaleType === constants.scale.types.UPPERLEFT) {
 		// Position the scale
 		scale.x = 10;
 		scale.y = 20;
 	} else if (scaleType === constants.scale.types.UPPERRIGHT) {
 		// Position the scale
-		scale.x = startImage.bitmap.width - 10;
+		scale.x = startImage.bitmap.width - scale.width - 10;
 		scale.y = 20;
 	}
 

@@ -64,21 +64,32 @@ module.exports = async () => {
 				this.data.integrity = false;
 		}
 
-		async addScale(type=constants.scale.types.BELOW) {
+		async addScale(type=constants.scale.types.BELOW, settings={}) {
+			settings.belowColor = settings.belowColor ? settings.belowColor : constants.scale.colors.AUTO;
+			settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.scale.colors.AUTO;
+
 			const initialImage = await Jimp.read(this.data.files.image);
 
-			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type);
+			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings.belowColor);
 
-			// Finds general luminosity of text area
-			let textBackgroundPixels = [];
-			image.scan(scale.x, scale.y, scale.width, scale.height, (x, y, index) => {
-				textBackgroundPixels.push({
-					x, y,
-					color: {r: image.bitmap.data[index], g: image.bitmap.data[index + 1], b: image.bitmap.data[index + 2], a: image.bitmap.data[index + 3]}
-				})
-			});
+			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
+			if (settings.scaleColor === constants.scale.colors.AUTO) {
+				// Finds general luminosity of text area
+				let textBackgroundPixels = [];
+				image.scan(scale.x, scale.y, scale.width, scale.height, (x, y, index) => {
+					textBackgroundPixels.push({
+						x, y,
+						color: {
+							r: image.bitmap.data[index],
+							g: image.bitmap.data[index + 1],
+							b: image.bitmap.data[index + 2],
+							a: image.bitmap.data[index + 3]
+						}
+					})
+				});
 
-			const isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .5;
+				isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .5;
+			}
 
 			// Creates scale bar and scale text on image
 			await image.print(
@@ -117,18 +128,14 @@ module.exports = async () => {
 		}
 
 		async writeImage(settings={}) {
-			let outputUri = settings.uri ? settings.uri : this.data.uri;
-			outputUri = outputUri.replace(/\\/gmi, '/');
-			if (!outputUri.endsWith('/'))
-				outputUri += '/';
+			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
+			outputUri += (outputUri.endsWith(constants.pointShoot.fileFormats.OUTPUTIMAGE) ? '' : constants.pointShoot.fileFormats.OUTPUTIMAGE);
 
-			const outputName = settings.name ? settings.name : this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length));
-
-			return await this.data.image.writeAsync(outputName + (outputName.endsWith(constants.pointShoot.fileFormats.OUTPUTIMAGE) ? '' : constants.pointShoot.fileFormats.OUTPUTIMAGE));
+			return await this.data.image.writeAsync(outputUri);
 		}
 
 		async addScaleAndWrite(type=undefined, settings={}) {
-			await this.addScale(type);
+			await this.addScale(type, settings);
 			await this.writeImage(settings);
 			this.data.image = undefined;
 		}
