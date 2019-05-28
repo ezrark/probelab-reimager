@@ -67,10 +67,11 @@ module.exports = async () => {
 		async addScale(type=constants.scale.types.BELOW, settings={}) {
 			settings.belowColor = settings.belowColor ? settings.belowColor : constants.scale.colors.AUTO;
 			settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.scale.colors.AUTO;
+			settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
 
 			const initialImage = await Jimp.read(this.data.files.image);
 
-			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings.belowColor);
+			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings.belowColor, settings.scaleSize);
 
 			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
 			if (settings.scaleColor === constants.scale.colors.AUTO) {

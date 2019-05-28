@@ -10,6 +10,7 @@ function help() {
 	console.log('-p [pos], --position [pos]      \tPosition to print the scale');
 	console.log('-c [color], --color [color]     \tScale color');
 	console.log('-b [color], --background [color]\tIf \'Below\', background color');
+	console.log('-s [µm], --scale [µm]           \tScale to display, < 1 for auto');
 	console.log();
 	console.log('Colors (Scale and Background):');
 	console.log('a, auto \tSelects the color automatically');
@@ -32,7 +33,8 @@ require('./pointshoot')().then(async Pointshoot => {
 		version: false,
 		position: constants.scale.types.BELOW,
 		scaleColor: constants.scale.colors.AUTO,
-		background: constants.scale.colors.AUTO
+		background: constants.scale.colors.AUTO,
+		scaleSize: constants.scale.AUTOSIZE
 	};
 
 	let dirUri = '';
@@ -45,6 +47,9 @@ require('./pointshoot')().then(async Pointshoot => {
 					break;
 				case '--help':
 					options.help = true;
+					break;
+				case '--scale':
+					options.scaleSize = process.argv[++i];
 					break;
 				case '--color':
 					switch (process.argv[++i]) {
@@ -112,6 +117,9 @@ require('./pointshoot')().then(async Pointshoot => {
 			}
 		} else if (process.argv[i].startsWith('-')) {
 			switch (process.argv[i]) {
+				case '-s':
+					options.scaleSize = process.argv[++i];
+					break;
 				case '-c':
 					switch (process.argv[++i]) {
 						case 'a':
@@ -219,7 +227,7 @@ require('./pointshoot')().then(async Pointshoot => {
 		}).filter(i => i);
 
 		for (const point of ps)
-			await point.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background});
+			await point.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background, scaleSize: options.scaleSize});
 
 		console.log('All images written');
 	}

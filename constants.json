@@ -21,6 +21,7 @@
     "MAGNIFICATIONKEY": "magcam"
   },
   "scale": {
+    "AUTOSIZE": 0,
     "types": {
       "BELOW": 0,
       "LOWERLEFT": 1,

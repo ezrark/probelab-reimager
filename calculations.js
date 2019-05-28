@@ -78,7 +78,7 @@ function sumPixelLuminosity(pixels) {
 	}, 0) / pixels.length)/255;
 }
 
-async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO) {
+async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO, scaleSize=constants.scale.AUTOSIZE) {
 	let scale = {
 		x: 0,
 		y: 0,
@@ -96,6 +96,8 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 	[scale.visualScale, scale.scaleLength, scale.pixelSize, scale.scaleSize] = estimateVisualScale(magnification, startImage.bitmap.width);
 	scale.height = Jimp.measureTextHeight(await Jimp.loadFont(fonts[scale.scaleSize]), '0', 10);
 
+	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
+	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
 	scale.height = scale.height % 2 === 0 ? scale.height : scale.height + 1;
 
 	// Figure out how long the scale bar needs to be
