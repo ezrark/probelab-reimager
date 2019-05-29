@@ -33,10 +33,14 @@
     "AUTOSIZE": 0,
     "types": {
       "BELOW": 0,
+      "BELOWLEFT": 0,
       "LOWERLEFT": 1,
       "LOWERRIGHT": 2,
       "UPPERLEFT": 3,
-      "UPPERRIGHT": 4
+      "UPPERRIGHT": 4,
+      "LOWERCENTER": 5,
+      "BELOWRIGHT": 6,
+      "BELOWCENTER": 7
     },
     "sizes": {
       "TINY": "tiny",
@@ -56,5 +60,6 @@
     "GREEN": 0.587,
     "BLUE": 0.114
   },
-  "PIXELSIZECONSTANT": 116.73
+  "PIXELSIZECONSTANT": 116.73,
+  "SCALEBARHEIGHTPERCENT": 0.08
 }

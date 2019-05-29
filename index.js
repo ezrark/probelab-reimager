@@ -19,12 +19,16 @@ function help() {
 	console.log('w, white\t');
 	console.log();
 	console.log('Positions:');
-	console.log('d, default    \tScale is Underneath the image');
-	console.log('b, below      \tScale is Underneath the image');
-	console.log('ul, upperleft \tScale is in the Upper Left');
-	console.log('ur, upperright\tScale is in the Upper Right');
-	console.log('ll, lowerleft \tScale is in the Lower Left');
-	console.log('lr, loweright \tScale is in the Lower Right');
+	console.log('d, default     \tScale is Underneath the image');
+	console.log('b, below       \tScale is Underneath the image -- DEPRECATED');
+	console.log('bl, belowleft  \tScale is Under the image, Left');
+	console.log('br, belowright \tScale is Under the image, Right');
+	console.log('bc, belowcenter\tScale is Under the image, Centered');
+	console.log('ul, upperleft  \tScale is in the Upper Left');
+	console.log('ur, upperright \tScale is in the Upper Right');
+	console.log('ll, lowerleft  \tScale is in the Lower Left');
+	console.log('lr, loweright  \tScale is in the Lower Right');
+	console.log('lc, lowercenter\tScale is in the Lower Center');
 }
 
 Promise.all([
@@ -56,7 +60,7 @@ Promise.all([
 					options.scaleSize = parseInt(process.argv[++i]);
 					break;
 				case '--barheight':
-					options.scaleBarHeight = parseInt(process.argv[++i]);
+					options.scaleBarHeight = parseInt(process.argv[++i])/100;
 					break;
 				case '--color':
 					switch (process.argv[++i]) {
@@ -97,11 +101,23 @@ Promise.all([
 						case 'd':
 						case 'default':
 						default:
-							options.position = constants.scale.types.BELOW;
+							options.position = constants.scale.types.BELOWLEFT;
 							break;
 						case 'b':
 						case 'below':
 							options.position = constants.scale.types.BELOW;
+							break;
+						case 'bl':
+						case 'belowleft':
+							options.position = constants.scale.types.BELOWLEFT;
+							break;
+						case 'br':
+						case 'belowright':
+							options.position = constants.scale.types.BELOWRIGHT;
+							break;
+						case 'bc':
+						case 'belowcenter':
+							options.position = constants.scale.types.BELOWCENTER;
 							break;
 						case 'ul':
 						case 'upperleft':
@@ -119,6 +135,10 @@ Promise.all([
 						case 'lowerright':
 							options.position = constants.scale.types.LOWERRIGHT;
 							break;
+						case 'lc':
+						case 'lowercenter':
+							options.position = constants.scale.types.LOWERCENTER;
+							break;
 					}
 					break;
 			}
@@ -128,7 +148,7 @@ Promise.all([
 					options.scaleSize = parseInt(process.argv[++i]);
 					break;
 				case '-k':
-					options.scaleBarHeight = parseInt(process.argv[++i]);
+					options.scaleBarHeight = parseInt(process.argv[++i])/100;
 					break;
 				case '-c':
 					switch (process.argv[++i]) {
@@ -169,11 +189,23 @@ Promise.all([
 						case 'd':
 						case 'default':
 						default:
-							options.position = constants.scale.types.BELOW;
+							options.position = constants.scale.types.BELOWLEFT;
 							break;
 						case 'b':
 						case 'below':
 							options.position = constants.scale.types.BELOW;
+							break;
+						case 'bl':
+						case 'belowleft':
+							options.position = constants.scale.types.BELOWLEFT;
+							break;
+						case 'br':
+						case 'belowright':
+							options.position = constants.scale.types.BELOWRIGHT;
+							break;
+						case 'bc':
+						case 'belowcenter':
+							options.position = constants.scale.types.BELOWCENTER;
 							break;
 						case 'ul':
 						case 'upperleft':
@@ -190,6 +222,10 @@ Promise.all([
 						case 'lr':
 						case 'lowerright':
 							options.position = constants.scale.types.LOWERRIGHT;
+							break;
+						case 'lc':
+						case 'lowercenter':
+							options.position = constants.scale.types.LOWERCENTER;
 							break;
 					}
 					break;
@@ -236,8 +272,6 @@ Promise.all([
 
 					if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
 						return new ExtractedMap(file);
-
-					return undefined;
 				}).filter(item => item);
 			}
 		}).filter(i => i);

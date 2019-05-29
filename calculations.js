@@ -82,10 +82,12 @@ function sumPixelLuminosity(image, startX, startY, width, height) {
 	return (luminosity/(width * height))/255;
 }
 
-async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO, scaleSize=constants.scale.AUTOSIZE) {
+async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO, scaleSize=constants.scale.AUTOSIZE, scaleBarHeight=constants.scale.AUTOSIZE) {
 	let scale = {
 		x: 0,
 		y: 0,
+		textX: 0,
+		textY: 0,
 		width: 0,
 		height: 60,
 		visualScale: 0,
@@ -93,6 +95,7 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 		scaleLength: 0,
 		scaleBar: '',
 		scaleIsBlack: false,
+		barPixelHeight: 0,
 		scaleSize: {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 20}
 	};
 
@@ -103,6 +106,10 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
 	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
 	scale.height = scale.height % 2 === 0 ? scale.height : scale.height + 1;
+
+	scale.barPixelHeight = Math.round((scaleBarHeight ? scaleBarHeight : constants.SCALEBARHEIGHTPERCENT) * scale.height);
+
+	scale.visualScale = '' + scale.visualScale + 'µm';
 
 	// Figure out how long the scale bar needs to be
 	const smallFont = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
@@ -124,53 +131,98 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 	// Calculate any changes in the image to account for scale type
 	// Also positions the scale bar's x and y positions
 	let image = startImage;
-	if (scaleType === constants.scale.types.BELOW) {
-		// Position the scale
-		scale.x = scale.scaleSize.xOffset;
-		scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+	let belowScaleSet = false;
+	switch(scaleType) {
+		default:
+		case constants.scale.types.BELOWLEFT:
+			if (!belowScaleSet) {
+				// Position the scale
+				scale.x = scale.scaleSize.xOffset;
+				scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+				scale.textX = scale.x;
+				scale.textY = scale.y + 10 + scale.barPixelHeight;
+				belowScaleSet = true;
+			}
+		case constants.scale.types.BELOWRIGHT:
+			if (!belowScaleSet) {
+				// Position the scale
+				scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
+				scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+				scale.textX = scale.x;
+				scale.textY = scale.y + 10 + scale.barPixelHeight;
+				belowScaleSet = true;
+			}
+		case constants.scale.types.BELOWCENTER:
+			if (!belowScaleSet) {
+				scale.x = (startImage.bitmap.width / 2) - (scale.width / 2);
+				scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+				scale.textX = scale.x + (scale.width / 2) - Math.round(await Jimp.measureText(await Jimp.loadFont(fonts[scale.scaleSize.font]), scale.visualScale) / 2);
+				scale.textY = scale.y + 10 + scale.barPixelHeight;
+				belowScaleSet = true;
+			}
 
-		let imageIsBlack = belowColor === constants.scale.colors.BLACK;
-		if (belowColor === constants.scale.colors.AUTO) {
+			let imageIsBlack = belowColor === constants.scale.colors.BLACK;
+
 			// Check the luminosity and use white or black background to make it look nice
-			imageIsBlack = sumPixelLuminosity(image, 0, 0, startImage.bitmap.width, startImage.bitmap.height) < .5;
-		}
+			if (belowColor === constants.scale.colors.AUTO)
+				imageIsBlack = sumPixelLuminosity(image, 0, 0, startImage.bitmap.width, startImage.bitmap.height) < .5;
 
-		const tallBitmap = Array.from(await startImage.bitmap.data);
-		const totalNewPixels = startImage.bitmap.width * (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset);
-		if (imageIsBlack)
-			for (let i = 0; i < totalNewPixels; i++)
-				tallBitmap.push(0, 0, 0, 255);
-		else
-			for (let i = 0; i < totalNewPixels; i++)
-				tallBitmap.push(255, 255, 255, 255);
+			const tallBitmap = Array.from(await startImage.bitmap.data);
+			const totalNewPixels = startImage.bitmap.width * (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset + scale.barPixelHeight);
+			if (imageIsBlack)
+				for (let i = 0; i < totalNewPixels; i++)
+					tallBitmap.push(0, 0, 0, 255);
+			else
+				for (let i = 0; i < totalNewPixels; i++)
+					tallBitmap.push(255, 255, 255, 255);
 
-		// Resize the image with the new added scale bit
-		image = await new Promise(async (resolve, reject) => {
-			new Jimp({
-				data: Buffer.from(tallBitmap),
-				width: startImage.bitmap.width,
-				height: startImage.bitmap.height + (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset)
-			}, (err, image) => {
-				if (err) reject(err);
-				else resolve(image);
+			// Resize the image with the new added scale bit
+			image = await new Promise(async (resolve, reject) => {
+				new Jimp({
+					data: Buffer.from(tallBitmap),
+					width: startImage.bitmap.width,
+					height: startImage.bitmap.height + (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset + scale.barPixelHeight)
+				}, (err, image) => {
+					if (err) reject(err);
+					else resolve(image);
+				});
 			});
-		});
-	} else if (scaleType === constants.scale.types.LOWERLEFT) {
-		// Position the scale
-		scale.x = scale.scaleSize.xOffset;
-		scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
-	} else if (scaleType === constants.scale.types.LOWERRIGHT) {
-		// Position the scale
-		scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
-		scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
-	} else if (scaleType === constants.scale.types.UPPERLEFT) {
-		// Position the scale
-		scale.x = scale.scaleSize.xOffset;
-		scale.y = scale.scaleSize.yOffset;
-	} else if (scaleType === constants.scale.types.UPPERRIGHT) {
-		// Position the scale
-		scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
-		scale.y = scale.scaleSize.yOffset;
+			break;
+		case constants.scale.types.LOWERCENTER:
+			// Position the scale
+			scale.x = (startImage.bitmap.width/2) - (scale.width/2);
+			scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
+			scale.textX = scale.x + (scale.width/2) - Math.round(await Jimp.measureText(await Jimp.loadFont(fonts[scale.scaleSize.font]), scale.visualScale) / 2);
+			scale.textY = scale.y + 10;
+			break;
+		case constants.scale.types.LOWERRIGHT:
+			// Position the scale
+			scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
+			scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
+			scale.textX = scale.x;
+			scale.textY = scale.y + 10;
+			break;
+		case constants.scale.types.LOWERLEFT:
+			// Position the scale
+			scale.x = scale.scaleSize.xOffset;
+			scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
+			scale.textX = scale.x;
+			scale.textY = scale.y + 10;
+			break;
+		case constants.scale.types.UPPERRIGHT:
+			// Position the scale
+			scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
+			scale.y = scale.scaleSize.yOffset;
+			scale.textX = scale.x;
+			scale.textY = scale.y + 10;
+			break;
+		case constants.scale.types.UPPERLEFT:
+			// Position the scale
+			scale.x = scale.scaleSize.xOffset;
+			scale.y = scale.scaleSize.yOffset;
+			scale.textX = scale.x;
+			scale.textY = scale.y + 10;
+			break;
 	}
 
 	// Return the new image and scale information
