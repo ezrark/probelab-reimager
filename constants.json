@@ -1,4 +1,13 @@
 {
+  "extractedMap": {
+    "fileFormats": {
+      "IMAGERAW": ".siref",
+      "OUTPUTIMAGE": ".tif",
+      "ENTRY": "Extracted Spectrum.emsa",
+      "DIRECTORYCONST": ".MAP.EDS"
+    },
+    "MAGNIFICATIONKEY": "magcam"
+  },
   "pointShoot": {
     "fileFormats": {
       "IMAGERAW": ".psref",

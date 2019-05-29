@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function readPSMSAFile(uri) {
+function readMASFile(uri) {
 	const rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('\r\n');
 
 	return rawData.reduce((output, line) => {
@@ -38,6 +38,6 @@ function readPSEntryFile(uri) {
 }
 
 module.exports = {
-	readPSMSAFile,
+	readMASFile,
 	readPSEntryFile
 };

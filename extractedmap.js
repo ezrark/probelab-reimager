@@ -22,46 +22,30 @@ module.exports = async () => {
 		}
 	};
 
-	return class PointShoot {
+	return class ExtractedMap {
 		constructor(entryFile, uri=undefined) {
+			const directoryName = entryFile.uri.split('/').slice(-2, -1)[0];
+
 			this.data = {
 				uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
-				name: entryFile.name.substring(0, entryFile.name.length - constants.pointShoot.fileFormats.ENTRY.length),
+				name: directoryName.substring(0, directoryName.length - constants.extractedMap.fileFormats.DIRECTORYCONST.length),
 				image: undefined,
-				integrity: true,
 				magnification: 1,
-				points: {},
 				files: {
 					image: '',
-					entry: entryFile.uri,
-					points: []
+					entry: entryFile.uri
 				}
 			};
+
+			this.data.files.image = this.data.uri + this.data.name + constants.extractedMap.fileFormats.IMAGERAW;
+
 			this.updateFromDisk();
 		}
 
 		updateFromDisk() {
-			const [expected, points] = io.readPSEntryFile(this.data.files.entry);
+			this.data.data = io.readMASFile(this.data.files.entry);
 
-			this.data.points = points.reduce((points, point) => {
-				try {
-					point.data = io.readMASFile((this.data.uri + point.name));
-					points[point.name] = point;
-				} catch (err) {
-					console.warn(err);
-				}
-
-				return points;
-			}, {});
-
-			this.data.files.points = Object.keys(this.data.points);
-			this.data.files.image = this.data.uri + expected.imageName;
-			this.data.magnification = parseInt(this.data.points[points[0].name].data[constants.pointShoot.MAGNIFICATIONKEY].data);
-
-			this.data.integrity = checkPointIntegrity(this.data.files.points.map(name => this.data.points[name].data));
-
-			if (this.data.integrity && this.data.files.points.length !== expected.totalPoints)
-				this.data.integrity = false;
+			this.data.magnification = parseInt(this.data.data[constants.extractedMap.MAGNIFICATIONKEY].data);
 		}
 
 		async addScale(type=constants.scale.types.BELOW, settings={}) {
@@ -102,8 +86,8 @@ module.exports = async () => {
 		}
 
 		async writeImage(settings={}) {
-			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
-			outputUri += (outputUri.endsWith(constants.pointShoot.fileFormats.OUTPUTIMAGE) ? '' : constants.pointShoot.fileFormats.OUTPUTIMAGE);
+			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.extractedMap.fileFormats.IMAGERAW.length)));
+			outputUri += (outputUri.endsWith(constants.extractedMap.fileFormats.OUTPUTIMAGE) ? '' : constants.extractedMap.fileFormats.OUTPUTIMAGE);
 
 			return await this.data.image.writeAsync(outputUri);
 		}
@@ -115,14 +99,3 @@ module.exports = async () => {
 		}
 	}
 };
-
-function checkPointIntegrity(points) {
-	const expectedData = points[0];
-
-	for (const point of points)
-		for (const key in point)
-			if (!constants.pointShoot.integrity.SKIPARRAY.includes(key) && !key.startsWith('#quant_'))
-				if (expectedData[key].data !== point[key].data)
-					return false;
-	return true;
-}

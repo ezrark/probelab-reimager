@@ -27,8 +27,10 @@ function help() {
 	console.log('lr, loweright \tScale is in the Lower Right');
 }
 
-
-require('./pointshoot')().then(async Pointshoot => {
+Promise.all([
+	require('./extractedmap')(),
+	require('./pointshoot')()
+]).then(async ([ExtractedMap, Pointshoot]) => {
 	let options = {
 		help: false,
 		version: false,
@@ -224,18 +226,24 @@ require('./pointshoot')().then(async Pointshoot => {
 
 		const directory = fs.readdirSync(dirUri, {withFileTypes: true});
 
-		const ps = directory.flatMap(dir => {
+		const thermos = directory.flatMap(dir => {
 			if (dir.isDirectory()) {
 				const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
-				return files.filter(file => file.isFile() && file.name.endsWith(constants.pointShoot.fileFormats.ENTRY)).map(entryFile => {
-					entryFile.uri = dirUri + dir.name + '/' + entryFile.name;
-					return new Pointshoot(entryFile);
-				});
+				return files.filter(file => file.isFile()).map(file => {
+					file.uri = dirUri + dir.name + '/' + file.name;
+					if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
+						return new Pointshoot(file);
+
+					if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
+						return new ExtractedMap(file);
+
+					return undefined;
+				}).filter(item => item);
 			}
 		}).filter(i => i);
 
-		for (const point of ps)
-			await point.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background, scaleSize: options.scaleSize, scaleBarHeight: options.scaleBarHeight});
+		for (const thermo of thermos)
+			await thermo.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background, scaleSize: options.scaleSize, scaleBarHeight: options.scaleBarHeight});
 
 		console.log('All images written');
 	}

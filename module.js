@@ -1,5 +1,6 @@
 module.exports = {
 	constants: require('./constants'),
 	calculations: require('./calculations'),
-	PointShoot: require('./pointshoot')()
+	PointShoot: require('./pointshoot')(),
+	ExtractedMap: require('./extractedmap')()
 };
