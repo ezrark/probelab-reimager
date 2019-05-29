@@ -18,7 +18,7 @@ function readPSMSAFile(uri) {
 }
 
 function readPSEntryFile(uri) {
-	const rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('#');
+	const rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('#');
 
 	return rawData.reduce((output, set) => {
 		if (set.startsWith('..2')) {

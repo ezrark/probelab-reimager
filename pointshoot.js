@@ -45,7 +45,7 @@ module.exports = async () => {
 
 			this.data.points = points.reduce((points, point) => {
 				try {
-					point.data = io.readPSMSAFile(this.data.uri + point.name);
+					point.data = io.readPSMSAFile((this.data.uri + point.name).replace('�', ' '));
 					points[point.name] = point;
 				} catch (err) {
 					console.warn(err);
@@ -68,6 +68,7 @@ module.exports = async () => {
 			settings.belowColor = settings.belowColor ? settings.belowColor : constants.scale.colors.AUTO;
 			settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.scale.colors.AUTO;
 			settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
+			settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
 
 			const initialImage = await Jimp.read(this.data.files.image);
 
@@ -76,50 +77,22 @@ module.exports = async () => {
 			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
 			if (settings.scaleColor === constants.scale.colors.AUTO) {
 				// Finds general luminosity of text area
-				let textBackgroundPixels = [];
-				image.scan(scale.x, scale.y, scale.width, scale.height, (x, y, index) => {
-					textBackgroundPixels.push({
-						x, y,
-						color: {
-							r: image.bitmap.data[index],
-							g: image.bitmap.data[index + 1],
-							b: image.bitmap.data[index + 2],
-							a: image.bitmap.data[index + 3]
-						}
-					})
-				});
-
-				isBlack = calculations.sumPixelLuminosity(textBackgroundPixels) < .5;
+				isBlack = calculations.sumPixelLuminosity(image, scale.x, scale.y, scale.width, scale.height) < .5;
 			}
 
+			const scaleBarHeight = Math.round((settings.scaleBarHeight ? settings.scaleBarHeight : .08) * scale.height);
+
 			// Creates scale bar and scale text on image
-			await image.print(
-				isBlack ? fonts.white.small : fonts.black.small,
-				scale.x,
-				scale.y - 15,
-				scale.scaleBar
-			);
-			await image.print(
-				isBlack ? fonts.white.small : fonts.black.small,
-				scale.x,
-				scale.y - 14,
-				scale.scaleBar
-			);
-			await image.print(
-				isBlack ? fonts.white.small : fonts.black.small,
-				scale.x,
-				scale.y - 13,
-				scale.scaleBar
-			);
-			await image.print(
-				isBlack ? fonts.white.small : fonts.black.small,
-				scale.x,
-				scale.y - 12,
-				scale.scaleBar
-			);
+			for (let i = 0; i < scaleBarHeight; i++)
+				await image.print(
+					isBlack ? fonts.white.small : fonts.black.small,
+					scale.x,
+					scale.y - 15 + i,
+					scale.scaleBar
+				);
 
 			await image.print(
-				isBlack ? fonts.white[scale.scaleSize] : fonts.black[scale.scaleSize],
+				isBlack ? fonts.white[scale.scaleSize.font] : fonts.black[scale.scaleSize.font],
 				scale.x,
 				scale.y + 10,
 				'' + scale.visualScale + 'µm'

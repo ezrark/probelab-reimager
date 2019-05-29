@@ -11,6 +11,7 @@ function help() {
 	console.log('-c [color], --color [color]     \tScale color');
 	console.log('-b [color], --background [color]\tIf \'Below\', background color');
 	console.log('-s [µm], --scale [µm]           \tScale to display, < 1 for auto');
+	console.log('-k [%], --barheight [%]         \tSet scale bar to a % of the total scale height, < 1 for auto(8)');
 	console.log();
 	console.log('Colors (Scale and Background):');
 	console.log('a, auto \tSelects the color automatically');
@@ -34,7 +35,8 @@ require('./pointshoot')().then(async Pointshoot => {
 		position: constants.scale.types.BELOW,
 		scaleColor: constants.scale.colors.AUTO,
 		background: constants.scale.colors.AUTO,
-		scaleSize: constants.scale.AUTOSIZE
+		scaleSize: constants.scale.AUTOSIZE,
+		scaleBarHeight: constants.scale.AUTOSIZE
 	};
 
 	let dirUri = '';
@@ -49,7 +51,10 @@ require('./pointshoot')().then(async Pointshoot => {
 					options.help = true;
 					break;
 				case '--scale':
-					options.scaleSize = process.argv[++i];
+					options.scaleSize = parseInt(process.argv[++i]);
+					break;
+				case '--barheight':
+					options.scaleBarHeight = parseInt(process.argv[++i]);
 					break;
 				case '--color':
 					switch (process.argv[++i]) {
@@ -118,7 +123,10 @@ require('./pointshoot')().then(async Pointshoot => {
 		} else if (process.argv[i].startsWith('-')) {
 			switch (process.argv[i]) {
 				case '-s':
-					options.scaleSize = process.argv[++i];
+					options.scaleSize = parseInt(process.argv[++i]);
+					break;
+				case '-k':
+					options.scaleBarHeight = parseInt(process.argv[++i]);
 					break;
 				case '-c':
 					switch (process.argv[++i]) {
@@ -227,7 +235,7 @@ require('./pointshoot')().then(async Pointshoot => {
 		}).filter(i => i);
 
 		for (const point of ps)
-			await point.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background, scaleSize: options.scaleSize});
+			await point.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background, scaleSize: options.scaleSize, scaleBarHeight: options.scaleBarHeight});
 
 		console.log('All images written');
 	}

@@ -38,18 +38,18 @@ function estimateVisualScale(magnification, width, pixelSize=calculatePixelSize(
 
 function estimateScaleSize(width) {
 	if (width === 4096)
-		return constants.scale.sizes.LARGE;
+		return {font: constants.scale.sizes.SUPER, xOffset: 20, yOffset: 30};
 	if (width === 2048)
-		return constants.scale.sizes.LARGE;
+		return {font: constants.scale.sizes.LARGE, xOffset: 10, yOffset: 20};
 	if (width === 1024)
-		return constants.scale.sizes.NORMAL;
+		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 20};
 	if (width === 512)
-		return constants.scale.sizes.NORMAL;
+		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 20};
 	if (width === 256)
-		return constants.scale.sizes.NORMAL;
+		return {font: constants.scale.sizes.SMALL, xOffset: 10, yOffset: 20};
 	if (width === 128)
-		return constants.scale.sizes.SMALL;
-	return constants.scale.sizes.TINY;
+		return {font: constants.scale.sizes.SMALL, xOffset: 5, yOffset: 10};
+	return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 10};
 }
 
 function calculatePixelSize(magnification, width) {
@@ -72,10 +72,14 @@ function calculatePixelSize(magnification, width) {
 	return thousand;
 }
 
-function sumPixelLuminosity(pixels) {
-	return (pixels.reduce((sum, pixel) => {
-		return sum + (constants.luminosity.RED * pixel.color.r) + (constants.luminosity.GREEN * pixel.color.g) + (constants.luminosity.BLUE * pixel.color.b);
-	}, 0) / pixels.length)/255;
+function sumPixelLuminosity(image, startX, startY, width, height) {
+	let luminosity = 0;
+
+	image.scan(startX, startY, width, height, (x, y, index) => {
+		luminosity += (constants.luminosity.RED * image.bitmap.data[index]) + (constants.luminosity.GREEN * image.bitmap.data[index + 1]) + (constants.luminosity.BLUE * image.bitmap.data[index + 2]);
+	});
+
+	return (luminosity/(width * height))/255;
 }
 
 async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO, scaleSize=constants.scale.AUTOSIZE) {
@@ -89,12 +93,12 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 		scaleLength: 0,
 		scaleBar: '',
 		scaleIsBlack: false,
-		scaleSize: constants.scale.sizes.NORMAL
+		scaleSize: {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 20}
 	};
 
 	// General easy calculations and estimations
 	[scale.visualScale, scale.scaleLength, scale.pixelSize, scale.scaleSize] = estimateVisualScale(magnification, startImage.bitmap.width);
-	scale.height = Jimp.measureTextHeight(await Jimp.loadFont(fonts[scale.scaleSize]), '0', 10);
+	scale.height = Jimp.measureTextHeight(await Jimp.loadFont(fonts[scale.scaleSize.font]), '0', 10);
 
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
 	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
@@ -122,39 +126,30 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 	let image = startImage;
 	if (scaleType === constants.scale.types.BELOW) {
 		// Position the scale
-		scale.x = 10;
-		scale.y = startImage.bitmap.height + 5;
+		scale.x = scale.scaleSize.xOffset;
+		scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
 
 		let imageIsBlack = belowColor === constants.scale.colors.BLACK;
 		if (belowColor === constants.scale.colors.AUTO) {
-			// Create a luminosity map
-			let imageBackground = [];
-			startImage.scan(0, 0, startImage.bitmap.width, startImage.bitmap.height, (x, y, index) => {
-				imageBackground.push({
-					x, y,
-					color: {
-						r: startImage.bitmap.data[index],
-						g: startImage.bitmap.data[index + 1],
-						b: startImage.bitmap.data[index + 2],
-						a: startImage.bitmap.data[index + 3]
-					}
-				})
-			});
-
 			// Check the luminosity and use white or black background to make it look nice
-			imageIsBlack = sumPixelLuminosity(imageBackground) < .5;
+			imageIsBlack = sumPixelLuminosity(image, 0, 0, startImage.bitmap.width, startImage.bitmap.height) < .5;
 		}
 
 		const tallBitmap = Array.from(await startImage.bitmap.data);
-		for (let i = 0; i < startImage.bitmap.width * (scale.height + 20); i++)
-			tallBitmap.push(imageIsBlack ? 0 : 255, imageIsBlack ? 0 : 255, imageIsBlack ? 0 : 255, 255);
+		const totalNewPixels = startImage.bitmap.width * (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset);
+		if (imageIsBlack)
+			for (let i = 0; i < totalNewPixels; i++)
+				tallBitmap.push(0, 0, 0, 255);
+		else
+			for (let i = 0; i < totalNewPixels; i++)
+				tallBitmap.push(255, 255, 255, 255);
 
 		// Resize the image with the new added scale bit
 		image = await new Promise(async (resolve, reject) => {
 			new Jimp({
 				data: Buffer.from(tallBitmap),
 				width: startImage.bitmap.width,
-				height: startImage.bitmap.height + (scale.height + 20)
+				height: startImage.bitmap.height + (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset)
 			}, (err, image) => {
 				if (err) reject(err);
 				else resolve(image);
@@ -162,20 +157,20 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 		});
 	} else if (scaleType === constants.scale.types.LOWERLEFT) {
 		// Position the scale
-		scale.x = 10;
-		scale.y = startImage.bitmap.height - scale.height - 20;
+		scale.x = scale.scaleSize.xOffset;
+		scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
 	} else if (scaleType === constants.scale.types.LOWERRIGHT) {
 		// Position the scale
-		scale.x = startImage.bitmap.width - scale.width - 10;
-		scale.y = startImage.bitmap.height - scale.height - 20;
+		scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
+		scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
 	} else if (scaleType === constants.scale.types.UPPERLEFT) {
 		// Position the scale
-		scale.x = 10;
-		scale.y = 20;
+		scale.x = scale.scaleSize.xOffset;
+		scale.y = scale.scaleSize.yOffset;
 	} else if (scaleType === constants.scale.types.UPPERRIGHT) {
 		// Position the scale
-		scale.x = startImage.bitmap.width - scale.width - 10;
-		scale.y = 20;
+		scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
+		scale.y = scale.scaleSize.yOffset;
 	}
 
 	// Return the new image and scale information
