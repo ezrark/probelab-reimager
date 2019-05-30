@@ -7,11 +7,12 @@ function help() {
 	console.log('Options:');
 	console.log('-v, --version                   \tDisplays the version information');
 	console.log('-h, --help                      \tProvides this text');
+	console.log('-t, --ontop                     \tSets the scale bar on top of the scale value');
 	console.log('-p [pos], --position [pos]      \tPosition to print the scale');
 	console.log('-c [color], --color [color]     \tScale color');
 	console.log('-b [color], --background [color]\tIf \'Below\', background color');
 	console.log('-s [µm], --scale [µm]           \tScale to display, < 1 for auto');
-	console.log('-k [%], --barheight [%]         \tSet scale bar to a % of the total scale height, < 1 for auto(8)');
+	console.log('-k [%], --barheight [%]         \tSet scale bar to a % of the text font height, < 1 for auto(8)');
 	console.log();
 	console.log('Colors (Scale and Background):');
 	console.log('a, auto \tSelects the color automatically');
@@ -40,9 +41,10 @@ Promise.all([
 		version: false,
 		position: constants.scale.types.BELOW,
 		scaleColor: constants.scale.colors.AUTO,
-		background: constants.scale.colors.AUTO,
+		belowColor: constants.scale.colors.AUTO,
 		scaleSize: constants.scale.AUTOSIZE,
-		scaleBarHeight: constants.scale.AUTOSIZE
+		scaleBarHeight: constants.scale.AUTOSIZE,
+		scaleBarTop: constants.scale.SCALEBARTOP
 	};
 
 	let dirUri = '';
@@ -55,6 +57,9 @@ Promise.all([
 					break;
 				case '--help':
 					options.help = true;
+					break;
+				case '--ontop':
+					options.scaleBarTop = true;
 					break;
 				case '--scale':
 					options.scaleSize = parseInt(process.argv[++i]);
@@ -84,15 +89,15 @@ Promise.all([
 						case 'a':
 						case 'auto':
 						default:
-							options.background = constants.scale.colors.AUTO;
+							options.belowColor = constants.scale.colors.AUTO;
 							break;
 						case 'b':
 						case 'black':
-							options.background = constants.scale.colors.BLACK;
+							options.belowColor = constants.scale.colors.BLACK;
 							break;
 						case 'w':
 						case 'white':
-							options.background = constants.scale.colors.WHITE;
+							options.belowColor = constants.scale.colors.WHITE;
 							break;
 					}
 					break;
@@ -172,15 +177,15 @@ Promise.all([
 						case 'a':
 						case 'auto':
 						default:
-							options.background = constants.scale.colors.AUTO;
+							options.belowColor = constants.scale.colors.AUTO;
 							break;
 						case 'b':
 						case 'black':
-							options.background = constants.scale.colors.BLACK;
+							options.belowColor = constants.scale.colors.BLACK;
 							break;
 						case 'w':
 						case 'white':
-							options.background = constants.scale.colors.WHITE;
+							options.belowColor = constants.scale.colors.WHITE;
 							break;
 					}
 					break;
@@ -238,6 +243,9 @@ Promise.all([
 							case 'h':
 								options.help = true;
 								break;
+							case 't':
+								options.scaleBarTop = true;
+								break;
 						}
 					break;
 			}
@@ -277,7 +285,7 @@ Promise.all([
 		}).filter(i => i);
 
 		for (const thermo of thermos)
-			await thermo.addScaleAndWrite(options.position, {scaleColor: options.scaleColor, belowColor: options.background, scaleSize: options.scaleSize, scaleBarHeight: options.scaleBarHeight});
+			await thermo.addScaleAndWrite(options.position, options);
 
 		console.log('All images written');
 	}

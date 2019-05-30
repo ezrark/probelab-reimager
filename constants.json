@@ -31,6 +31,7 @@
   },
   "scale": {
     "AUTOSIZE": 0,
+    "SCALEBARTOP": false,
     "types": {
       "BELOW": 0,
       "BELOWLEFT": 0,

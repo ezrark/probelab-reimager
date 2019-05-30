@@ -69,23 +69,24 @@ module.exports = async () => {
 			settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.scale.colors.AUTO;
 			settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
 			settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
+			settings.scaleBarTop = settings.scaleBarTop ? settings.scaleBarTop : constants.scale.SCALEBARTOP;
 
 			const initialImage = await Jimp.read(this.data.files.image);
 
-			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings.belowColor, settings.scaleSize, settings.scaleBarHeight);
+			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings.belowColor, settings.scaleSize, settings.scaleBarHeight, settings.scaleBarTop);
 
 			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
 
 			// Finds general luminosity of text area
 			if (settings.scaleColor === constants.scale.colors.AUTO)
-				isBlack = calculations.sumPixelLuminosity(image, scale.x, scale.y, scale.width, scale.height) < .5;
+				isBlack = calculations.sumPixelLuminosity(image, scale.x, scale.y, scale.width, scale.textFontHeight) < .5;
 
 			// Creates scale bar and scale text on image
 			for (let i = 0; i < scale.barPixelHeight; i++)
 				await image.print(
-					isBlack ? fonts.white.small : fonts.black.small,
-					scale.x,
-					scale.y - 10 + scale.barPixelHeight - i,
+					isBlack ? fonts.white[scale.barFont] : fonts.black[scale.barFont],
+					scale.barX,
+					scale.barY - i,
 					scale.scaleBar
 				);
 
