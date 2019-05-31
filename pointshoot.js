@@ -70,10 +70,11 @@ module.exports = async () => {
 			settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
 			settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
 			settings.scaleBarTop = settings.scaleBarTop ? settings.scaleBarTop : constants.scale.SCALEBARTOP;
+			settings.pixelSizeConstant = settings.pixelSizeConstant ? settings.pixelSizeConstant : constants.PIXELSIZECONSTANT;
 
 			const initialImage = await Jimp.read(this.data.files.image);
 
-			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings.belowColor, settings.scaleSize, settings.scaleBarHeight, settings.scaleBarTop);
+			const [scale, image] = await calculations.calculateScale(initialImage, this.data.magnification, type, settings);
 
 			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
 
@@ -101,7 +102,7 @@ module.exports = async () => {
 		}
 
 		async writeImage(settings={}) {
-			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
+			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
 			return await this.data.image.writeAsync(outputUri);
 		}
 

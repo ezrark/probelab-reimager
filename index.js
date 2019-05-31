@@ -13,6 +13,12 @@ function help() {
 	console.log('-b [color], --background [color]\tIf \'Below\', background color');
 	console.log('-s [µm], --scale [µm]           \tScale to display, < 1 for auto');
 	console.log('-k [%], --barheight [%]         \tSet scale bar to a % of the text font height, < 1 for auto(8)');
+	console.log('-x [num], --pixelsize [num]     \tSets the pixel size constant for the probe calibration equation');
+	console.log();
+	console.log('Pixel Size Constant:');
+	console.log('  Default: 116.73');
+	console.log('Default was found using the UMN Probelab\'s JEOL JAX 8530F Plus and is the constant of the calibration curve.');
+	console.log('The calibration curve seems to always be CONST*x^(-1) or close enough to it for scale estimations.');
 	console.log();
 	console.log('Colors (Scale and Background):');
 	console.log('a, auto \tSelects the color automatically');
@@ -44,7 +50,8 @@ Promise.all([
 		belowColor: constants.scale.colors.AUTO,
 		scaleSize: constants.scale.AUTOSIZE,
 		scaleBarHeight: constants.scale.AUTOSIZE,
-		scaleBarTop: constants.scale.SCALEBARTOP
+		scaleBarTop: constants.scale.SCALEBARTOP,
+		pixelSizeConstant: constants.PIXELSIZECONSTANT
 	};
 
 	let dirUri = '';
@@ -63,6 +70,9 @@ Promise.all([
 					break;
 				case '--scale':
 					options.scaleSize = parseInt(process.argv[++i]);
+					break;
+				case '--pixelsize':
+					options.pixelSizeConstant = parseFloat(process.argv[++i]);
 					break;
 				case '--barheight':
 					options.scaleBarHeight = parseInt(process.argv[++i])/100;
@@ -154,6 +164,9 @@ Promise.all([
 					break;
 				case '-k':
 					options.scaleBarHeight = parseInt(process.argv[++i])/100;
+					break;
+				case '-x':
+					options.pixelSizeConstant = parseFloat(process.argv[++i]);
 					break;
 				case '-c':
 					switch (process.argv[++i]) {

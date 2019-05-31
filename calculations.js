@@ -12,7 +12,7 @@ const fonts = {
 };
 
 
-function estimateVisualScale(magnification, width, pixelSize=calculatePixelSize(magnification, width)) {
+function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=calculatePixelSize(magnification, width, pixelSizeConstant)) {
 	let scaleIndex = 0;
 
 	if (40 < magnification && magnification <= 100)
@@ -52,8 +52,8 @@ function estimateScaleSize(width) {
 	return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 2, between: 2};
 }
 
-function calculatePixelSize(magnification, width) {
-	const thousand = constants.PIXELSIZECONSTANT*Math.pow(magnification, -1);
+function calculatePixelSize(magnification, width, pixelSizeConstant) {
+	const thousand = pixelSizeConstant*Math.pow(magnification, -1);
 
 	if (width === 4096)
 		return thousand/4;
@@ -82,7 +82,7 @@ function sumPixelLuminosity(image, startX, startY, width, height) {
 	return (luminosity/(width * height))/255;
 }
 
-async function calculateScale(startImage, magnification, scaleType, belowColor=constants.scale.colors.AUTO, scaleSize=constants.scale.AUTOSIZE, scaleBarHeight=constants.scale.AUTOSIZE, scaleBarTop=constants.scale.SCALEBARTOP) {
+async function calculateScale(startImage, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant}) {
 	let scale = {
 		x: 0,
 		y: 0,
@@ -106,7 +106,7 @@ async function calculateScale(startImage, magnification, scaleType, belowColor=c
 	const smallFontHeight = Jimp.measureTextHeight(smallFont, '0', 10);
 
 	// General easy calculations and estimations
-	[scale.visualScale, scale.scaleLength, scale.pixelSize, scale.scaleSize] = estimateVisualScale(magnification, startImage.bitmap.width);
+	[scale.visualScale, scale.scaleLength, scale.pixelSize, scale.scaleSize] = estimateVisualScale(magnification, startImage.bitmap.width, pixelSizeConstant);
 	scale.textFontHeight = Jimp.measureTextHeight(await Jimp.loadFont(fonts[scale.scaleSize.font]), '0', 10);
 
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
