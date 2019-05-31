@@ -102,8 +102,6 @@ module.exports = async () => {
 
 		async writeImage(settings={}) {
 			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
-			outputUri += (outputUri.endsWith(constants.pointShoot.fileFormats.OUTPUTIMAGE) ? '' : constants.pointShoot.fileFormats.OUTPUTIMAGE);
-
 			return await this.data.image.writeAsync(outputUri);
 		}
 

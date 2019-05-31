@@ -86,8 +86,6 @@ module.exports = async () => {
 
 		async writeImage(settings={}) {
 			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.extractedMap.fileFormats.IMAGERAW.length)));
-			outputUri += (outputUri.endsWith(constants.extractedMap.fileFormats.OUTPUTIMAGE) ? '' : constants.extractedMap.fileFormats.OUTPUTIMAGE);
-
 			return await this.data.image.writeAsync(outputUri);
 		}
 
