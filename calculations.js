@@ -38,18 +38,18 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=
 
 function estimateScaleSize(width) {
 	if (width === 4096)
-		return {font: constants.scale.sizes.SUPER, xOffset: 20, yOffset: 30, between: 10};
+		return {font: constants.scale.sizes.SUPER, xOffset: 20, yOffset: 30, between: 10, heightOffset: 0};
 	if (width === 2048)
-		return {font: constants.scale.sizes.LARGE, xOffset: 10, yOffset: 20, between: 10};
+		return {font: constants.scale.sizes.LARGE, xOffset: 10, yOffset: 20, between: 10, heightOffset: 5};
 	if (width === 1024)
-		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 7};
+		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 7, heightOffset: 12};
 	if (width === 512)
-		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 5};
+		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 5, heightOffset: 13};
 	if (width === 256)
-		return {font: constants.scale.sizes.SMALL, xOffset: 10, yOffset: 5, between: 5};
+		return {font: constants.scale.sizes.SMALL, xOffset: 10, yOffset: 5, between: 5, heightOffset: 19};
 	if (width === 128)
-		return {font: constants.scale.sizes.SMALL, xOffset: 2, yOffset: 2, between: 2};
-	return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 2, between: 2};
+		return {font: constants.scale.sizes.SMALL, xOffset: 2, yOffset: 2, between: 2, heightOffset: 15};
+	return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 2, between: 2, heightOffset: 13};
 }
 
 function calculatePixelSize(magnification, width, pixelSizeConstant) {
@@ -76,10 +76,14 @@ function sumPixelLuminosity(image, startX, startY, width, height) {
 	let luminosity = 0;
 
 	image.scan(startX, startY, width, height, (x, y, index) => {
-		luminosity += (constants.luminosity.RED * image.bitmap.data[index]) + (constants.luminosity.GREEN * image.bitmap.data[index + 1]) + (constants.luminosity.BLUE * image.bitmap.data[index + 2]);
+		luminosity += findPixelLuminosity(image.bitmap.data[index], image.bitmap.data[index + 1], image.bitmap.data[index + 2]);
 	});
 
-	return (luminosity/(width * height))/255;
+	return (luminosity /(width * height)) / 255;
+}
+
+function findPixelLuminosity(r, g, b) {
+	return (constants.luminosity.RED * r) + (constants.luminosity.GREEN * g) + (constants.luminosity.BLUE * b)
 }
 
 async function calculateScale(startImage, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant}) {
@@ -91,6 +95,7 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 		barX: 0,
 		barY: 0,
 		width: 0,
+		height: 0,
 		textFontHeight: 60,
 		visualScale: 0,
 		pixelSize: 0,
@@ -164,29 +169,7 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 				belowScaleSet = true;
 			}
 
-			let belowHeightOffset = 0;
-			switch (startImage.bitmap.width) {
-				case 2048:
-					belowHeightOffset = 5;
-					break;
-				case 1024:
-					belowHeightOffset = 12;
-					break;
-				case 512:
-					belowHeightOffset = 13;
-					break;
-				case 256:
-					belowHeightOffset = 19;
-					break;
-				case 128:
-					belowHeightOffset = 15;
-					break;
-				case 64:
-					belowHeightOffset = 15;
-					break;
-			}
-
-			scale.y = scale.y - belowHeightOffset;
+			scale.y = scale.y - scale.scaleSize.heightOffset;
 
 			scale.textX = scale.x + (scale.width / 2) - Math.round(textWidth / 2);
 			scale.barX = scale.x + (scale.width/2) - Math.round(barWidth / 2);
@@ -206,7 +189,7 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 				imageIsBlack = sumPixelLuminosity(startImage, 0, 0, startImage.bitmap.width, startImage.bitmap.height) < .5;
 
 			const tallBitmap = Array.from(await startImage.bitmap.data);
-			const totalNewPixels = startImage.bitmap.width * (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset - belowHeightOffset)/4;
+			const totalNewPixels = startImage.bitmap.width * (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset - scale.scaleSize.heightOffset)/4;
 			if (imageIsBlack)
 				for (let i = 0; i < totalNewPixels; i++)
 					tallBitmap.push(0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255);
@@ -219,7 +202,7 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 				new Jimp({
 					data: Buffer.from(tallBitmap),
 					width: startImage.bitmap.width,
-					height: startImage.bitmap.height + (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset - belowHeightOffset)
+					height: startImage.bitmap.height + (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset - scale.scaleSize.heightOffset)
 				}, (err, image) => {
 					if (err) reject(err);
 					else resolve(image);
@@ -266,6 +249,12 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 		scale.textY = scale.y + smallFontHeight;
 	}
 
+	// Correct the image y and height for the font size depending on the image size
+	if (!belowScaleSet) {
+		scale.y = scale.y + scale.scaleSize.heightOffset;
+		scale.height = scale.height - scale.scaleSize.heightOffset;
+	}
+
 	// Return the image and scale information
 	return [scale, startImage];
 }
@@ -274,5 +263,6 @@ module.exports = {
 	estimateVisualScale,
 	calculatePixelSize,
 	sumPixelLuminosity,
+	findPixelLuminosity,
 	calculateScale
 };

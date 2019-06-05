@@ -10,14 +10,15 @@ function help() {
 	console.log('-t, --ontop                     \tSets the scale bar on top of the scale value');
 	console.log('-p [pos], --position [pos]      \tPosition to print the scale');
 	console.log('-c [color], --color [color]     \tScale color');
-	console.log('-b [color], --background [color]\tIf \'Below\', background color');
+	console.log('-b [color], --background [color]\t\'Below\' or if opaque, background color');
+	console.log('-o [0-100], --opacity [0-100]   \tOpacity of the background for the scale (default 0)');
 	console.log('-s [µm], --scale [µm]           \tScale to display, < 1 for auto');
-	console.log('-k [%], --barheight [%]         \tSet scale bar to a % of the text font height, < 1 for auto(8)');
+	console.log('-k [0-100], --barheight [0-100] \tSet scale bar to a % of the text font height, < 1 for auto(8)');
 	console.log('-x [num], --pixelsize [num]     \tSets the pixel size constant for the probe calibration equation');
 	console.log();
 	console.log('Pixel Size Constant:');
 	console.log('  Default: 116.73');
-	console.log('Default was found using the UMN Probelab\'s JEOL JAX 8530F Plus and is the constant of the calibration curve.');
+	console.log('Default was with the UMN Probelab\'s JEOL JAX 8530F Plus and is the constant of the calibration curve.');
 	console.log('The calibration curve seems to always be CONST*x^(-1) or close enough to it for scale estimations.');
 	console.log();
 	console.log('Colors (Scale and Background):');
@@ -26,32 +27,32 @@ function help() {
 	console.log('w, white\t');
 	console.log();
 	console.log('Positions:');
-	console.log('d, default     \tScale is Underneath the image');
-	console.log('b, below       \tScale is Underneath the image -- DEPRECATED');
-	console.log('bl, belowleft  \tScale is Under the image, Left');
-	console.log('br, belowright \tScale is Under the image, Right');
-	console.log('bc, belowcenter\tScale is Under the image, Centered');
-	console.log('ul, upperleft  \tScale is in the Upper Left');
-	console.log('ur, upperright \tScale is in the Upper Right');
-	console.log('ll, lowerleft  \tScale is in the Lower Left');
-	console.log('lr, loweright  \tScale is in the Lower Right');
-	console.log('lc, lowercenter\tScale is in the Lower Center');
+	console.log('d, default      \tScale is Underneath the image, Centered');
+	console.log('bl, belowleft   \tScale is Under the image, Left');
+	console.log('br, belowright  \tScale is Under the image, Right');
+	console.log('bc, belowcenter \tScale is Under the image, Centered');
+	console.log('ul, upperleft   \tScale is in the Upper Left');
+	console.log('ur, upperright  \tScale is in the Upper Right');
+	console.log('ll, lowerleft   \tScale is in the Lower Left');
+	console.log('lr, loweright   \tScale is in the Lower Right');
+	console.log('lc, lowercenter \tScale is in the Lower Center');
 }
 
 Promise.all([
-	require('./extractedmap')(),
-	require('./pointshoot')()
+	require('./extractedmap'),
+	require('./pointshoot')
 ]).then(async ([ExtractedMap, Pointshoot]) => {
 	let options = {
 		help: false,
 		version: false,
-		position: constants.scale.types.BELOW,
+		position: constants.scale.types.BELOWCENTER,
 		scaleColor: constants.scale.colors.AUTO,
 		belowColor: constants.scale.colors.AUTO,
 		scaleSize: constants.scale.AUTOSIZE,
 		scaleBarHeight: constants.scale.AUTOSIZE,
 		scaleBarTop: constants.scale.SCALEBARTOP,
-		pixelSizeConstant: constants.PIXELSIZECONSTANT
+		pixelSizeConstant: constants.PIXELSIZECONSTANT,
+		backgroundOpacity: constants.scale.background.AUTOOPACITY
 	};
 
 	let dirUri = '';
@@ -76,6 +77,9 @@ Promise.all([
 					break;
 				case '--barheight':
 					options.scaleBarHeight = parseInt(process.argv[++i])/100;
+					break;
+				case '--opacity':
+					options.backgroundOpacity = parseInt(process.argv[++i]);
 					break;
 				case '--color':
 					switch (process.argv[++i]) {
@@ -116,11 +120,7 @@ Promise.all([
 						case 'd':
 						case 'default':
 						default:
-							options.position = constants.scale.types.BELOWLEFT;
-							break;
-						case 'b':
-						case 'below':
-							options.position = constants.scale.types.BELOW;
+							options.position = constants.scale.types.BELOWCENTER;
 							break;
 						case 'bl':
 						case 'belowleft':
@@ -168,6 +168,9 @@ Promise.all([
 				case '-x':
 					options.pixelSizeConstant = parseFloat(process.argv[++i]);
 					break;
+				case '-o':
+					options.backgroundOpacity = parseInt(process.argv[++i]);
+					break;
 				case '-c':
 					switch (process.argv[++i]) {
 						case 'a':
@@ -207,11 +210,7 @@ Promise.all([
 						case 'd':
 						case 'default':
 						default:
-							options.position = constants.scale.types.BELOWLEFT;
-							break;
-						case 'b':
-						case 'below':
-							options.position = constants.scale.types.BELOW;
+							options.position = constants.scale.types.BELOWCENTER;
 							break;
 						case 'bl':
 						case 'belowleft':

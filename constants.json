@@ -32,8 +32,15 @@
   "scale": {
     "AUTOSIZE": 0,
     "SCALEBARTOP": false,
+    "background": {
+      "AUTOOPACITY": 0,
+      "colors": {
+        "DEFAULT": "white",
+        "WHITE": "white",
+        "BLACK": "black"
+      }
+    },
     "types": {
-      "BELOW": 0,
       "BELOWLEFT": 0,
       "LOWERLEFT": 1,
       "LOWERRIGHT": 2,
@@ -59,8 +66,9 @@
   "luminosity": {
     "RED": 0.299,
     "GREEN": 0.587,
-    "BLUE": 0.114
+    "BLUE": 0.114,
+    "TARGET": 0.5
   },
   "PIXELSIZECONSTANT": 116.73,
-  "SCALEBARHEIGHTPERCENT": 0.08
+  "SCALEBARHEIGHTPERCENT": 0.15
 }
