@@ -25,10 +25,12 @@ module.exports = require('./thermo')().then(async ([Fonts, Thermo]) => {
 			this.data.files.image = this.data.uri + expected.imageName;
 			this.data.magnification = parseInt(this.data.points[points[0].name].data[constants.pointShoot.MAGNIFICATIONKEY].data);
 
-			this.data.integrity = checkPointIntegrity(this.data.files.points.map(name => this.data.points[name].data));
+			this.data.integrity = checkPointIntegrity(this.data.files.points.map(name => this.data.points[name]));
 
-			if (this.data.integrity && this.data.files.points.length !== expected.totalPoints)
+			if (!this.data.integrity && this.data.files.points.length !== parseInt(expected.totalPoints)) {
 				this.data.integrity = false;
+				console.warn(this.data.name);
+			}
 		}
 	}
 });
@@ -36,10 +38,14 @@ module.exports = require('./thermo')().then(async ([Fonts, Thermo]) => {
 function checkPointIntegrity(points) {
 	const expectedData = points[0];
 
-	for (const point of points)
-		for (const key in point)
+	for (const point of points) {
+		for (const key in point.data)
 			if (!constants.pointShoot.integrity.SKIPARRAY.includes(key) && !key.startsWith('#quant_'))
-				if (expectedData[key].data !== point[key].data)
+				if (expectedData.data[key].data !== point.data[key].data)
 					return false;
+		if (expectedData.values[2] !== point.values[2])
+			if (expectedData.values[3] !== point.values[3])
+				return false;
+	}
 	return true;
 }

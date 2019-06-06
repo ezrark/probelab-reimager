@@ -37,39 +37,45 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=
 }
 
 function estimateScaleSize(width) {
-	if (width === 4096)
-		return {font: constants.scale.sizes.SUPER, xOffset: 20, yOffset: 30, between: 10, heightOffset: 0};
-	if (width === 2048)
-		return {font: constants.scale.sizes.LARGE, xOffset: 10, yOffset: 20, between: 10, heightOffset: 5};
-	if (width === 1024)
-		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 7, heightOffset: 12};
-	if (width === 512)
-		return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 5, heightOffset: 13};
-	if (width === 256)
-		return {font: constants.scale.sizes.SMALL, xOffset: 10, yOffset: 5, between: 5, heightOffset: 19};
-	if (width === 128)
-		return {font: constants.scale.sizes.SMALL, xOffset: 2, yOffset: 2, between: 2, heightOffset: 15};
-	return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 2, between: 2, heightOffset: 13};
+	switch(width) {
+		case 4096:
+			return {font: constants.scale.sizes.SUPER, xOffset: 20, yOffset: 30, between: 10, heightOffset: 0};
+		case 2048:
+			return {font: constants.scale.sizes.LARGE, xOffset: 10, yOffset: 20, between: 10, heightOffset: 5};
+		case 1024:
+			return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 7, heightOffset: 12};
+		case 512:
+			return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 5, heightOffset: 13};
+		case 256:
+			return {font: constants.scale.sizes.SMALL, xOffset: 10, yOffset: 5, between: 5, heightOffset: 19};
+		case 128:
+			return {font: constants.scale.sizes.SMALL, xOffset: 2, yOffset: 2, between: 2, heightOffset: 15};
+		case 64:
+		default:
+			return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 2, between: 2, heightOffset: 13};
+	}
 }
 
 function calculatePixelSize(magnification, width, pixelSizeConstant) {
 	const thousand = pixelSizeConstant*Math.pow(magnification, -1);
 
-	if (width === 4096)
-		return thousand/4;
-	if (width === 2048)
-		return thousand/2;
-	if (width === 1024)
-		return thousand;
-	if (width === 512)
-		return thousand*2;
-	if (width === 256)
-		return thousand*4;
-	if (width === 128)
-		return thousand*8;
-	if (width === 64)
-		return thousand*16;
-	return thousand;
+	switch(width) {
+		case 4096:
+			return thousand/4;
+		case 2048:
+			return thousand/2;
+		case 1024:
+		default:
+			return thousand;
+		case 512:
+			return thousand*2;
+		case 256:
+			return thousand*4;
+		case 128:
+			return thousand*8;
+		case 64:
+			return thousand*16;
+	}
 }
 
 function sumPixelLuminosity(image, startX, startY, width, height) {
@@ -84,6 +90,30 @@ function sumPixelLuminosity(image, startX, startY, width, height) {
 
 function findPixelLuminosity(r, g, b) {
 	return (constants.luminosity.RED * r) + (constants.luminosity.GREEN * g) + (constants.luminosity.BLUE * b)
+}
+
+function convertPositionToXY(posX, posY) {
+
+}
+
+function estimatePointSize(width) {
+	switch(width) {
+		case 4096:
+			return 28;
+		case 2048:
+			return 14;
+		case 1024:
+		default:
+			return 7;
+		case 512:
+			return 5;
+		case 256:
+			return 3;
+		case 128:
+			return 2;
+		case 64:
+			return 1;
+	}
 }
 
 async function calculateScale(startImage, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant}) {
@@ -260,6 +290,7 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 }
 
 module.exports = {
+	estimatePointSize,
 	estimateVisualScale,
 	calculatePixelSize,
 	sumPixelLuminosity,

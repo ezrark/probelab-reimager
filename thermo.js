@@ -26,6 +26,7 @@ module.exports = async () => {
 			this.data = {
 				uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 				name,
+				scale: {},
 				image: undefined,
 				integrity: true,
 				magnification: 1,
@@ -52,6 +53,7 @@ module.exports = async () => {
 
 			// Calculate scale and image
 			const [scale, image] = await calculations.calculateScale(await Jimp.read(this.data.files.image), this.data.magnification, type, settings);
+			this.data.scale = scale;
 
 			// Luminosity
 			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
@@ -128,6 +130,22 @@ module.exports = async () => {
 			this.data.image = image;
 		}
 
+		async addPoint(x1, y1, x2, y2, type=constants.point.types.CROSS, size=constants.point.AUTOSIZE) {
+			const image = this.data.image;
+
+			if (size === constants.point.AUTOSIZE)
+				size = calculations.estimatePointSize(image.bitmap.width);
+
+			const x = Math.round((x1/x2) * image.bitmap.width);
+			const y = Math.round((y1/y2) * image.bitmap.height);
+
+			image.scan(x - Math.round(size/2), y - Math.round(size/2), size, size, (x, y, index) => {
+				image.bitmap.data[index] = 255;
+				image.bitmap.data[index + 1] = 0;
+				image.bitmap.data[index + 2] = 0;
+			});
+		}
+
 		async writeImage(settings={}) {
 			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
 			return await this.data.image.writeAsync(outputUri);
@@ -135,6 +153,11 @@ module.exports = async () => {
 
 		async addScaleAndWrite(type=undefined, settings={}) {
 			await this.addScale(type, settings);
+
+			if (settings.addPoints && this.data.points)
+				for (const point of Object.values(this.data.points))
+					await this.addPoint(...point.values);
+
 			await this.writeImage(settings);
 			this.data.image = undefined;
 		}

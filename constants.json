@@ -1,14 +1,17 @@
 {
+  "PIXELSIZECONSTANT": 116.73,
+  "SCALEBARHEIGHTPERCENT": 0.15,
   "extractedMap": {
+    "MAGNIFICATIONKEY": "magcam",
     "fileFormats": {
       "IMAGERAW": ".siref",
       "OUTPUTIMAGE": ".tif",
       "ENTRY": "Extracted Spectrum.emsa",
       "DIRECTORYCONST": ".MAP.EDS"
-    },
-    "MAGNIFICATIONKEY": "magcam"
+    }
   },
   "pointShoot": {
+    "MAGNIFICATIONKEY": "magcam",
     "fileFormats": {
       "IMAGERAW": ".psref",
       "ENTRY": ".p_s",
@@ -26,8 +29,7 @@
         "#stores",
         "#peaklab"
       ]
-    },
-    "MAGNIFICATIONKEY": "magcam"
+    }
   },
   "scale": {
     "AUTOSIZE": 0,
@@ -69,6 +71,16 @@
     "BLUE": 0.114,
     "TARGET": 0.5
   },
-  "PIXELSIZECONSTANT": 116.73,
-  "SCALEBARHEIGHTPERCENT": 0.15
+  "point": {
+    "AUTOSIZE": 0,
+    "types": {
+      "CROSS": "cross"
+    },
+    "colors": {
+      "WHITE": [255, 255, 255],
+      "BLACK": [0, 0, 0],
+      "ORANGE": [250, 130, 49],
+      "RED": [255, 63, 52]
+    }
+  }
 }

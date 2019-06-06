@@ -8,6 +8,7 @@ function help() {
 	console.log('-v, --version                   \tDisplays the version information');
 	console.log('-h, --help                      \tProvides this text');
 	console.log('-t, --ontop                     \tSets the scale bar on top of the scale value');
+	console.log('-i, --points                    \tPrints points onto image');
 	console.log('-p [pos], --position [pos]      \tPosition to print the scale');
 	console.log('-c [color], --color [color]     \tScale color');
 	console.log('-b [color], --background [color]\t\'Below\' or if opaque, background color');
@@ -52,7 +53,8 @@ Promise.all([
 		scaleBarHeight: constants.scale.AUTOSIZE,
 		scaleBarTop: constants.scale.SCALEBARTOP,
 		pixelSizeConstant: constants.PIXELSIZECONSTANT,
-		backgroundOpacity: constants.scale.background.AUTOOPACITY
+		backgroundOpacity: constants.scale.background.AUTOOPACITY,
+		addPoints: false
 	};
 
 	let dirUri = '';
@@ -80,6 +82,9 @@ Promise.all([
 					break;
 				case '--opacity':
 					options.backgroundOpacity = parseInt(process.argv[++i]);
+					break;
+				case '--points':
+					options.addPoints = true;
 					break;
 				case '--color':
 					switch (process.argv[++i]) {
@@ -171,6 +176,9 @@ Promise.all([
 				case '-o':
 					options.backgroundOpacity = parseInt(process.argv[++i]);
 					break;
+				case '-i':
+					options.addPoints = true;
+					break;
 				case '-c':
 					switch (process.argv[++i]) {
 						case 'a':
@@ -258,6 +266,9 @@ Promise.all([
 							case 't':
 								options.scaleBarTop = true;
 								break;
+							case 'i':
+								options.addPoints = true;
+								break;
 						}
 					break;
 			}
@@ -265,40 +276,41 @@ Promise.all([
 			dirUri = process.argv[i];
 	}
 
-	if (dirUri === '')
-		options.help = true;
-
-	process.env.NODE_ENV = 'production';
-
 	if (options.version)
 		console.log(require('./package').version);
-
-	if (options.help)
-		help();
 	else {
-		dirUri = dirUri.replace(/\\/gmi, '/');
-		if (!dirUri.endsWith('/'))
-			dirUri = dirUri + '/';
+		if (dirUri === '')
+			options.help = true;
 
-		const directory = fs.readdirSync(dirUri, {withFileTypes: true});
+		process.env.NODE_ENV = 'production';
 
-		const thermos = directory.flatMap(dir => {
-			if (dir.isDirectory()) {
-				const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
-				return files.filter(file => file.isFile()).map(file => {
-					file.uri = dirUri + dir.name + '/' + file.name;
-					if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-						return new Pointshoot(file);
+		if (options.help)
+			help();
+		else {
+			dirUri = dirUri.replace(/\\/gmi, '/');
+			if (!dirUri.endsWith('/'))
+				dirUri = dirUri + '/';
 
-					if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
-						return new ExtractedMap(file);
-				}).filter(item => item);
-			}
-		}).filter(i => i);
+			const directory = fs.readdirSync(dirUri, {withFileTypes: true});
 
-		for (const thermo of thermos)
-			await thermo.addScaleAndWrite(options.position, options);
+			const thermos = directory.flatMap(dir => {
+				if (dir.isDirectory()) {
+					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
+					return files.filter(file => file.isFile()).map(file => {
+						file.uri = dirUri + dir.name + '/' + file.name;
+						if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
+							return new Pointshoot(file);
 
-		console.log('All images written');
+						if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
+							return new ExtractedMap(file);
+					}).filter(item => item);
+				}
+			}).filter(i => i);
+
+			for (const thermo of thermos)
+				await thermo.addScaleAndWrite(options.position, options);
+
+			console.log('All images written');
+		}
 	}
 });
