@@ -96,28 +96,103 @@ function convertPositionToXY(posX, posY) {
 
 }
 
-function estimatePointSize(width) {
+function estimatePointScale(width) {
 	switch(width) {
 		case 4096:
-			return 28;
+			return [40, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.NORMAL,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.LARGE,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.SUPER,
+			}];
 		case 2048:
-			return 14;
+			return [20, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.NORMAL,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.LARGE,
+			}];
 		case 1024:
 		default:
-			return 7;
+			return [10, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.SMALL,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.NORMAL,
+			}];
 		case 512:
-			return 5;
+			return [8, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.SMALL,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.NORMAL,
+			}];
 		case 256:
-			return 3;
+			return [4, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.TINY,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.SMALL,
+			}];
 		case 128:
-			return 2;
+			return [4, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.TINY,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.SMALL,
+			}];
 		case 64:
-			return 1;
+			return [4, {
+				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
+				[constants.point.fonts.MEDIUM]: constants.scale.sizes.TINY,
+				[constants.point.fonts.LARGE]: constants.scale.sizes.SMALL,
+			}];
 	}
+}
+
+async function calculatePointPosition(x, y, size, fontSize) {
+	size = size < 5 ? 5 : (size % 2 === 0 ? size + 1 : size);
+	let point = {
+		centerX: x,
+		centerY: y,
+		leftX: 0,
+		topY: 0,
+		rightX: 0,
+		bottomY: 0,
+		size,
+		halfSize: 0,
+		quarterSize: 0,
+		eighthSize: 0,
+		sixteenthSize: Math.floor(size/16),
+		height: 0,
+		width: 0,
+		pointHeight: size,
+		pointWidth: size,
+		fontHeight: 0,
+		fontX: 0,
+		fontY: 0
+	};
+
+	point.halfSize = point.quarterSize !== 0 ? point.quarterSize * 2 : Math.floor(size/2);
+	point.quarterSize = point.eighthSize !== 0 ? point.eighthSize * 2 : Math.floor(size/4);
+	point.eighthSize = point.sixteenthSize !== 0 ? point.sixteenthSize * 2 : Math.floor(size/8);
+
+	point.leftX = x - point.halfSize;
+	point.topY = y - point.halfSize;
+	point.rightX = x + point.halfSize;
+	point.bottomY = y + point.halfSize;
+
+	const labelFont = await Jimp.loadFont(fonts[fontSize]);
+	const labelFontHeight = Jimp.measureTextHeight(labelFont, '0', 10);
+
+	point.fontHeight = labelFontHeight;
+	point.height = labelFontHeight + size;
+	point.fontX = point.rightX;
+	point.fontY = point.topY - labelFontHeight;
+
+	return point;
 }
 
 async function calculateScale(startImage, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant}) {
 	let scale = {
+		imageHeight: startImage.bitmap.height,
+		imageWidth: startImage.bitmap.width,
+		realHeight: startImage.bitmap.height,
+		realWidth: startImage.bitmap.width,
 		x: 0,
 		y: 0,
 		textX: 0,
@@ -239,6 +314,9 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 				});
 			});
 
+			scale.realHeight = image.bitmap.height;
+			scale.realWidth = image.bitmap.width;
+
 			// Return the new image and scale information
 			return [scale, image];
 		case constants.scale.types.LOWERCENTER:
@@ -290,7 +368,8 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 }
 
 module.exports = {
-	estimatePointSize,
+	estimatePointScale,
+	calculatePointPosition,
 	estimateVisualScale,
 	calculatePixelSize,
 	sumPixelLuminosity,

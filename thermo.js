@@ -18,6 +18,20 @@ module.exports = async () => {
 			[constants.scale.sizes.NORMAL]: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
 			[constants.scale.sizes.LARGE]: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK),
 			[constants.scale.sizes.SUPER]: await Jimp.loadFont(Jimp.FONT_SANS_128_BLACK)
+		},
+		[constants.point.colors.ORANGE]: {
+			[constants.scale.sizes.TINY]: await Jimp.loadFont(Jimp.FONT_SANS_8_BLACK),
+			[constants.scale.sizes.SMALL]: await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK),
+			[constants.scale.sizes.NORMAL]: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
+			[constants.scale.sizes.LARGE]: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK),
+			[constants.scale.sizes.SUPER]: await Jimp.loadFont(Jimp.FONT_SANS_128_BLACK)
+		},
+		[constants.point.colors.RED]: {
+			[constants.scale.sizes.TINY]: await Jimp.loadFont(Jimp.FONT_SANS_8_BLACK),
+			[constants.scale.sizes.SMALL]: await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK),
+			[constants.scale.sizes.NORMAL]: await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK),
+			[constants.scale.sizes.LARGE]: await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK),
+			[constants.scale.sizes.SUPER]: await Jimp.loadFont(Jimp.FONT_SANS_128_BLACK)
 		}
 	};
 
@@ -130,20 +144,96 @@ module.exports = async () => {
 			this.data.image = image;
 		}
 
-		async addPoint(x1, y1, x2, y2, type=constants.point.types.CROSS, size=constants.point.AUTOSIZE) {
+		async addPoint(x1, y1, x2, y2, name='', type=constants.point.types.THERMOINSTANT, size=constants.point.AUTOSIZE, color=constants.point.colors.RED, fontSize=constants.point.AUTOSIZE) {
 			const image = this.data.image;
+			const scale = this.data.scale;
 
-			if (size === constants.point.AUTOSIZE)
-				size = calculations.estimatePointSize(image.bitmap.width);
+			const [autoSize, autoFontSize] = calculations.estimatePointScale(scale.imageWidth);
+			size = size === constants.point.AUTOSIZE ? autoSize : size;
+			fontSize = fontSize === constants.point.AUTOSIZE ? autoFontSize[constants.point.fonts.MEDIUM] : autoFontSize[fontSize];
 
-			const x = Math.round((x1/x2) * image.bitmap.width);
-			const y = Math.round((y1/y2) * image.bitmap.height);
+			const x = Math.floor((x1/x2) * scale.imageWidth);
+			const y = Math.floor((y1/y2) * scale.imageHeight);
 
-			image.scan(x - Math.round(size/2), y - Math.round(size/2), size, size, (x, y, index) => {
-				image.bitmap.data[index] = 255;
-				image.bitmap.data[index + 1] = 0;
-				image.bitmap.data[index + 2] = 0;
-			});
+			const point = await calculations.calculatePointPosition(x, y, size, fontSize);
+
+			if (point.size < 8)
+				type = constants.point.types.CIRCLE;
+
+			switch (type) {
+				default:
+				case constants.point.types.CIRCLE:
+					image.scan(point.leftX, point.topY, point.size+1, point.size+1, (pixelX, pixelY, index) => {
+						if (Math.sqrt(Math.pow(x - pixelX, 2) + Math.pow(y - pixelY, 2)) <= point.halfSize) {
+							image.bitmap.data[index] = color[0];
+							image.bitmap.data[index + 1] = color[1];
+							image.bitmap.data[index + 2] = color[2];
+						}
+					});
+					break;
+				case constants.point.types.THERMOINSTANT:  // TODO: Fix this garbage, please
+					// Top Horizontal
+					image.scan(point.leftX + point.eighthSize, point.topY + point.eighthSize, point.size - point.quarterSize, point.eighthSize, (pixelX, pixelY, index) => {
+						image.bitmap.data[index] = color[0];
+						image.bitmap.data[index + 1] = color[1];
+						image.bitmap.data[index + 2] = color[2];
+					});
+					// Left Vertical
+					image.scan(point.leftX + point.eighthSize, point.topY + point.eighthSize, point.eighthSize, point.size - point.quarterSize, (pixelX, pixelY, index) => {
+						image.bitmap.data[index] = color[0];
+						image.bitmap.data[index + 1] = color[1];
+						image.bitmap.data[index + 2] = color[2];
+					});
+					// Bottom Horizontal
+					image.scan(point.leftX + point.eighthSize, point.bottomY - point.quarterSize + 1, point.size - point.quarterSize, point.eighthSize, (pixelX, pixelY, index) => {
+						image.bitmap.data[index] = color[0];
+						image.bitmap.data[index + 1] = color[1];
+						image.bitmap.data[index + 2] = color[2];
+					});
+					// Right Vertical
+					image.scan(point.rightX - point.quarterSize + 1, point.topY + point.eighthSize, point.eighthSize, point.size - point.quarterSize, (pixelX, pixelY, index) => {
+						image.bitmap.data[index] = color[0];
+						image.bitmap.data[index + 1] = color[1];
+						image.bitmap.data[index + 2] = color[2];
+					});
+				case constants.point.types.CROSS:
+					image.scan(point.leftX - point.quarterSize, y - point.sixteenthSize, point.size + point.halfSize, (point.sixteenthSize*2)+1, (pixelX, pixelY, index) => {
+						image.bitmap.data[index] = color[0];
+						image.bitmap.data[index + 1] = color[1];
+						image.bitmap.data[index + 2] = color[2];
+					});
+					image.scan(x - point.sixteenthSize, point.topY - point.quarterSize, (point.sixteenthSize*2)+1, point.size + point.halfSize, (pixelX, pixelY, index) => {
+						image.bitmap.data[index] = color[0];
+						image.bitmap.data[index + 1] = color[1];
+						image.bitmap.data[index + 2] = color[2];
+					});
+					break;
+			}
+
+			let font;
+			switch(color) {
+				default:
+				case constants.point.colors.RED:
+					font = fonts[constants.point.colors.RED][fontSize];
+					break;
+				case constants.point.colors.ORANGE:
+					font = fonts[constants.point.colors.ORANGE][fontSize];
+					break;
+				case constants.point.colors.WHITE:
+					font = fonts.white[fontSize];
+					break;
+				case constants.point.colors.BLACK:
+					font = fonts.black[fontSize];
+					break;
+			}
+
+			await image.print(
+				font,
+				point.fontX,
+				point.fontY,
+				name
+			);
+
 		}
 
 		async writeImage(settings={}) {
@@ -156,7 +246,7 @@ module.exports = async () => {
 
 			if (settings.addPoints && this.data.points)
 				for (const point of Object.values(this.data.points))
-					await this.addPoint(...point.values);
+					await this.addPoint(point.values[0], point.values[1], point.values[2], point.values[3], point.name);
 
 			await this.writeImage(settings);
 			this.data.image = undefined;

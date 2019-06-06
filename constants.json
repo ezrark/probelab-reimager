@@ -74,7 +74,14 @@
   "point": {
     "AUTOSIZE": 0,
     "types": {
-      "CROSS": "cross"
+      "CROSS": "cross",
+      "CIRCLE": "circle",
+      "THERMOINSTANT": "fancyCross"
+    },
+    "fonts": {
+      "LARGE": "large",
+      "MEDIUM": "medium",
+      "SMALL": "small"
     },
     "colors": {
       "WHITE": [255, 255, 255],
