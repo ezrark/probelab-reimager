@@ -47,8 +47,8 @@ Promise.all([
 		help: false,
 		version: false,
 		position: constants.scale.types.BELOWCENTER,
-		scaleColor: constants.scale.colors.AUTO,
-		belowColor: constants.scale.colors.AUTO,
+		scaleColor: constants.colors.AUTO,
+		belowColor: constants.colors.AUTO,
 		scaleSize: constants.scale.AUTOSIZE,
 		scaleBarHeight: constants.scale.AUTOSIZE,
 		scaleBarTop: constants.scale.SCALEBARTOP,
@@ -91,7 +91,7 @@ Promise.all([
 						case 'a':
 						case 'auto':
 						default:
-							options.scaleColor = constants.scale.colors.AUTO;
+							options.scaleColor = constants.colors.AUTO;
 							break;
 						case 'b':
 						case 'black':
@@ -108,7 +108,7 @@ Promise.all([
 						case 'a':
 						case 'auto':
 						default:
-							options.belowColor = constants.scale.colors.AUTO;
+							options.belowColor = constants.colors.AUTO;
 							break;
 						case 'b':
 						case 'black':
@@ -184,7 +184,7 @@ Promise.all([
 						case 'a':
 						case 'auto':
 						default:
-							options.scaleColor = constants.scale.colors.AUTO;
+							options.scaleColor = constants.colors.AUTO;
 							break;
 						case 'b':
 						case 'black':
@@ -201,7 +201,7 @@ Promise.all([
 						case 'a':
 						case 'auto':
 						default:
-							options.belowColor = constants.scale.colors.AUTO;
+							options.belowColor = constants.colors.AUTO;
 							break;
 						case 'b':
 						case 'black':
@@ -308,7 +308,7 @@ Promise.all([
 			}).filter(i => i);
 
 			for (const thermo of thermos)
-				await thermo.addScaleAndWrite(options.position, options);
+				await thermo.addScaleAndWrite(options.position, JSON.parse(JSON.stringify(options)));
 
 			console.log('All images written');
 		}

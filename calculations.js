@@ -39,20 +39,20 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=
 function estimateScaleSize(width) {
 	switch(width) {
 		case 4096:
-			return {font: constants.scale.sizes.SUPER, xOffset: 20, yOffset: 30, between: 10, heightOffset: 0};
+			return {xOffset: 20, yOffset: 30, between: 10, heightOffset: 0};
 		case 2048:
-			return {font: constants.scale.sizes.LARGE, xOffset: 10, yOffset: 20, between: 10, heightOffset: 5};
+			return {xOffset: 10, yOffset: 20, between: 10, heightOffset: 5};
 		case 1024:
-			return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 7, heightOffset: 12};
+			return {xOffset: 10, yOffset: 10, between: 7, heightOffset: 12};
 		case 512:
-			return {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 10, between: 5, heightOffset: 13};
+			return {xOffset: 10, yOffset: 10, between: 5, heightOffset: 13};
 		case 256:
-			return {font: constants.scale.sizes.SMALL, xOffset: 10, yOffset: 5, between: 5, heightOffset: 19};
+			return {xOffset: 10, yOffset: 5, between: 5, heightOffset: 19};
 		case 128:
-			return {font: constants.scale.sizes.SMALL, xOffset: 2, yOffset: 2, between: 2, heightOffset: 15};
+			return {xOffset: 2, yOffset: 2, between: 2, heightOffset: 15};
 		case 64:
 		default:
-			return {font: constants.scale.sizes.TINY, xOffset: 2, yOffset: 2, between: 2, heightOffset: 13};
+			return {xOffset: 2, yOffset: 2, between: 2, heightOffset: 13};
 	}
 }
 
@@ -144,7 +144,7 @@ function estimatePointScale(width) {
 	}
 }
 
-async function calculatePointPosition(x, y, size, fontSize) {
+async function calculatePointPosition(x, y, width, size, fontSize) {
 	size = size < 5 ? 5 : (size % 2 === 0 ? size + 1 : size);
 	let point = {
 		centerX: x,
@@ -164,7 +164,8 @@ async function calculatePointPosition(x, y, size, fontSize) {
 		pointWidth: size,
 		fontHeight: 0,
 		fontX: 0,
-		fontY: 0
+		fontY: 0,
+		fontSize: Math.round(width*constants.FONTWIDTHMUTIPLIER)
 	};
 
 	point.halfSize = point.quarterSize !== 0 ? point.quarterSize * 2 : Math.floor(size/2);
@@ -184,10 +185,15 @@ async function calculatePointPosition(x, y, size, fontSize) {
 	point.fontX = point.rightX;
 	point.fontY = point.topY - labelFontHeight;
 
+	if (point.fontSize < 8)
+		point.fontSize = 8;
+
 	return point;
 }
 
-async function calculateScale(startImage, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant}) {
+async function calculateScale(startImage, scratchCtx, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
+	startImage = await Jimp.read(startImage);
+
 	let scale = {
 		imageHeight: startImage.bitmap.height,
 		imageWidth: startImage.bitmap.width,
@@ -201,52 +207,39 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 		barY: 0,
 		width: 0,
 		height: 0,
-		textFontHeight: 60,
+		textFontHeight: Math.round(startImage.bitmap.width*constants.FONTWIDTHMUTIPLIER),
 		visualScale: 0,
 		pixelSize: 0,
 		scaleLength: 0,
-		scaleBar: '',
 		scaleIsBlack: false,
 		barPixelHeight: 0,
 		barFont: constants.scale.sizes.SMALL,
-		scaleSize: {font: constants.scale.sizes.NORMAL, xOffset: 10, yOffset: 20, between: 10}
+		scaleOffsets: {
+			xOffset: Math.round(startImage.bitmap.width*constants.XOFFSETMULTIPLIER),
+			yOffset: Math.round(startImage.bitmap.width*constants.YOFFSETMULTIPLIER),
+			between: Math.round(startImage.bitmap.width*constants.BETWEENMULTIPLIER)
+		}
 	};
 
-	const smallFont = await Jimp.loadFont(fonts[scale.barFont]);
-	const smallFontHeight = Jimp.measureTextHeight(smallFont, '0', 10);
+	if (scale.textFontHeight < 8)
+		scale.textFontHeight = 8;
 
 	// General easy calculations and estimations
-	[scale.visualScale, scale.scaleLength, scale.pixelSize, scale.scaleSize] = estimateVisualScale(magnification, startImage.bitmap.width, pixelSizeConstant);
-	scale.textFontHeight = Jimp.measureTextHeight(await Jimp.loadFont(fonts[scale.scaleSize.font]), '0', 10);
+	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, startImage.bitmap.width, pixelSizeConstant);
 
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
 	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
-	scale.textFontHeight = scale.textFontHeight % 2 === 0 ? scale.textFontHeight : scale.textFontHeight + 1;
 
 	scale.barPixelHeight = Math.round((scaleBarHeight ? scaleBarHeight : constants.SCALEBARHEIGHTPERCENT) * scale.textFontHeight);
 
-	scale.height = scale.textFontHeight + scale.scaleSize.between + scale.barPixelHeight + smallFontHeight;
+	scale.height = scale.textFontHeight + scale.scaleOffsets.between + scale.barPixelHeight;
 
 	scale.visualScale = '' + scale.visualScale + 'µm';
 
-	// Figure out how long the scale bar needs to be
-	let actualBarLength = 0;
-	let prevBarLength = 0;
+	scratchCtx.font = `${scale.textFontHeight}px "${font}"`;
+	const textWidth = scratchCtx.measureText(scale.visualScale).width;
 
-	while (actualBarLength < scale.scaleLength) {
-		prevBarLength = actualBarLength;
-
-		scale.scaleBar += '_';
-		actualBarLength = await Jimp.measureText(smallFont, scale.scaleBar);
-	}
-
-	if (Math.abs(prevBarLength - scale.scaleLength) < Math.abs(actualBarLength - scale.scaleLength))
-		scale.scaleBar = scale.scaleBar.substring(1);
-
-	const barWidth = await Jimp.measureText(smallFont, scale.scaleBar);
-	const textWidth = await Jimp.measureText(await Jimp.loadFont(fonts[scale.scaleSize.font]), scale.visualScale);
-
-	scale.width = barWidth > textWidth ? barWidth : textWidth;
+	scale.width = scale.scaleLength > textWidth ? scale.scaleLength : textWidth;
 
 	// Calculate any changes in the image to account for scale type
 	// Also positions the scale bar's x and y positions
@@ -256,112 +249,85 @@ async function calculateScale(startImage, magnification, scaleType, {belowColor,
 		case constants.scale.types.BELOWLEFT:
 			if (!belowScaleSet) {
 				// Position the scale
-				scale.x = scale.scaleSize.xOffset;
-				scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+				scale.x = scale.scaleOffsets.xOffset;
+				scale.y = startImage.bitmap.height + scale.scaleOffsets.xOffset;
 				belowScaleSet = true;
 			}
 		case constants.scale.types.BELOWRIGHT:
 			if (!belowScaleSet) {
 				// Position the scale
-				scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
-				scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+				scale.x = startImage.bitmap.width - scale.width - scale.scaleOffsets.xOffset;
+				scale.y = startImage.bitmap.height + scale.scaleOffsets.xOffset;
 				belowScaleSet = true;
 			}
 		case constants.scale.types.BELOWCENTER:
 			if (!belowScaleSet) {
 				scale.x = (startImage.bitmap.width / 2) - (scale.width / 2);
-				scale.y = startImage.bitmap.height + scale.scaleSize.xOffset;
+				scale.y = startImage.bitmap.height + scale.scaleOffsets.xOffset;
 				belowScaleSet = true;
 			}
 
-			scale.y = scale.y - scale.scaleSize.heightOffset;
+			scale.y = scale.y - scale.scaleOffsets.heightOffset;
 
 			scale.textX = scale.x + (scale.width / 2) - Math.round(textWidth / 2);
-			scale.barX = scale.x + (scale.width/2) - Math.round(barWidth / 2);
+			scale.barX = scale.x + (scale.width/2) - Math.round(scale.scaleLength / 2);
 
 			if (scaleBarTop) {
 				scale.barY = scale.y + scale.barPixelHeight;
 				scale.textY = scale.y + scale.height - scale.textFontHeight;
 			} else {
-				scale.barY = scale.y + scale.height - smallFontHeight;
-				scale.textY = scale.y + smallFontHeight;
+				scale.barY = scale.y + scale.height;
+				scale.textY = scale.y;
 			}
 
-			let imageIsBlack = belowColor === constants.scale.colors.BLACK;
-
-			// Check the luminosity and use white or black background to make it look nice
-			if (belowColor === constants.scale.colors.AUTO)
-				imageIsBlack = sumPixelLuminosity(startImage, 0, 0, startImage.bitmap.width, startImage.bitmap.height) < .5;
-
-			const tallBitmap = Array.from(await startImage.bitmap.data);
-			const totalNewPixels = startImage.bitmap.width * (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset - scale.scaleSize.heightOffset)/4;
-			if (imageIsBlack)
-				for (let i = 0; i < totalNewPixels; i++)
-					tallBitmap.push(0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255);
-			else
-				for (let i = 0; i < totalNewPixels; i++)
-					tallBitmap.push(255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255);
-
-			// Resize the image with the new added scale bit
-			const image = await new Promise(async (resolve, reject) => {
-				new Jimp({
-					data: Buffer.from(tallBitmap),
-					width: startImage.bitmap.width,
-					height: startImage.bitmap.height + (scale.height + scale.scaleSize.yOffset + scale.scaleSize.xOffset - scale.scaleSize.heightOffset)
-				}, (err, image) => {
-					if (err) reject(err);
-					else resolve(image);
-				});
-			});
-
-			scale.realHeight = image.bitmap.height;
-			scale.realWidth = image.bitmap.width;
+			scale.realHeight = startImage.bitmap.height + (scale.height + scale.scaleOffsets.yOffset + scale.scaleOffsets.xOffset - scale.scaleOffsets.heightOffset);
+			scale.realWidth = startImage.bitmap.width;
 
 			// Return the new image and scale information
-			return [scale, image];
+			return [scale, startImage];
 		case constants.scale.types.LOWERCENTER:
 			// Position the scale
-			scale.x = (startImage.bitmap.width/2) - (scale.width/2);
-			scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
+			scale.x = Math.round((startImage.bitmap.width/2) - (scale.width/2));
+			scale.y = Math.round(startImage.bitmap.height - scale.height - scale.scaleOffsets.yOffset);
 			break;
 		case constants.scale.types.LOWERRIGHT:
 			// Position the scale
-			scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
-			scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
+			scale.x = Math.round(startImage.bitmap.width - scale.width - scale.scaleOffsets.xOffset);
+			scale.y = Math.round(startImage.bitmap.height - scale.height - scale.scaleOffsets.yOffset);
 			break;
 		case constants.scale.types.LOWERLEFT:
 			// Position the scale
-			scale.x = scale.scaleSize.xOffset;
-			scale.y = startImage.bitmap.height - scale.height - scale.scaleSize.yOffset;
+			scale.x = Math.round(scale.scaleOffsets.xOffset);
+			scale.y = Math.round(startImage.bitmap.height - scale.height - scale.scaleOffsets.yOffset);
 			break;
 		case constants.scale.types.UPPERRIGHT:
 			// Position the scale
-			scale.x = startImage.bitmap.width - scale.width - scale.scaleSize.xOffset;
-			scale.y = scale.scaleSize.yOffset;
+			scale.x = Math.round(startImage.bitmap.width - scale.width - scale.scaleOffsets.xOffset);
+			scale.y = Math.round(scale.scaleOffsets.yOffset);
 			break;
 		case constants.scale.types.UPPERLEFT:
 			// Position the scale
-			scale.x = scale.scaleSize.xOffset;
-			scale.y = scale.scaleSize.yOffset;
+			scale.x = Math.round(scale.scaleOffsets.xOffset);
+			scale.y = Math.round(scale.scaleOffsets.yOffset);
 			break;
 	}
 
-	scale.barX = scale.x + (scale.width/2) - Math.round(barWidth / 2);
+	scale.barX = scale.x + (scale.width/2) - Math.round(scale.scaleLength / 2);
 	scale.textX = scale.x + (scale.width/2) - Math.round(textWidth / 2);
 
 	if (scaleBarTop) {
 		scale.barY = scale.y + scale.barPixelHeight;
 		scale.textY = scale.y + scale.height - scale.textFontHeight;
 	} else {
-		scale.barY = scale.y + scale.height - smallFontHeight;
-		scale.textY = scale.y + smallFontHeight;
+		scale.barY = scale.y + scale.height;
+		scale.textY = scale.y;
 	}
 
 	// Correct the image y and height for the font size depending on the image size
-	if (!belowScaleSet) {
-		scale.y = scale.y + scale.scaleSize.heightOffset;
-		scale.height = scale.height - scale.scaleSize.heightOffset;
-	}
+	//if (!belowScaleSet) {
+	//	scale.y = scale.y + scale.scaleOffsets.heightOffset;
+	//	scale.height = scale.height - scale.scaleOffsets.heightOffset;
+	//}
 
 	// Return the image and scale information
 	return [scale, startImage];

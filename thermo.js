@@ -1,9 +1,16 @@
 const Jimp = require('jimp');
+const Canvas = require('canvas');
 
 const constants = require('./constants');
 const calculations = require('./calculations');
 
+Canvas.registerFont('fonts/OpenSans-Regular.ttf', { family: 'Open Sans' });
+Canvas.registerFont('fonts/Comic Sans MS.ttf', { family: 'Comic Sans MS' });
+
 module.exports = async () => {
+	const scratchCanvas = Canvas.createCanvas(300, 300);
+	const scratchCtx = scratchCanvas.getContext('2d');
+
 	const fonts = {
 		white: {
 			[constants.scale.sizes.TINY]: await Jimp.loadFont(Jimp.FONT_SANS_8_WHITE),
@@ -57,17 +64,66 @@ module.exports = async () => {
 		updateFromDisk() {}
 
 		async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
-			settings.belowColor = settings.belowColor ? settings.belowColor : constants.scale.colors.AUTO;
-			settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.scale.colors.AUTO;
-			settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
+			settings.belowColor = settings.belowColor ? settings.belowColor : constants.colors.AUTO;
+			settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.colors.AUTO;
+			settings.scaleSize = settings.scaleOffsets ? settings.scaleOffsets : constants.scale.AUTOSIZE;
 			settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
 			settings.scaleBarTop = settings.scaleBarTop ? settings.scaleBarTop : constants.scale.SCALEBARTOP;
 			settings.pixelSizeConstant = settings.pixelSizeConstant ? settings.pixelSizeConstant : constants.PIXELSIZECONSTANT;
 			settings.backgroundOpacity  = settings.backgroundOpacity ? settings.backgroundOpacity : constants.scale.background.AUTOOPACITY;
+			settings.font = settings.font ? settings.font : constants.fonts.OPENSANS;
 
 			// Calculate scale and image
-			const [scale, image] = await calculations.calculateScale(await Jimp.read(this.data.files.image), this.data.magnification, type, settings);
+			const [scale, rawImage] = await calculations.calculateScale(this.data.files.image, scratchCtx, this.data.magnification, type, settings);
 			this.data.scale = scale;
+
+			// Background
+			settings.backgroundOpacity = (settings.backgroundOpacity < 0 ? 0 : (settings.backgroundOpacity > 100 ? 100 : settings.backgroundOpacity))/100;
+
+			return new Promise(async (resolve, reject) => {
+				const scale = this.data.scale;
+
+				const canvas = Canvas.createCanvas(scale.realWidth, scale.realHeight);
+				const ctx = canvas.getContext('2d');
+
+				const img = new Canvas.Image();
+				img.onload = async () => {
+
+					ctx.drawImage(img, 0, 0);
+					ctx.font = `${scale.textFontHeight}px "${settings.font}"`;
+
+					if (scale.realHeight > scale.imageHeight) {
+						let imageIsBlack = settings.belowColor === constants.scale.colors.BLACK;
+
+						// Check the luminosity and use white or black background to make it look nice
+						if (settings.belowColor === constants.colors.AUTO)
+							imageIsBlack = calculations.sumPixelLuminosity(rawImage, 0, 0, rawImage.bitmap.width, rawImage.bitmap.height) < .5;
+
+						ctx.fillStyle = imageIsBlack ? constants.colors.black.RGBA : constants.colors.white.RGBA;
+						ctx.fillRect(0, scale.imageHeight, scale.realWidth, scale.realHeight - scale.imageHeight);
+					} else {
+						ctx.fillStyle = `rgba(${constants.colors.white.R}, ${constants.colors.white.G}, ${constants.colors.white.B}, ${settings.backgroundOpacity})`;
+						ctx.fillRect(scale.x - scale.scaleOffsets.xOffset, scale.y - scale.scaleOffsets.xOffset, scale.width + (scale.scaleOffsets.xOffset * 2), scale.realHeight - scale.y + (scale.scaleOffsets.xOffset*2));
+					}
+
+					const imageIsBlack = calculations.sumPixelLuminosity(rawImage, scale.x, scale.y, scale.width, scale.height) < .5;
+
+					ctx.fillStyle = settings.scaleColor ? settings.scaleColor.RGBA : (imageIsBlack ? constants.colors.black.RGBA : constants.colors.white.RGBA);
+					ctx.fillText(scale.visualScale, scale.textX, scale.textY + scale.textFontHeight);
+					ctx.fillRect(scale.x, scale.y, scale.scaleLength, scale.barPixelHeight);
+
+					new Jimp({
+						data: canvas.toBuffer('raw'),
+						width: scale.realWidth,
+						height: scale.realHeight
+					}, (err, image) => {
+						this.data.image = image;
+						resolve();
+					});
+				};
+				img.onerror = reject;
+				img.src = await rawImage.getBase64Async(Jimp.MIME_PNG);
+			});
 
 			// Luminosity
 			let isBlack = settings.scaleColor === constants.scale.colors.WHITE;
@@ -84,10 +140,10 @@ module.exports = async () => {
 				gotLuminosity = true;
 
 				let textArea = {
-					x: scale.x - scale.scaleSize.xOffset,
-					y: scale.y - scale.scaleSize.xOffset,
-					width: scale.width + (scale.scaleSize.xOffset * 2),
-					height: scale.height + (scale.scaleSize.xOffset * 2)
+					x: scale.x - scale.scaleOffsets.xOffset,
+					y: scale.y - scale.scaleOffsets.xOffset,
+					width: scale.width + (scale.scaleOffsets.xOffset * 2),
+					height: scale.height + (scale.scaleOffsets.xOffset * 2)
 				};
 
 				if (settings.scaleColor === constants.scale.colors.AUTO)
@@ -135,7 +191,7 @@ module.exports = async () => {
 				);
 
 			await image.print(
-				isBlack ? fonts.white[scale.scaleSize.font] : fonts.black[scale.scaleSize.font],
+				isBlack ? fonts.white[scale.scaleOffsets.font] : fonts.black[scale.scaleOffsets.font],
 				scale.textX,
 				scale.textY,
 				scale.visualScale
@@ -144,19 +200,41 @@ module.exports = async () => {
 			this.data.image = image;
 		}
 
-		async addPoint(x1, y1, x2, y2, name='', type=constants.point.types.THERMOINSTANT, size=constants.point.AUTOSIZE, color=constants.point.colors.RED, fontSize=constants.point.AUTOSIZE) {
-			const image = this.data.image;
-			const scale = this.data.scale;
+		addPoint(x1, y1, x2, y2, name='', type=constants.point.types.THERMOINSTANT, size=constants.point.AUTOSIZE, color=constants.point.colors.RED, fontSize=constants.point.AUTOSIZE) {
+			return new Promise(async (resolve, reject) => {
+				const scale = this.data.scale;
 
-			const [autoSize, autoFontSize] = calculations.estimatePointScale(scale.imageWidth);
-			size = size === constants.point.AUTOSIZE ? autoSize : size;
-			fontSize = fontSize === constants.point.AUTOSIZE ? autoFontSize[constants.point.fonts.MEDIUM] : autoFontSize[fontSize];
+				const canvas = Canvas.createCanvas(scale.realWidth, scale.realHeight);
+				const ctx = canvas.getContext('2d');
 
-			const x = Math.floor((x1/x2) * scale.imageWidth);
-			const y = Math.floor((y1/y2) * scale.imageHeight);
+				const img = new Canvas.Image();
+				img.onload = async () => {
+					const [autoSize, autoFontSize] = calculations.estimatePointScale(scale.imageWidth);
+					size = size === constants.point.AUTOSIZE ? autoSize : size;
+					fontSize = fontSize === constants.point.AUTOSIZE ? autoFontSize[constants.point.fonts.MEDIUM] : autoFontSize[fontSize];
 
-			const point = await calculations.calculatePointPosition(x, y, size, fontSize);
+					const x = Math.floor((x1 / x2) * scale.imageWidth);
+					const y = Math.floor((y1 / y2) * scale.imageHeight);
 
+					const point = await calculations.calculatePointPosition(x, y, scale.imageWidth, size, fontSize);
+
+					ctx.drawImage(img, 0, 0);
+					ctx.font = `${point.fontSize}px "Comic Sans MS"`;
+					ctx.fillText(name, point.fontX, point.fontY);
+					new Jimp({
+						data: canvas.toBuffer('raw'),
+						width: scale.realWidth,
+						height: scale.realHeight
+					}, (err, image) => {
+						this.data.image = image;
+
+						resolve();
+					});
+				};
+				img.onerror = console.warn;
+				img.src = await this.data.image.getBase64Async(Jimp.MIME_PNG);
+			});
+			/*
 			if (point.size < 8)
 				type = constants.point.types.CIRCLE;
 
@@ -233,7 +311,7 @@ module.exports = async () => {
 				point.fontY,
 				name
 			);
-
+*/
 		}
 
 		async writeImage(settings={}) {

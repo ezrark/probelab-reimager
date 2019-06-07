@@ -6,6 +6,8 @@
     "thermo-reimager": "index.js"
   },
   "dependencies": {
-    "jimp": "^0.6.4"
+    "canvas": "^2.5.0",
+    "jimp": "^0.6.4",
+    "probe-image-size": "^4.0.0"
   }
 }
