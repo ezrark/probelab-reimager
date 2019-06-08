@@ -1,16 +1,5 @@
-const Jimp = require('jimp');
-
 const constants = require('./constants');
 const scales = [1000, 500, 250, 100, 50, 25, 10, 5, 1];
-
-const fonts = {
-	[constants.scale.sizes.TINY]: Jimp.FONT_SANS_8_WHITE,
-	[constants.scale.sizes.SMALL]: Jimp.FONT_SANS_16_WHITE,
-	[constants.scale.sizes.NORMAL]: Jimp.FONT_SANS_32_WHITE,
-	[constants.scale.sizes.LARGE]: Jimp.FONT_SANS_64_WHITE,
-	[constants.scale.sizes.SUPER]: Jimp.FONT_SANS_128_WHITE
-};
-
 
 function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=calculatePixelSize(magnification, width, pixelSizeConstant)) {
 	let scaleIndex = 0;
@@ -33,27 +22,7 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=
 	if (Math.round(scales[scaleIndex] / pixelSize) > .3 * width)
 		scaleIndex += 1;
 
-	return [scales[scaleIndex], Math.round(scales[scaleIndex] / pixelSize), pixelSize, estimateScaleSize(width)];
-}
-
-function estimateScaleSize(width) {
-	switch(width) {
-		case 4096:
-			return {xOffset: 20, yOffset: 30, between: 10, heightOffset: 0};
-		case 2048:
-			return {xOffset: 10, yOffset: 20, between: 10, heightOffset: 5};
-		case 1024:
-			return {xOffset: 10, yOffset: 10, between: 7, heightOffset: 12};
-		case 512:
-			return {xOffset: 10, yOffset: 10, between: 5, heightOffset: 13};
-		case 256:
-			return {xOffset: 10, yOffset: 5, between: 5, heightOffset: 19};
-		case 128:
-			return {xOffset: 2, yOffset: 2, between: 2, heightOffset: 15};
-		case 64:
-		default:
-			return {xOffset: 2, yOffset: 2, between: 2, heightOffset: 13};
-	}
+	return [scales[scaleIndex], Math.round(scales[scaleIndex] / pixelSize), pixelSize];
 }
 
 function calculatePixelSize(magnification, width, pixelSizeConstant) {
@@ -92,60 +61,12 @@ function findPixelLuminosity(r, g, b) {
 	return (constants.luminosity.RED * r) + (constants.luminosity.GREEN * g) + (constants.luminosity.BLUE * b)
 }
 
-function convertPositionToXY(posX, posY) {
-
+function pointToXY(pos, width, height) {
+	return [Math.floor((pos.values[0] / pos.values[2]) * width), Math.floor((pos.values[1] / pos.values[3]) * height)];
 }
 
-function estimatePointScale(width) {
-	switch(width) {
-		case 4096:
-			return [40, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.NORMAL,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.LARGE,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.SUPER,
-			}];
-		case 2048:
-			return [20, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.NORMAL,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.LARGE,
-			}];
-		case 1024:
-		default:
-			return [10, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.SMALL,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.NORMAL,
-			}];
-		case 512:
-			return [8, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.SMALL,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.NORMAL,
-			}];
-		case 256:
-			return [4, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.TINY,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.SMALL,
-			}];
-		case 128:
-			return [4, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.TINY,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.SMALL,
-			}];
-		case 64:
-			return [4, {
-				[constants.point.fonts.SMALL]: constants.scale.sizes.TINY,
-				[constants.point.fonts.MEDIUM]: constants.scale.sizes.TINY,
-				[constants.point.fonts.LARGE]: constants.scale.sizes.SMALL,
-			}];
-	}
-}
-
-async function calculatePointPosition(x, y, width, size, fontSize) {
-	size = size < 5 ? 5 : (size % 2 === 0 ? size + 1 : size);
+async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, font) {
+	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
 	let point = {
 		centerX: x,
 		centerY: y,
@@ -153,47 +74,54 @@ async function calculatePointPosition(x, y, width, size, fontSize) {
 		topY: 0,
 		rightX: 0,
 		bottomY: 0,
-		size,
-		halfSize: 0,
-		quarterSize: 0,
-		eighthSize: 0,
+		size: 0,
+		halfSize: Math.floor(size/2),
+		quarterSize: Math.floor(size/4),
+		eighthSize: Math.floor(size/8),
 		sixteenthSize: Math.floor(size/16),
 		height: 0,
 		width: 0,
-		pointHeight: size,
-		pointWidth: size,
+		pointHeight: 0,
+		pointWidth: 0,
 		fontHeight: 0,
 		fontX: 0,
 		fontY: 0,
-		fontSize: Math.round(width*constants.FONTWIDTHMUTIPLIER)
+		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
 	};
 
-	point.halfSize = point.quarterSize !== 0 ? point.quarterSize * 2 : Math.floor(size/2);
-	point.quarterSize = point.eighthSize !== 0 ? point.eighthSize * 2 : Math.floor(size/4);
-	point.eighthSize = point.sixteenthSize !== 0 ? point.sixteenthSize * 2 : Math.floor(size/8);
+	if (point.fontSize < 8)
+		point.fontSize = 8;
+
+	scratchCtx.font = `${point.fontSize}px "${font}"`;
+	point.fontHeight = scratchCtx.measureText('m').width;
+
+	if (size === 5 || size === 3) {
+		point.sixteenthSize = 1;
+		point.eighthSize = 1;
+		point.quarterSize = 2;
+		point.halfSize = 3;
+	} else {
+		point.sixteenthSize = point.sixteenthSize === 0 ? 1 : point.sixteenthSize;
+		point.eighthSize = point.eighthSize === 0 ? 1 : point.eighthSize;
+		point.quarterSize = point.quarterSize === 0 ? 1 : point.quarterSize;
+		point.halfSize = point.halfSize === 0 ? 2 : point.halfSize;
+	}
+
+	point.size = point.pointHeight = point.pointWidth = point.halfSize * 2;
 
 	point.leftX = x - point.halfSize;
 	point.topY = y - point.halfSize;
 	point.rightX = x + point.halfSize;
 	point.bottomY = y + point.halfSize;
 
-	const labelFont = await Jimp.loadFont(fonts[fontSize]);
-	const labelFontHeight = Jimp.measureTextHeight(labelFont, '0', 10);
-
-	point.fontHeight = labelFontHeight;
-	point.height = labelFontHeight + size;
+	point.height = point.fontHeight + point.size;
 	point.fontX = point.rightX;
-	point.fontY = point.topY - labelFontHeight;
-
-	if (point.fontSize < 8)
-		point.fontSize = 8;
+	point.fontY = point.topY - Math.round(point.fontHeight/3);
 
 	return point;
 }
 
-async function calculateScale(startImage, scratchCtx, magnification, scaleType, {belowColor, scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
-	startImage = await Jimp.read(startImage);
-
+async function calculateScale(startImage, scratchCtx, magnification, scaleType, {scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
 	let scale = {
 		imageHeight: startImage.bitmap.height,
 		imageWidth: startImage.bitmap.width,
@@ -213,7 +141,6 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 		scaleLength: 0,
 		scaleIsBlack: false,
 		barPixelHeight: 0,
-		barFont: constants.scale.sizes.SMALL,
 		scaleOffsets: {
 			xOffset: Math.round(startImage.bitmap.width*constants.XOFFSETMULTIPLIER),
 			yOffset: Math.round(startImage.bitmap.width*constants.YOFFSETMULTIPLIER),
@@ -228,113 +155,82 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, startImage.bitmap.width, pixelSizeConstant);
 
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
-	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
-
 	scale.barPixelHeight = Math.round((scaleBarHeight ? scaleBarHeight : constants.SCALEBARHEIGHTPERCENT) * scale.textFontHeight);
 
-	scale.height = scale.textFontHeight + scale.scaleOffsets.between + scale.barPixelHeight;
-
+	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
 	scale.visualScale = '' + scale.visualScale + 'µm';
 
 	scratchCtx.font = `${scale.textFontHeight}px "${font}"`;
 	const textWidth = scratchCtx.measureText(scale.visualScale).width;
+	const lineHeight = scratchCtx.measureText('m').width;
 
-	scale.width = scale.scaleLength > textWidth ? scale.scaleLength : textWidth;
+	scale.height = lineHeight + scale.scaleOffsets.between + scale.barPixelHeight + (2 * scale.scaleOffsets.yOffset);
+	scale.width = (scale.scaleLength > textWidth ? scale.scaleLength : textWidth) + (2 * scale.scaleOffsets.xOffset);
 
 	// Calculate any changes in the image to account for scale type
 	// Also positions the scale bar's x and y positions
-	let belowScaleSet = false;
 	switch(scaleType) {
-		default:
 		case constants.scale.types.BELOWLEFT:
-			if (!belowScaleSet) {
-				// Position the scale
-				scale.x = scale.scaleOffsets.xOffset;
-				scale.y = startImage.bitmap.height + scale.scaleOffsets.xOffset;
-				belowScaleSet = true;
-			}
-		case constants.scale.types.BELOWRIGHT:
-			if (!belowScaleSet) {
-				// Position the scale
-				scale.x = startImage.bitmap.width - scale.width - scale.scaleOffsets.xOffset;
-				scale.y = startImage.bitmap.height + scale.scaleOffsets.xOffset;
-				belowScaleSet = true;
-			}
-		case constants.scale.types.BELOWCENTER:
-			if (!belowScaleSet) {
-				scale.x = (startImage.bitmap.width / 2) - (scale.width / 2);
-				scale.y = startImage.bitmap.height + scale.scaleOffsets.xOffset;
-				belowScaleSet = true;
-			}
+			scale.x = 0;
+			scale.y = startImage.bitmap.height;
 
-			scale.y = scale.y - scale.scaleOffsets.heightOffset;
-
-			scale.textX = scale.x + (scale.width / 2) - Math.round(textWidth / 2);
-			scale.barX = scale.x + (scale.width/2) - Math.round(scale.scaleLength / 2);
-
-			if (scaleBarTop) {
-				scale.barY = scale.y + scale.barPixelHeight;
-				scale.textY = scale.y + scale.height - scale.textFontHeight;
-			} else {
-				scale.barY = scale.y + scale.height;
-				scale.textY = scale.y;
-			}
-
-			scale.realHeight = startImage.bitmap.height + (scale.height + scale.scaleOffsets.yOffset + scale.scaleOffsets.xOffset - scale.scaleOffsets.heightOffset);
+			scale.realHeight = startImage.bitmap.height + scale.height;
 			scale.realWidth = startImage.bitmap.width;
+			break;
+		case constants.scale.types.BELOWRIGHT:
+			scale.x = startImage.bitmap.width - scale.width;
+			scale.y = startImage.bitmap.height;
 
-			// Return the new image and scale information
-			return [scale, startImage];
+			scale.realHeight = startImage.bitmap.height + scale.height;
+			scale.realWidth = startImage.bitmap.width;
+			break;
+		default:
+		case constants.scale.types.BELOWCENTER:
+			scale.x = Math.round((startImage.bitmap.width / 2) - (scale.width / 2));
+			scale.y = startImage.bitmap.height;
+
+			scale.realHeight = startImage.bitmap.height + scale.height;
+			scale.realWidth = startImage.bitmap.width;
+			break;
 		case constants.scale.types.LOWERCENTER:
-			// Position the scale
 			scale.x = Math.round((startImage.bitmap.width/2) - (scale.width/2));
-			scale.y = Math.round(startImage.bitmap.height - scale.height - scale.scaleOffsets.yOffset);
+			scale.y = startImage.bitmap.height - scale.height;
 			break;
 		case constants.scale.types.LOWERRIGHT:
-			// Position the scale
-			scale.x = Math.round(startImage.bitmap.width - scale.width - scale.scaleOffsets.xOffset);
-			scale.y = Math.round(startImage.bitmap.height - scale.height - scale.scaleOffsets.yOffset);
+			scale.x = startImage.bitmap.width - scale.width;
+			scale.y = startImage.bitmap.height - scale.height;
 			break;
 		case constants.scale.types.LOWERLEFT:
-			// Position the scale
-			scale.x = Math.round(scale.scaleOffsets.xOffset);
-			scale.y = Math.round(startImage.bitmap.height - scale.height - scale.scaleOffsets.yOffset);
+			scale.x = 0;
+			scale.y = startImage.bitmap.height - scale.height;
 			break;
 		case constants.scale.types.UPPERRIGHT:
-			// Position the scale
-			scale.x = Math.round(startImage.bitmap.width - scale.width - scale.scaleOffsets.xOffset);
-			scale.y = Math.round(scale.scaleOffsets.yOffset);
+			scale.x = startImage.bitmap.width - scale.width;
+			scale.y = 0;
 			break;
 		case constants.scale.types.UPPERLEFT:
-			// Position the scale
-			scale.x = Math.round(scale.scaleOffsets.xOffset);
-			scale.y = Math.round(scale.scaleOffsets.yOffset);
+			scale.x = 0;
+			scale.y = 0;
 			break;
 	}
 
-	scale.barX = scale.x + (scale.width/2) - Math.round(scale.scaleLength / 2);
-	scale.textX = scale.x + (scale.width/2) - Math.round(textWidth / 2);
+	scale.barX = Math.round(scale.x + (scale.width / 2) - Math.round(scale.scaleLength / 2));
+	scale.textX = Math.round(scale.x + (scale.width / 2) - Math.round(textWidth / 2));
 
 	if (scaleBarTop) {
-		scale.barY = scale.y + scale.barPixelHeight;
-		scale.textY = scale.y + scale.height - scale.textFontHeight;
+		scale.textY = scale.y + scale.height - lineHeight - Math.round(scale.scaleOffsets.yOffset / 2);
+		scale.barY = scale.textY - scale.scaleOffsets.between - Math.round(scale.scaleOffsets.yOffset / 2) - scale.barPixelHeight;
 	} else {
-		scale.barY = scale.y + scale.height;
-		scale.textY = scale.y;
+		scale.barY = scale.y + scale.height - scale.scaleOffsets.yOffset - scale.barPixelHeight;
+		scale.textY = scale.barY - lineHeight - scale.scaleOffsets.between;
 	}
-
-	// Correct the image y and height for the font size depending on the image size
-	//if (!belowScaleSet) {
-	//	scale.y = scale.y + scale.scaleOffsets.heightOffset;
-	//	scale.height = scale.height - scale.scaleOffsets.heightOffset;
-	//}
 
 	// Return the image and scale information
 	return [scale, startImage];
 }
 
 module.exports = {
-	estimatePointScale,
+	pointToXY,
 	calculatePointPosition,
 	estimateVisualScale,
 	calculatePixelSize,

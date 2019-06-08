@@ -37,7 +37,7 @@
     }
   },
   "fonts": {
-    "OPENSANS": "Open Sans",
+    "OPENSANS": "Open Sans Bold",
     "COMICSANSMS": "Comic Sans MS"
   },
   "extractedMap": {
@@ -115,7 +115,8 @@
     "types": {
       "CROSS": "cross",
       "CIRCLE": "circle",
-      "THERMOINSTANT": "fancyCross"
+      "THERMOINSTANT": "fancyCross",
+      "THERMOINSTANTROUND": "fancyCrossWithCircle"
     },
     "fonts": {
       "LARGE": "large",
