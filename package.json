@@ -6,7 +6,10 @@
     "thermo-reimager": "index.js"
   },
   "dependencies": {
-    "canvas": "^2.5.0",
+    "canvas": "^2.0.1",
     "jimp": "^0.6.4"
+  },
+  "peerDependencies": {
+    "canvas": "^2.0.1"
   }
 }
