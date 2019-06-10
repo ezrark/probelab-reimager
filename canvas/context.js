@@ -1,61 +1,61 @@
 export default class Context {
-	constructor() {
+	constructor(canvasRoot, uuid) {
+		this.sendRemote = canvasRoot.sendRemote.bind(canvasRoot, uuid);
+	}
+
+	async font() {
 
 	}
 
-	font() {
+	async drawImage() {
 
 	}
 
-	drawImage() {
+	async fillRect() {
 
 	}
 
-	fillRect() {
+	async fillText() {
 
 	}
 
-	fillText() {
+	async beginPath() {
 
 	}
 
-	beginPath() {
+	async fill() {
 
 	}
 
-	fill() {
+	async stroke() {
 
 	}
 
-	stroke() {
+	async ellipse() {
 
 	}
 
-	ellipse() {
+	async set strokeStyle(style) {
 
 	}
 
-	set strokeStyle(style) {
+	async get strokeStyle() {
 
 	}
 
-	get strokeStyle() {
+	async set textBaseline(value) {
 
 	}
 
-	set textBaseline(value) {
+	async get textBaseline() {
 
 	}
 
-	get textBaseline() {
+	async set fillStyle(style) {
 
 	}
 
-	set fillStyle(style) {
-
-	}
-
-	get fillStyle() {
+	async get fillStyle() {
 
 	}
 }

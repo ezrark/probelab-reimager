@@ -4,7 +4,6 @@ const constants = require('./constants');
 
 const ExtractedMap = require('./extractedmap');
 const PointShoot = require('./pointshoot');
-const Canvas = require('canvas');
 const CanvasAbstract = require('./canvas/canvasroot');
 
 function help() {
