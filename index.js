@@ -1,11 +1,12 @@
 const fs = require('fs');
 
+const Canvas = require('canvas');
+
 const constants = require('./constants');
 
 const ExtractedMap = require('./extractedmap');
 const PointShoot = require('./pointshoot');
 const CanvasRoot = require('./canvas/canvasroot');
-const Canvas = require('canvas');
 const NodeCanvas = require('./canvas/nodecanvasmodule');
 
 function help() {
