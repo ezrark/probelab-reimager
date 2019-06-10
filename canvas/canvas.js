@@ -1,6 +1,6 @@
-import Context from './context';
+const Context = require('./context');
 
-export default class Canvas {
+module.exports = class Canvas {
 	constructor(canvasRoot, uuid) {
 		this.data = {
 			uuid,
@@ -14,7 +14,7 @@ export default class Canvas {
 		return new Context(this.data.canvasRoot, await this.sendRemote('getContext', [contextId]));
 	}
 
-	async toBuffer(type='raw', quality=0.9) {
-		return await this.sendRemote('toBuffer', [type, quality]);
+	async getBuffer(type='raw', quality=0.9) {
+		return await this.sendRemote('getBuffer', [type, quality]);
 	}
 }

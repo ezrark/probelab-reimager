@@ -4,8 +4,12 @@ const io = require('./io');
 const Thermo = require('./thermo');
 
 module.exports = class extends Thermo {
-	constructor(entryFile, uri=undefined) {
-		super(entryFile, entryFile.name.substring(0, entryFile.name.length - constants.pointShoot.fileFormats.ENTRY.length), uri);
+	constructor(entryFile, Canvas, uri=undefined) {
+		super(entryFile,
+			entryFile.name.substring(0, entryFile.name.length - constants.pointShoot.fileFormats.ENTRY.length),
+			Canvas,
+			uri
+		);
 	}
 
 	updateFromDisk() {

@@ -4,9 +4,13 @@ const io = require('./io');
 const Thermo = require('./thermo');
 
 module.exports = class extends Thermo {
-	constructor(entryFile, uri=undefined) {
+	constructor(entryFile, Canvas, uri=undefined) {
 		const directoryName = entryFile.uri.split('/').slice(-2, -1)[0];
-		super(entryFile, directoryName.substring(0, directoryName.length - constants.extractedMap.fileFormats.DIRECTORYCONST.length), uri);
+		super(entryFile,
+			directoryName.substring(0, directoryName.length - constants.extractedMap.fileFormats.DIRECTORYCONST.length),
+			Canvas,
+			uri
+		);
 
 		this.data.files.image = this.data.uri + this.data.name + constants.extractedMap.fileFormats.IMAGERAW;
 	}

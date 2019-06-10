@@ -4,7 +4,9 @@ const constants = require('./constants');
 
 const ExtractedMap = require('./extractedmap');
 const PointShoot = require('./pointshoot');
-const CanvasAbstract = require('./canvas/canvasroot');
+const CanvasRoot = require('./canvas/canvasroot');
+const Canvas = require('canvas');
+const NodeCanvas = require('./canvas/nodecanvasmodule');
 
 function help() {
 	console.log('Usage: thermo-reimager [options] [directory]\n');
@@ -466,29 +468,35 @@ else {
 
 		const directory = fs.readdirSync(dirUri, {withFileTypes: true});
 
-		const thermos = directory.flatMap(dir => {
-			if (dir.isDirectory()) {
-				const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
-				return files.filter(file => file.isFile()).map(file => {
-					file.uri = dirUri + dir.name + '/' + file.name;
-					if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-						return new PointShoot(file);
+		const nodeCanvas = new NodeCanvas(Canvas);
+		const canvas = new CanvasRoot(nodeCanvas);
+		canvas.init().then(async () => {
 
-					if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
-						return new ExtractedMap(file);
-				}).filter(item => item);
+			const thermos = directory.flatMap(dir => {
+				if (dir.isDirectory()) {
+					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
+					return files.filter(file => file.isFile()).map(file => {
+						file.uri = dirUri + dir.name + '/' + file.name;
+						if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
+							return new PointShoot(file, canvas);
+
+						if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
+							return new ExtractedMap(file, canvas);
+					}).filter(item => item);
+				}
+			}).filter(i => i);
+
+			try {
+				await writeThermos(thermos, options, points);
+				console.log('All images written');
+			} catch(err) {
+				console.warn(err);
 			}
-		}).filter(i => i);
-
-		writeThermos(thermos, options, points).then(() => {
-			console.log('All images written');
-		}).catch(console.warn);
+		});
 	}
 }
 
 async function writeThermos(thermos, options, points) {
-	const canvas = new CanvasAbstract(Canvas);
-	await canvas.init();
 	for (const thermo of thermos) {
 		await thermo.createWrite(options.position, JSON.parse(JSON.stringify(options)), points);
 		console.log(`Wrote ${thermo.data.name}`);

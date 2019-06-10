@@ -1,7 +1,7 @@
-import GenerateUuid from '../generateuuid';
-import Canvas from './canvas';
+const GenerateUuid = require('../generateuuid');
+const Canvas = require('./canvas');
 
-export default class CanvasRoot {
+module.exports = class CanvasRoot {
 	constructor(remote) {
 		this.data = {
 			remote,
@@ -30,12 +30,16 @@ export default class CanvasRoot {
 		await this.registerFont('fonts/Comic Sans MS.ttf', { family: 'Comic Sans MS' });
 	}
 
-	sendRemote(namespace, command, args) {
+	sendRemote(namespace, command, args=[]) {
 		return new Promise((resolve ,reject) => {
 			const uuid = GenerateUuid.v4();
 			this.data.sentCommands.set(uuid, {resolve, reject, uuid});
 			this.data.remote.send(namespace, command, args, uuid);
 		});
+	}
+
+	async getOrCreateCanvas(uuid, width=300, height=300) {
+		return new Canvas(this, await this.sendRemote('root', 'getOrCreateCanvas', [uuid, width, height]));
 	}
 
 	async registerFont(uri, css) {

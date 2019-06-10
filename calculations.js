@@ -93,7 +93,7 @@ async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, f
 		point.fontSize = 8;
 
 	scratchCtx.font = `${point.fontSize}px "${font}"`;
-	point.fontHeight = scratchCtx.measureText('m').width;
+	point.fontHeight = (await scratchCtx.measureText('m')).width;
 
 	if (size === 5 || size === 3) {
 		point.sixteenthSize = 1;
@@ -160,9 +160,9 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
 	scale.visualScale = '' + scale.visualScale + 'µm';
 
-	scratchCtx.font = `${scale.textFontHeight}px "${font}"`;
-	const textWidth = scratchCtx.measureText(scale.visualScale).width;
-	const lineHeight = scratchCtx.measureText('m').width;
+	await scratchCtx.setFont(`${scale.textFontHeight}px "${font}"`);
+	const textWidth = (await scratchCtx.measureText(scale.visualScale)).width;
+	const lineHeight = (await scratchCtx.measureText('m')).width;
 
 	scale.height = lineHeight + scale.scaleOffsets.between + scale.barPixelHeight + (2 * scale.scaleOffsets.yOffset);
 	scale.width = (scale.scaleLength > textWidth ? scale.scaleLength : textWidth) + (2 * scale.scaleOffsets.xOffset);

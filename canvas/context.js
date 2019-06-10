@@ -1,61 +1,81 @@
-export default class Context {
+module.exports = class Context {
 	constructor(canvasRoot, uuid) {
 		this.sendRemote = canvasRoot.sendRemote.bind(canvasRoot, uuid);
 	}
 
-	async font() {
-
+	drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+		return this.sendRemote('drawImage', [image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
 	}
 
-	async drawImage() {
-
+	fillRect(x, y, width, height) {
+		return this.sendRemote('fillRect', [x, y, width, height]);
 	}
 
-	async fillRect() {
-
+	fillText(text, x, y, maxWidth) {
+		return this.sendRemote('fillText', [text, x, y, maxWidth]);
 	}
 
-	async fillText() {
-
+	strokeRect(x, y, width, height) {
+		return this.sendRemote('strokeRect', [x, y, width, height]);
 	}
 
-	async beginPath() {
-
+	beginPath() {
+		return this.sendRemote('beginPath');
 	}
 
-	async fill() {
-
+	fill() {
+		return this.sendRemote('fill');
 	}
 
-	async stroke() {
-
+	stroke() {
+		return this.sendRemote('stroke');
 	}
 
-	async ellipse() {
-
+	ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise) {
+		return this.sendRemote('ellipse', [x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise]);
 	}
 
-	async set strokeStyle(style) {
-
+	measureText(text) {
+		return this.sendRemote('measureText', [text]);
 	}
 
-	async get strokeStyle() {
-
+	setFont(font) {
+		return this.sendRemote('SETfont', font);
 	}
 
-	async set textBaseline(value) {
-
+	get font() {
+		return this.sendRemote('GETfont');
 	}
 
-	async get textBaseline() {
-
+	setStrokeStyle(style) {
+		return this.sendRemote('SETstrokeStyle', style);
 	}
 
-	async set fillStyle(style) {
-
+	get strokeStyle() {
+		return this.sendRemote('GETstrokeStyle');
 	}
 
-	async get fillStyle() {
-
+	setTextBaseline(value) {
+		return this.sendRemote('SETtextBaseline', value);
 	}
-}
+
+	get textBaseline() {
+		return this.sendRemote('GETtextBaseline');
+	}
+
+	setFillStyle(style) {
+		return this.sendRemote('SETfillStyle', style);
+	}
+
+	get fillStyle() {
+		return this.sendRemote('GETfillStyle');
+	}
+
+	setLineWidth(width) {
+		return this.sendRemote('SETlineWidth', width);
+	}
+
+	get lineWidth() {
+		return this.sendRemote('GETlineWidth');
+	}
+};
