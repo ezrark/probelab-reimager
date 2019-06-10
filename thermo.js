@@ -1,16 +1,10 @@
-const Jimp = require('jimp');
-const Canvas = require('canvas');
+const Jimp = require('jimp/es');
 
 const constants = require('./constants');
 const calculations = require('./calculations');
 
-Canvas.registerFont('fonts/OpenSans-Bold.ttf', { family: 'Open Sans Bold' });
-Canvas.registerFont('fonts/Comic Sans MS.ttf', { family: 'Comic Sans MS' });
-const scratchCanvas = Canvas.createCanvas(300, 300);
-const scratchCtx = scratchCanvas.getContext('2d');
-
 module.exports = class {
-	constructor(entryFile, name, uri=undefined) {
+	constructor(entryFile, name, Canvas, uri=undefined) {
 		this.data = {
 			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 			name,
@@ -26,6 +20,12 @@ module.exports = class {
 				points: []
 			}
 		};
+
+		Canvas.registerFont('fonts/OpenSans-Bold.ttf', { family: 'Open Sans Bold' });
+		Canvas.registerFont('fonts/Comic Sans MS.ttf', { family: 'Comic Sans MS' });
+		const scratchCanvas = Canvas.createCanvas(300, 300);
+		const scratchCtx = scratchCanvas.getContext('2d');
+
 		this.updateFromDisk();
 	}
 

@@ -4,6 +4,8 @@ const constants = require('./constants');
 
 const ExtractedMap = require('./extractedmap');
 const PointShoot = require('./pointshoot');
+const Canvas = require('canvas');
+const CanvasAbstract = require('./canvas/canvasroot');
 
 function help() {
 	console.log('Usage: thermo-reimager [options] [directory]\n');
@@ -486,6 +488,8 @@ else {
 }
 
 async function writeThermos(thermos, options, points) {
+	const canvas = new CanvasAbstract(Canvas);
+	await canvas.init();
 	for (const thermo of thermos) {
 		await thermo.createWrite(options.position, JSON.parse(JSON.stringify(options)), points);
 		console.log(`Wrote ${thermo.data.name}`);
