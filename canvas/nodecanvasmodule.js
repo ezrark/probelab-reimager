@@ -28,6 +28,15 @@ module.exports = class NodeCanvas extends EventEmitter {
 					data = await space[command.slice(3)];
 				else
 					switch(command) {
+						case 'drawImage':
+							data = await new Promise(async (resolve, reject) => {
+								const image = new this.data.Canvas.Image();
+								image.onload = async () => {
+									resolve(await space.drawImage(image, ...args.filter(arg => typeof arg !== 'string' && arg !== undefined && arg !== null)));
+								};
+								image.src = args[0];
+							});
+							break;
 						case 'getContext':
 							data = await space.getContextOverride(...args);
 							break;
@@ -56,7 +65,7 @@ module.exports = class NodeCanvas extends EventEmitter {
 	}
 
 	registerFont(uri, css) {
-		return this.data.Canvas.registerFont(uri, css);
+		return this.data.Canvas.registerFont(css.uri, css);
 	}
 
 	async createCanvas(width, height, uuid=undefined) {

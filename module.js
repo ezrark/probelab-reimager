@@ -3,6 +3,6 @@ module.exports = {
 	CanvasRoot: require('./canvas/canvasroot'),
 	constants: require('./constants'),
 	calculations: require('./calculations'),
-	PointShoot: require('./pointshoot')(),
-	ExtractedMap: require('./extractedmap')()
+	PointShoot: require('./pointshoot'),
+	ExtractedMap: require('./extractedmap')
 };
