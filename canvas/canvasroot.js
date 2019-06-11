@@ -28,8 +28,8 @@ module.exports = class CanvasRoot {
 	}
 
 	async init() {
-		await this.registerFont(fs.readFileSync('fonts/OpenSans-Bold.ttf').toString('base64'), { family: 'Open Sans Bold', uri: 'fonts/OpenSans-Bold.ttf' });
-		await this.registerFont(fs.readFileSync('fonts/Comic Sans MS.ttf').toString('base64'), { family: 'Comic Sans MS', uri: 'fonts/Comic Sans MS.ttf' });
+		await this.registerFont(fs.readFileSync(`${__dirname}/../fonts/Comic Sans MS.ttf`).toString('base64'), { family: 'Open Sans Bold', uri: 'fonts/OpenSans-Bold.ttf' });
+		await this.registerFont(fs.readFileSync(`${__dirname}/../fonts/Comic Sans MS.ttf`).toString('base64'), { family: 'Comic Sans MS', uri: 'fonts/Comic Sans MS.ttf' });
 	}
 
 	sendRemote(namespace, command, args=[]) {
