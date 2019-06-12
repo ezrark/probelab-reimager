@@ -30,7 +30,7 @@ module.exports = class {
 	async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
 		settings.belowColor = settings.belowColor ? settings.belowColor : constants.colors.AUTO;
 		settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.colors.AUTO;
-		settings.scaleSize = settings.scaleOffsets ? settings.scaleOffsets : constants.scale.AUTOSIZE;
+		settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
 		settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
 		settings.scaleBarTop = settings.scaleBarTop ? settings.scaleBarTop : constants.scale.SCALEBARTOP;
 		settings.pixelSizeConstant = settings.pixelSizeConstant ? settings.pixelSizeConstant : constants.PIXELSIZECONSTANT;
