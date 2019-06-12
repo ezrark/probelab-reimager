@@ -1,6 +1,6 @@
 {
   "name": "thermo-reimager",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "main": "module.js",
   "bin": {
     "thermo-reimager": "index.js"

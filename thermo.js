@@ -62,7 +62,7 @@ module.exports = class {
 		let textBackgroundIsBlack = '';
 
 		if (scale.realHeight > scale.imageHeight) {
-			let imageIsBlack = settings.belowColor === constants.scale.colors.BLACK;
+			let imageIsBlack = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
 
 			// Check the luminosity and use white or black background to make it look nice
 			if (settings.belowColor === constants.colors.AUTO)
@@ -78,7 +78,7 @@ module.exports = class {
 			await ctx.fillRect(scale.x, scale.y, scale.width, scale.height);
 		}
 
-		if (typeof textBackgroundIsBlack === 'string')
+		if (!settings.scaleColor && typeof textBackgroundIsBlack === 'string')
 			textBackgroundIsBlack = calculations.sumPixelLuminosity(rawImage, scale.x, scale.y, scale.width, scale.height) < .5;
 
 		await ctx.setFillStyle(settings.scaleColor ? settings.scaleColor.RGBA : (textBackgroundIsBlack ? constants.colors.white.RGBA : constants.colors.black.RGBA));
