@@ -72,7 +72,6 @@ module.exports = class {
 			await ctx.setFillStyle(imageIsBlack ? constants.colors.black.RGBA : constants.colors.white.RGBA);
 			await ctx.fillRect(0, scale.imageHeight, scale.realWidth, scale.realHeight - scale.imageHeight);
 		} else {
-			textBackgroundIsBlack = !!settings.belowColor;
 			await ctx.setFillStyle(`rgba(${settings.belowColor ? settings.belowColor.R : constants.colors.white.R}, ${
 				settings.belowColor ? settings.belowColor.G : constants.colors.white.G}, ${
 				settings.belowColor ? settings.belowColor.B : constants.colors.white.B}, ${settings.backgroundOpacity})`);

@@ -490,6 +490,7 @@ else {
 			try {
 				await writeThermos(thermos, options, points);
 				console.log('All images written');
+				process.exit();
 			} catch(err) {
 				console.warn(err);
 			}
