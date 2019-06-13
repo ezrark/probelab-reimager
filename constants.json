@@ -40,6 +40,13 @@
     "OPENSANS": "Open Sans Bold",
     "COMICSANSMS": "Comic Sans MS"
   },
+  "export": {
+    "tiff": {
+      "quality": 100,
+      "compression": "none",
+      "predictor": "none"
+    }
+  },
   "extractedMap": {
     "MAGNIFICATIONKEY": "magcam",
     "fileFormats": {

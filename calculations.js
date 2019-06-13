@@ -47,12 +47,14 @@ function calculatePixelSize(magnification, width, pixelSizeConstant) {
 	}
 }
 
-function sumPixelLuminosity(image, startX, startY, width, height) {
+function sumPixelLuminosity(image, startX, startY, width, height, hasAlpha=false) {
 	let luminosity = 0;
+	const init = startX*startY*(hasAlpha ? 4 : 3);
+	const max = (startX+width)*(startY+height)*(hasAlpha ? 4 : 3);
+	const step = (hasAlpha ? 4 : 3);
 
-	image.scan(startX, startY, width, height, (x, y, index) => {
-		luminosity += findPixelLuminosity(image.bitmap.data[index], image.bitmap.data[index + 1], image.bitmap.data[index + 2]);
-	});
+	for (let i = init; i < max; i+=step)
+		luminosity += findPixelLuminosity(image[i], image[i + 1], image[i + 2]);
 
 	return (luminosity /(width * height)) / 255;
 }
@@ -123,10 +125,10 @@ async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, f
 
 async function calculateScale(startImage, scratchCtx, magnification, scaleType, {scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
 	let scale = {
-		imageHeight: startImage.bitmap.height,
-		imageWidth: startImage.bitmap.width,
-		realHeight: startImage.bitmap.height,
-		realWidth: startImage.bitmap.width,
+		imageHeight: startImage.height,
+		imageWidth: startImage.width,
+		realHeight: startImage.height,
+		realWidth: startImage.width,
 		x: 0,
 		y: 0,
 		textX: 0,
@@ -135,16 +137,16 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 		barY: 0,
 		width: 0,
 		height: 0,
-		textFontHeight: Math.round(startImage.bitmap.width*constants.FONTWIDTHMUTIPLIER),
+		textFontHeight: Math.round(startImage.width*constants.FONTWIDTHMUTIPLIER),
 		visualScale: 0,
 		pixelSize: 0,
 		scaleLength: 0,
 		scaleIsBlack: false,
 		barPixelHeight: 0,
 		scaleOffsets: {
-			xOffset: Math.round(startImage.bitmap.width*constants.XOFFSETMULTIPLIER),
-			yOffset: Math.round(startImage.bitmap.width*constants.YOFFSETMULTIPLIER),
-			between: Math.round(startImage.bitmap.width*constants.BETWEENMULTIPLIER)
+			xOffset: Math.round(startImage.width*constants.XOFFSETMULTIPLIER),
+			yOffset: Math.round(startImage.width*constants.YOFFSETMULTIPLIER),
+			between: Math.round(startImage.width*constants.BETWEENMULTIPLIER)
 		}
 	};
 
@@ -152,7 +154,7 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 		scale.textFontHeight = 8;
 
 	// General easy calculations and estimations
-	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, startImage.bitmap.width, pixelSizeConstant);
+	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, startImage.width, pixelSizeConstant);
 
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
 	scale.barPixelHeight = Math.round((scaleBarHeight ? scaleBarHeight : constants.SCALEBARHEIGHTPERCENT) * scale.textFontHeight);
@@ -172,40 +174,40 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 	switch(scaleType) {
 		case constants.scale.types.BELOWLEFT:
 			scale.x = 0;
-			scale.y = startImage.bitmap.height;
+			scale.y = startImage.height;
 
-			scale.realHeight = startImage.bitmap.height + scale.height;
-			scale.realWidth = startImage.bitmap.width;
+			scale.realHeight = startImage.height + scale.height;
+			scale.realWidth = startImage.width;
 			break;
 		case constants.scale.types.BELOWRIGHT:
-			scale.x = startImage.bitmap.width - scale.width;
-			scale.y = startImage.bitmap.height;
+			scale.x = startImage.width - scale.width;
+			scale.y = startImage.height;
 
-			scale.realHeight = startImage.bitmap.height + scale.height;
-			scale.realWidth = startImage.bitmap.width;
+			scale.realHeight = startImage.height + scale.height;
+			scale.realWidth = startImage.width;
 			break;
 		default:
 		case constants.scale.types.BELOWCENTER:
-			scale.x = Math.round((startImage.bitmap.width / 2) - (scale.width / 2));
-			scale.y = startImage.bitmap.height;
+			scale.x = Math.round((startImage.width / 2) - (scale.width / 2));
+			scale.y = startImage.height;
 
-			scale.realHeight = startImage.bitmap.height + scale.height;
-			scale.realWidth = startImage.bitmap.width;
+			scale.realHeight = startImage.height + scale.height;
+			scale.realWidth = startImage.width;
 			break;
 		case constants.scale.types.LOWERCENTER:
-			scale.x = Math.round((startImage.bitmap.width/2) - (scale.width/2));
-			scale.y = startImage.bitmap.height - scale.height;
+			scale.x = Math.round((startImage.width/2) - (scale.width/2));
+			scale.y = startImage.height - scale.height;
 			break;
 		case constants.scale.types.LOWERRIGHT:
-			scale.x = startImage.bitmap.width - scale.width;
-			scale.y = startImage.bitmap.height - scale.height;
+			scale.x = startImage.width - scale.width;
+			scale.y = startImage.height - scale.height;
 			break;
 		case constants.scale.types.LOWERLEFT:
 			scale.x = 0;
-			scale.y = startImage.bitmap.height - scale.height;
+			scale.y = startImage.height - scale.height;
 			break;
 		case constants.scale.types.UPPERRIGHT:
-			scale.x = startImage.bitmap.width - scale.width;
+			scale.x = startImage.width - scale.width;
 			scale.y = 0;
 			break;
 		case constants.scale.types.UPPERLEFT:
@@ -226,7 +228,7 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 	}
 
 	// Return the image and scale information
-	return [scale, startImage];
+	return scale;
 }
 
 module.exports = {

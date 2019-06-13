@@ -1,4 +1,4 @@
-const Jimp = require('jimp');
+const sharp = require('sharp');
 
 const constants = require('./constants');
 const calculations = require('./calculations');
@@ -10,7 +10,6 @@ module.exports = class {
 			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 			name,
 			scale: {},
-			image: undefined,
 			canvas: undefined,
 			scratchCtx: undefined,
 			integrity: true,
@@ -34,18 +33,22 @@ module.exports = class {
 		settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
 		settings.scaleBarTop = settings.scaleBarTop ? settings.scaleBarTop : constants.scale.SCALEBARTOP;
 		settings.pixelSizeConstant = settings.pixelSizeConstant ? settings.pixelSizeConstant : constants.PIXELSIZECONSTANT;
-		settings.backgroundOpacity  = settings.backgroundOpacity ? settings.backgroundOpacity : constants.scale.background.AUTOOPACITY;
+		settings.backgroundOpacity = settings.backgroundOpacity ? settings.backgroundOpacity : constants.scale.background.AUTOOPACITY;
 		settings.font = settings.font ? settings.font : constants.fonts.OPENSANS;
 
 		const scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
 		const scratchCtx = this.data.scratchCtx = await scratchCanvas.getContext('2d');
 
+		const tiffInput = sharp(this.data.files.image);
+		const rawImage = await tiffInput.clone().raw().toBuffer();
+		const meta = await tiffInput.metadata();
+
 		// Calculate scale and image
-		const [scale, rawImage] = await calculations.calculateScale(await Jimp.read(this.data.files.image), scratchCtx, this.data.magnification, type, settings);
+		const scale = await calculations.calculateScale(meta, scratchCtx, this.data.magnification, type, settings);
 		this.data.scale = scale;
 
 		// Background
-		settings.backgroundOpacity = (settings.backgroundOpacity < 0 ? 0 : (settings.backgroundOpacity > 100 ? 100 : settings.backgroundOpacity))/100;
+		settings.backgroundOpacity = (settings.backgroundOpacity < 0 ? 0 : (settings.backgroundOpacity > 100 ? 100 : settings.backgroundOpacity)) / 100;
 
 		const canvas = await this.data.Canvas.createCanvas(scale.realWidth, scale.realHeight);
 		const ctx = await canvas.getContext('2d');
@@ -56,7 +59,7 @@ module.exports = class {
 		// For that reason we can't use setters since they don't support Promises and we don't know if the front-end
 		//   module supports synchronous ordered commands (otherwise we can assume everything would happen in-order)
 
-		await ctx.drawImage(await rawImage.getBase64Async(Jimp.MIME_PNG), 0, 0);
+		await ctx.drawImage(`data:image/png;base64,${(await tiffInput.clone().png().toBuffer()).toString('base64')}`, 0, 0);
 		await ctx.setFont(`${scale.textFontHeight}px "${settings.font}"`);
 		await ctx.setTextBaseline('bottom');
 		let textBackgroundIsBlack = '';
@@ -66,7 +69,7 @@ module.exports = class {
 
 			// Check the luminosity and use white or black background to make it look nice
 			if (settings.belowColor === constants.colors.AUTO)
-				imageIsBlack = calculations.sumPixelLuminosity(rawImage, 0, 0, rawImage.bitmap.width, rawImage.bitmap.height) < .5;
+				imageIsBlack = calculations.sumPixelLuminosity(rawImage, 0, 0, meta.width, meta.height) < .5;
 
 			textBackgroundIsBlack = imageIsBlack;
 			await ctx.setFillStyle(imageIsBlack ? constants.colors.black.RGBA : constants.colors.white.RGBA);
@@ -148,38 +151,47 @@ module.exports = class {
 		}
 	}
 
-	toBuffer() {
-		return this.data.canvas.getBuffer('raw');
+	async toSharp() {
+		const {type, data} = await this.data.canvas.getBuffer('raw');
+		switch(type) {
+			default:
+			case 'array':
+				return await sharp(Buffer.from(data), {raw: {
+						width: this.data.scale.realWidth,
+						height: this.data.scale.realHeight,
+						channels: 4
+					}});
+			case 'raw':
+				return await sharp(data, {raw: {
+					width: this.data.scale.realWidth,
+						height: this.data.scale.realHeight,
+						channels: 4
+				}});
+			case 'image/png':
+				return await sharp(Buffer.from(data.split(',', 2)[1], 'base64'));
+		}
 	}
 
-	write(settings={}) {
-		return new Promise(async (resolve, reject) => {
-			let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
+	async write(settings={}) {
+		settings.tiff = typeof settings.tiff !== 'object' ? {} : settings.tiff;
+		settings.tiff.quality = settings.tiff.quality === undefined ? constants.export.tiff.quality : settings.tiff.quality;
+		settings.tiff.compression = settings.tiff.compression === undefined ? constants.export.tiff.compression : settings.tiff.compression;
+		settings.tiff.predictor = settings.tiff.predictor === undefined ? constants.export.tiff.predictor : settings.tiff.predictor;
 
-			new Jimp({
-				data: await this.toBuffer(),
-				width: this.data.scale.realWidth,
-				height: this.data.scale.realHeight
-			}, async (err, image) => {
-				if (err)
-					reject(err);
-				else
-					resolve(await image.writeAsync(outputUri));
-			});
-		});
+		let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
+
+		await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
+		return outputUri;
 	}
 
 	async createBuffer(type=undefined, settings={}, points=[]) {
 		await this.create(type, settings, points);
-		const buffer = this.toBuffer();
-		this.data.canvas = undefined;
-		return buffer;
+		return await this.toSharp().toBuffer();
 	}
 
 	async createWrite(type=undefined, settings={}, points=[]) {
 		await this.create(type, settings, points);
 		await this.write(settings);
-		this.data.canvas = undefined;
 	}
 
 	async create(type=undefined, settings={}, points=[]) {
@@ -190,9 +202,8 @@ module.exports = class {
 				await this.addPoint(x, y, name, settings);
 
 		if (settings.addPoints && this.data.points)
-			for (const point of Object.values(this.data.points)) {
+			for (const point of Object.values(this.data.points))
 				await this.addPoint(...calculations.pointToXY(point, this.data.scale.imageWidth, this.data.scale.imageHeight), point.name.match(/pt(\d.+)psmsa/miu)[1].slice(0, -1), settings);
-			}
 
 		return this;
 	}

@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const fsPromises = require('fs').promises;
 
 const GenerateUuid = require('../generateuuid');
 
@@ -64,8 +65,8 @@ module.exports = class NodeCanvas extends EventEmitter {
 			this.emit('reject', uuid, {message: 'Namespace does not exist'});
 	}
 
-	registerFont(uri, css) {
-		return this.data.Canvas.registerFont(css.uri, css);
+	async registerFont(uri, css) {
+		return await this.data.Canvas.registerFont(uri, css);
 	}
 
 	async createCanvas(width, height, uuid=undefined) {
@@ -81,8 +82,8 @@ module.exports = class NodeCanvas extends EventEmitter {
 
 		space.toBufferOverride = (type, quality) => {
 			if (type === 'raw')
-				return fixBGRA(space.toBuffer(type, quality));
-			return space.toBuffer(type, quality);
+				return {type: 'raw', data: fixBGRA(space.toBuffer('raw', quality))};
+			return {type: type, data: space.toBuffer(type, quality)};
 		};
 
 		this.data.namespaces[uuid] = space;

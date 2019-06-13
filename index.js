@@ -86,7 +86,12 @@ let options = {
 	pointSize: constants.point.AUTOSIZE,
 	pointFontSize: constants.point.AUTOSIZE,
 	pointFont: constants.fonts.OPENSANS,
-	font: constants.fonts.OPENSANS
+	font: constants.fonts.OPENSANS,
+	tiff: {
+		quality: constants.export.tiff.quality,
+		compression: constants.export.tiff.compression,
+		predictor: constants.export.tiff.predictor
+	}
 };
 
 let points = [];

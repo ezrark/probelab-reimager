@@ -14,7 +14,7 @@ module.exports = class Canvas {
 		return new Context(this.data.canvasRoot, await this.sendRemote('getContext', [contextId]));
 	}
 
-	async getBuffer(type='raw', quality=0.9) {
+	async getBuffer(type='raw', quality=1.0) {
 		return await this.sendRemote('getBuffer', [type, quality]);
 	}
 }
