@@ -163,8 +163,9 @@ module.exports = class {
 	}
 
 	async createBuffer(type=undefined, settings={}, points=[]) {
+		settings = Sanitize.writeSettings(settings);
 		await this.create(type, settings, points);
-		return await this.toSharp().toBuffer();
+		return (await this.toSharp()).tiff(settings.tiff).toBuffer();
 	}
 
 	async createWrite(type=undefined, settings={}, points=[]) {
