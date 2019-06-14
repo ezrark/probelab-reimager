@@ -2,6 +2,7 @@ const sharp = require('sharp');
 
 const constants = require('./constants');
 const calculations = require('./calculations');
+const Sanitize = require('./sanitize');
 
 module.exports = class {
 	constructor(entryFile, name, Canvas, uri=undefined) {
@@ -27,15 +28,7 @@ module.exports = class {
 	updateFromDisk() {}
 
 	async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
-		settings.belowColor = settings.belowColor ? settings.belowColor : constants.colors.AUTO;
-		settings.scaleColor = settings.scaleColor ? settings.scaleColor : constants.colors.AUTO;
-		settings.scaleSize = settings.scaleSize ? settings.scaleSize : constants.scale.AUTOSIZE;
-		settings.scaleBarHeight = settings.scaleBarHeight ? settings.scaleBarHeight : constants.scale.AUTOSIZE;
-		settings.scaleBarTop = settings.scaleBarTop ? settings.scaleBarTop : constants.scale.SCALEBARTOP;
-		settings.pixelSizeConstant = settings.pixelSizeConstant ? settings.pixelSizeConstant : constants.PIXELSIZECONSTANT;
-		settings.backgroundOpacity = settings.backgroundOpacity ? settings.backgroundOpacity : constants.scale.background.AUTOOPACITY;
-		settings.font = settings.font ? settings.font : constants.fonts.OPENSANS;
-
+		settings = Sanitize.scaleSettings(settings);
 		const scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
 		const scratchCtx = this.data.scratchCtx = await scratchCanvas.getContext('2d');
 
@@ -47,10 +40,7 @@ module.exports = class {
 		const scale = await calculations.calculateScale(meta, scratchCtx, this.data.magnification, type, settings);
 		this.data.scale = scale;
 
-		// Background
-		settings.backgroundOpacity = (settings.backgroundOpacity < 0 ? 0 : (settings.backgroundOpacity > 100 ? 100 : settings.backgroundOpacity)) / 100;
-
-		const canvas = await this.data.Canvas.createCanvas(scale.realWidth, scale.realHeight);
+		const canvas = this.data.canvas = await this.data.Canvas.createCanvas(scale.realWidth, scale.realHeight);
 		const ctx = await canvas.getContext('2d');
 
 		// So we are using a "Canvas" object that is really just a communication layer to an actual canvas element.
@@ -75,9 +65,7 @@ module.exports = class {
 			await ctx.setFillStyle(imageIsBlack ? constants.colors.black.RGBA : constants.colors.white.RGBA);
 			await ctx.fillRect(0, scale.imageHeight, scale.realWidth, scale.realHeight - scale.imageHeight);
 		} else {
-			await ctx.setFillStyle(`rgba(${settings.belowColor ? settings.belowColor.R : constants.colors.white.R}, ${
-				settings.belowColor ? settings.belowColor.G : constants.colors.white.G}, ${
-				settings.belowColor ? settings.belowColor.B : constants.colors.white.B}, ${settings.backgroundOpacity})`);
+			await ctx.setFillStyle(settings.RGBA);
 			await ctx.fillRect(scale.x, scale.y, scale.width, scale.height);
 		}
 
@@ -87,16 +75,10 @@ module.exports = class {
 		await ctx.setFillStyle(settings.scaleColor ? settings.scaleColor.RGBA : (textBackgroundIsBlack ? constants.colors.white.RGBA : constants.colors.black.RGBA));
 		await ctx.fillText(scale.visualScale, scale.textX, scale.textY + scale.textFontHeight);
 		await ctx.fillRect(scale.barX, scale.barY, scale.scaleLength, scale.barPixelHeight);
-
-		this.data.canvas = canvas;
 	}
 
 	async addPoint(x, y, name='', settings={}) {
-		settings.pointType = settings.pointType ? settings.pointType : constants.point.types.THERMOINSTANT;
-		settings.textColor = settings.textColor ? settings.textColor : constants.colors.red;
-		settings.pointSize = settings.pointSize ? settings.pointSize : constants.point.AUTOSIZE;
-		settings.pointFontSize = settings.pointFontSize ? settings.pointFontSize : constants.point.AUTOSIZE;
-		settings.pointFont = settings.pointFont ? settings.pointFont : constants.fonts.OPENSANS;
+		settings = Sanitize.pointSettings(settings);
 
 		const scale = this.data.scale;
 		if (scale === undefined)
@@ -173,11 +155,7 @@ module.exports = class {
 	}
 
 	async write(settings={}) {
-		settings.tiff = typeof settings.tiff !== 'object' ? {} : settings.tiff;
-		settings.tiff.quality = settings.tiff.quality === undefined ? constants.export.tiff.quality : settings.tiff.quality;
-		settings.tiff.compression = settings.tiff.compression === undefined ? constants.export.tiff.compression : settings.tiff.compression;
-		settings.tiff.predictor = settings.tiff.predictor === undefined ? constants.export.tiff.predictor : settings.tiff.predictor;
-
+		settings = Sanitize.writeSettings(settings);
 		let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
 
 		await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
@@ -206,5 +184,23 @@ module.exports = class {
 				await this.addPoint(...calculations.pointToXY(point, this.data.scale.imageWidth, this.data.scale.imageHeight), point.name.match(/pt(\d.+)psmsa/miu)[1].slice(0, -1), settings);
 
 		return this;
+	}
+
+	serialize() {
+		return {
+			uri: this.data.uri,
+			name: this.data.name,
+			integrity: this.data.integrity,
+			magnification: this.data.magnification,
+			points: this.data.points,
+			image: {
+				width: this.data.scale.imageWidth,
+				height: this.data.scale.imageHeight
+			},
+			output: {
+				width: this.data.scale.realWidth,
+				height: this.data.scale.realHeight
+			}
+		}
 	}
 };
