@@ -135,8 +135,14 @@ module.exports = class {
 		}
 	}
 
-	async toPngUrl() {
-		return await this.data.canvas.getBuffer('url');
+	async toUrl(settings) {
+		settings = Sanitize.writeSettings(settings);
+		if (settings.tiff)
+			return (await this.toSharp().tiff(settings.tiff)).toBuffer().toString('base64');
+		else if (settings.png)
+			return (await this.toSharp().png(settings.png)).toBuffer().toString('base64');
+		else if (settings.webp)
+			return (await this.toSharp().webp(settings.webp)).toBuffer().toString('base64');
 	}
 
 	async toSharp() {

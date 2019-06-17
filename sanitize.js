@@ -33,12 +33,23 @@ function pointSettings(inputSettings) {
 
 function writeSettings(inputSettings) {
 	inputSettings.tiff = typeof inputSettings.tiff !== 'object' ? {} : inputSettings.tiff;
+	inputSettings.webp = typeof inputSettings.webp !== 'object' ? {} : inputSettings.webp;
+	inputSettings.png = typeof inputSettings.png !== 'object' ? {} : inputSettings.png;
 
 	return {
 		tiff: {
 			quality: inputSettings.tiff.quality === undefined ? constants.export.tiff.quality : inputSettings.tiff.quality,
 			compression: inputSettings.tiff.compression === undefined ? constants.export.tiff.compression : inputSettings.tiff.compression,
 			predictor: inputSettings.tiff.predictor === undefined ? constants.export.tiff.predictor : inputSettings.tiff.predictor
+		},
+		webp: {
+			quality: inputSettings.webp.quality === undefined ? constants.export.webp.quality : inputSettings.webp.quality,
+			compression: inputSettings.webp.lossless === undefined ? constants.export.webp.lossless : inputSettings.webp.lossless,
+			predictor: inputSettings.webp.nearLossless === undefined ? constants.export.webp.nearLossless : inputSettings.webp.nearLossless
+		},
+		png: {
+			quality: inputSettings.png.quality === undefined ? constants.export.png.quality : inputSettings.png.quality,
+			compressionLevel: inputSettings.png.compressionLevel === undefined ? constants.export.png.compressionLevel : inputSettings.png.compressionLevel
 		}
 	}
 }

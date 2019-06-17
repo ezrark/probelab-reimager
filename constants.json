@@ -45,6 +45,15 @@
       "quality": 100,
       "compression": "none",
       "predictor": "none"
+    },
+    "webp": {
+      "quality": 100,
+      "lossless": true,
+      "nearLossless": false
+    },
+    "png": {
+      "quality": 100,
+      "compressionLevel": 9
     }
   },
   "extractedMap": {
