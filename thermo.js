@@ -136,7 +136,7 @@ module.exports = class {
 	}
 
 	async toPngUrl() {
-
+		return await this.data.canvas.getBuffer('url');
 	}
 
 	async toSharp() {

@@ -81,9 +81,14 @@ module.exports = class NodeCanvas extends EventEmitter {
 		};
 
 		space.toBufferOverride = (type, quality) => {
-			if (type === 'raw')
-				return {type: 'raw', data: fixBGRA(space.toBuffer('raw', quality))};
-			return {type: type, data: space.toBuffer(type, quality)};
+			switch(type) {
+				default:
+					return {type: type, data: space.toBuffer(type, quality)};
+				case 'raw':
+					return {type: 'raw', data: fixBGRA(space.toBuffer('raw', quality))};
+				case 'url':
+					return space.toDataURL('image/png');
+			}
 		};
 
 		this.data.namespaces[uuid] = space;
