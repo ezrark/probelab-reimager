@@ -3,11 +3,13 @@ const sharp = require('sharp');
 const constants = require('./constants');
 const calculations = require('./calculations');
 const Sanitize = require('./sanitize');
+const GenerateUuid = require('./generateuuid');
 
 module.exports = class {
-	constructor(entryFile, name, Canvas, uri=undefined) {
+	constructor(entryFile, name, Canvas, uri=undefined, uuid=undefined) {
 		this.data = {
 			Canvas,
+			uuid: uuid ? uuid : GenerateUuid.v4(),
 			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 			name,
 			scale: {},
@@ -40,7 +42,7 @@ module.exports = class {
 		const scale = await calculations.calculateScale(meta, scratchCtx, this.data.magnification, type, settings);
 		this.data.scale = scale;
 
-		const canvas = this.data.canvas = await this.data.Canvas.createCanvas(scale.realWidth, scale.realHeight);
+		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, scale.realWidth, scale.realHeight);
 		const ctx = await canvas.getContext('2d');
 
 		// So we are using a "Canvas" object that is really just a communication layer to an actual canvas element.
@@ -131,6 +133,10 @@ module.exports = class {
 				await ctx.fillRect(point.centerX - point.sixteenthSize, point.topY, point.eighthSize + 1, point.pointHeight);
 				break;
 		}
+	}
+
+	async toPngUrl() {
+
 	}
 
 	async toSharp() {

@@ -17,4 +17,4 @@ module.exports = class Canvas {
 	async getBuffer(type='raw', quality=1.0) {
 		return await this.sendRemote('getBuffer', [type, quality]);
 	}
-}
+};

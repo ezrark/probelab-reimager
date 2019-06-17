@@ -49,4 +49,4 @@ module.exports = class CanvasRoot {
 	async createCanvas(width, height) {
 		return new Canvas(this, await this.sendRemote('root', 'createCanvas', [width, height]));
 	}
-}
+};

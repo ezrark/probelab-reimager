@@ -46,7 +46,7 @@ module.exports = class NodeCanvas extends EventEmitter {
 							break;
 						case 'getOrCreateCanvas':
 							const innerSpace = this.data.namespaces[args[0]];
-							if (innerSpace)
+							if (innerSpace && innerSpace.width === args[1] && innerSpace.height === args[2])
 								data = args[0];
 							else
 								data = await this.createCanvas(args[1], args[2], args[0]);
