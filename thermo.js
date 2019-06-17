@@ -137,12 +137,14 @@ module.exports = class {
 
 	async toUrl(settings) {
 		settings = Sanitize.writeSettings(settings);
-		if (settings.tiff)
-			return (await (await this.toSharp()).tiff(settings.tiff).toBuffer()).toString('base64');
-		else if (settings.png)
-			return (await (await this.toSharp()).png(settings.png).toBuffer()).toString('base64');
-		else if (settings.webp)
-			return (await (await this.toSharp()).webp(settings.webp).toBuffer()).toString('base64');
+		if (settings.png.use)
+			return 'data:png;base64,' + (await (await this.toSharp()).png(settings.png).toBuffer()).toString('base64');
+		else if (settings.webp.use)
+			return 'data:webp;base64,' + (await (await this.toSharp()).webp(settings.webp).toBuffer()).toString('base64');
+		else if (settings.jpeg.use)
+			return 'data:jpeg;base64,' + (await (await this.toSharp()).jpeg(settings.jpeg).toBuffer()).toString('base64');
+		else
+			return 'data:tiff;base64,' + (await (await this.toSharp()).tiff(settings.tiff).toBuffer()).toString('base64');
 	}
 
 	async toSharp() {

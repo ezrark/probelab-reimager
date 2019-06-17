@@ -54,6 +54,10 @@
     "png": {
       "quality": 100,
       "compressionLevel": 9
+    },
+    "jpeg": {
+      "quality": 100,
+      "chromaSubsampling": "4:4:4"
     }
   },
   "extractedMap": {
