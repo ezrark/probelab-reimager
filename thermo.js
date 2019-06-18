@@ -191,8 +191,8 @@ module.exports = class {
 		await this.addScale(type, settings);
 
 		if (points)
-			for (const {x, y, name, settings=settings} of points)
-				await this.addPoint(x, y, name, settings);
+			for (const {x, y, name, pointSettings=settings} of points)
+				await this.addPoint(x, y, name, pointSettings);
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))

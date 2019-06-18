@@ -43,6 +43,7 @@ function writeSettings(inputSettings) {
 	inputSettings.jpeg = typeof inputSettings.jpeg !== 'object' ? {} : inputSettings.jpeg;
 
 	return {
+		uri: inputSettings.uri,
 		tiff: {
 			use: useTiff,
 			quality: inputSettings.tiff.quality === undefined ? constants.export.tiff.quality : inputSettings.tiff.quality,
