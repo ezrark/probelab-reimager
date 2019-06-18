@@ -49,18 +49,17 @@ function calculatePixelSize(magnification, width, pixelSizeConstant) {
 
 function sumPixelLuminosity(image, startX, startY, width, height, hasAlpha=false) {
 	let luminosity = 0;
-	const init = startX*startY*(hasAlpha ? 4 : 3);
-	const max = (startX+width)*(startY+height)*(hasAlpha ? 4 : 3);
 	const step = (hasAlpha ? 4 : 3);
+	const init = startX*startY*step;
+	const max = init + (width*height*step);
 
-	for (let i = init; i < max; i+=step)
+	for (let i = init; i < max; i += step)
 		luminosity += findPixelLuminosity(image[i], image[i + 1], image[i + 2]);
-
-	return (luminosity /(width * height)) / 255;
+	return luminosity / width / height;
 }
 
 function findPixelLuminosity(r, g, b) {
-	return (constants.luminosity.RED * r) + (constants.luminosity.GREEN * g) + (constants.luminosity.BLUE * b)
+	return ((constants.luminosity.RED * r) + (constants.luminosity.GREEN * g) + (constants.luminosity.BLUE * b))/768;
 }
 
 function pointToXY(pos, width, height) {
