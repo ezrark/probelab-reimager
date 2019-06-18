@@ -207,7 +207,7 @@ module.exports = class {
 			name: this.data.name,
 			integrity: this.data.integrity,
 			magnification: this.data.magnification,
-			points: this.data.points,
+			points: this.data.points.map(({name, type, values}) => ({name, type, values})),
 			image: {
 				width: this.data.scale.imageWidth,
 				height: this.data.scale.imageHeight
