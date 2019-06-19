@@ -16,7 +16,7 @@ function scaleSettings(inputSettings) {
 	output.backgroundOpacity = (inputSettings.backgroundOpacity < 0 ? 0 : (inputSettings.backgroundOpacity > 100 ? 100 : inputSettings.backgroundOpacity)) / 100;
 	output.RGBA = `rgba(${inputSettings.belowColor ? inputSettings.belowColor.R : constants.colors.white.R}, ${
 		inputSettings.belowColor ? inputSettings.belowColor.G : constants.colors.white.G}, ${
-		inputSettings.belowColor ? inputSettings.belowColor.B : constants.colors.white.B}, ${inputSettings.backgroundOpacity})`;
+		inputSettings.belowColor ? inputSettings.belowColor.B : constants.colors.white.B}, ${output.backgroundOpacity})`;
 
 	return output;
 }
