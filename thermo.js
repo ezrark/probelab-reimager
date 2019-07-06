@@ -4,6 +4,7 @@ const constants = require('./constants');
 const calculations = require('./calculations');
 const Sanitize = require('./sanitize');
 const GenerateUuid = require('./generateuuid');
+const io = require('./io');
 
 module.exports = class {
 	constructor(entryFile, name, Canvas, uri=undefined, uuid=undefined) {
@@ -31,9 +32,27 @@ module.exports = class {
 			metadata: {}
 		};
 
+		const entryData = io.readEntryFile(this.data.files.entry);
 
+		this.data.files.base = this.data.uri + entryData.data.base;
+		this.data.files.layers = entryData.layers;
+
+		this.data.files.layers.push({
+			element: 'base',
+			file: this.data.files.base
+		});
+
+		this.data.points = entryData.points.reduce((points, point) => {
+			point.data = io.readMASFile((this.data.uri + point.file));
+			points[point.file] = point;
+
+			return points;
+		}, {});
+
+		this.data.files.points = Object.keys(this.data.points);
 
 		this.updateFromDisk();
+
 	}
 
 	async init() {
@@ -41,7 +60,7 @@ module.exports = class {
 			if (element !== 'base') {
 				return {
 					element,
-					sharp: await (await (sharp(file).raw()).ensureAlpha())
+					sharp: await (await (sharp(this.data.uri + file).raw()).ensureAlpha())
 				}
 			} else {
 				return {
@@ -83,8 +102,11 @@ module.exports = class {
 
 	updateFromDisk() {}
 
-	async addLayer({name: layerName, color, opacity}, settings={}) {
+	async addLayer({name: layerName='', color=constants.colors.white, opacity=0.5}, settings={}) {
 		layerName = layerName.toLowerCase();
+
+		if (this.data.scratchCtx === undefined)
+			await this.init();
 
 		if (layerName === 'base')
 			await this.data.ctx.drawImage(`data:image/png;base64,${(await this.data.layers[layerName].clone().png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
@@ -110,6 +132,7 @@ module.exports = class {
 
 			await this.data.ctx.drawImage(`data:image/png;base64,${(await newImage.png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
 		}
+
 		return this;
 	}
 

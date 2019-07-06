@@ -13,31 +13,8 @@ module.exports = class extends Thermo {
 	}
 
 	updateFromDisk() {
-		const psData = io.readEntryFile(this.data.files.entry);
-
-		this.data.files.base = this.data.uri + psData.data.base;
-
-		this.data.files.layers.push({
-			element: 'base',
-			file: this.data.files.base
-		});
-
-		this.data.points = psData.points.reduce((points, point) => {
-			point.data = io.readMASFile((this.data.uri + point.file));
-			points[point.file] = point;
-
-			return points;
-		}, {});
-
-		this.data.files.points = Object.keys(this.data.points);
-		this.data.magnification = parseInt(this.data.points[psData.points[0].file].data[constants.pointShoot.MAGNIFICATIONKEY].data);
-
+		this.data.magnification = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
 		this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
-
-		if (!this.data.integrity && this.data.files.points.length !== parseInt(expected.totalPoints)) {
-			this.data.integrity = false;
-			console.warn(this.data.name);
-		}
 	}
 };
 

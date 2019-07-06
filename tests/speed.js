@@ -54,7 +54,7 @@ async function getThermos(dirUri) {
 
 async function bufferThermos(thermos, options, points) {
 	for (const thermo of thermos)
-		await (await thermo.addLayer('base')).createBuffer(options.position, JSON.parse(JSON.stringify(options)), points);
+		await (await thermo.addLayer({name: 'base'})).createBuffer(options.position, JSON.parse(JSON.stringify(options)), points);
 }
 
 async function speed(thermos=false, options={}) {
