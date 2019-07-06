@@ -10,6 +10,10 @@ module.exports = class Canvas {
 		this.sendRemote = canvasRoot.sendRemote.bind(canvasRoot, uuid);
 	}
 
+	async delete() {
+
+	}
+
 	async getContext(contextId) {
 		return new Context(this.data.canvasRoot, await this.sendRemote('getContext', [contextId]));
 	}

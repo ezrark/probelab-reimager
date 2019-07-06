@@ -13,37 +13,117 @@ module.exports = class {
 			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 			name,
 			scale: {},
+			metaConstants: {},
 			canvas: undefined,
+			ctx: undefined,
+			scratchCanvas: undefined,
 			scratchCtx: undefined,
 			integrity: true,
 			magnification: 1,
 			points: {},
+			layers: {},
 			files: {
-				image: '',
+				base: '',
 				entry: entryFile.uri,
-				points: []
-			}
+				points: [],
+				layers: []
+			},
+			metadata: {}
 		};
+
+
+
 		this.updateFromDisk();
+	}
+
+	async init() {
+		this.data.layers = (await Promise.all(this.data.files.layers.map(async ({file, element}) => {
+			if (element !== 'base') {
+				return {
+					element,
+					sharp: await (await (sharp(file).raw()).ensureAlpha())
+				}
+			} else {
+				return {
+					element,
+					sharp: sharp(file)
+				}
+			}
+		}))).reduce((layers, {sharp, element}) => {
+			layers[element] = sharp;
+			return layers;
+		}, {});
+
+		this.data.metadata = await this.data.layers.base.metadata();
+
+		const scratchCanvas = this.data.scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
+		this.data.scratchCtx = await scratchCanvas.getContext('2d');
+
+		const metaConstants = this.data.metaConstants = await calculations.calculateConstants(this.data.metadata, this.data.scratchCtx, constants.fonts.OPENSANS);
+
+		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, metaConstants.maxWidth, metaConstants.maxHeight);
+		this.data.ctx = await canvas.getContext('2d');
+		return this;
+	}
+
+	async deleteCanvas() {
+		this.data.scratchCtx = undefined;
+		this.data.ctx = undefined;
+
+		if (this.data.scratchCanvas)
+			await this.data.scratchCanvas.delete();
+
+		if (this.data.canvas)
+			await this.data.canvas.delete();
+
+		this.data.canvas = undefined;
+		this.data.scratchCanvas = undefined;
+		return this;
 	}
 
 	updateFromDisk() {}
 
+	async addLayer({name: layerName, color, opacity}, settings={}) {
+		layerName = layerName.toLowerCase();
+
+		if (layerName === 'base')
+			await this.data.ctx.drawImage(`data:image/png;base64,${(await this.data.layers[layerName].clone().png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
+		else if (this.data.layers[layerName]) {
+			const image = this.data.layers[layerName];
+			const metadata = await image.metadata();
+			const rawImage = await image.toBuffer();
+
+			for (let i = 0; i < rawImage.length; i += 4) {
+				rawImage[i + 3] = rawImage[i]*opacity;
+				rawImage[i] = color.R;
+				rawImage[i + 1] = color.G;
+				rawImage[i + 2] = color.B;
+			}
+
+			const newImage = sharp(Buffer.from(rawImage), {
+				raw: {
+					width: metadata.width,
+					height: metadata.height,
+					channels: 4
+				}
+			});
+
+			await this.data.ctx.drawImage(`data:image/png;base64,${(await newImage.png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
+		}
+		return this;
+	}
+
 	async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
 		settings = Sanitize.scaleSettings(settings);
-		const scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
-		const scratchCtx = this.data.scratchCtx = await scratchCanvas.getContext('2d');
 
-		const tiffInput = sharp(this.data.files.image);
-		const rawImage = await tiffInput.clone().raw().toBuffer();
-		const meta = await tiffInput.metadata();
+		if (this.data.scratchCtx === undefined)
+			await this.init();
+
+		const meta = this.data.metadata;
 
 		// Calculate scale and image
-		const scale = await calculations.calculateScale(meta, scratchCtx, this.data.magnification, type, settings);
-		this.data.scale = scale;
-
-		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, scale.realWidth, scale.realHeight);
-		const ctx = await canvas.getContext('2d');
+		const scale = this.data.scale = await calculations.calculateScale(this.data.metaConstants, this.data.scratchCtx, this.data.magnification, type, settings);
+		const ctx = this.data.ctx;
 
 		// So we are using a "Canvas" object that is really just a communication layer to an actual canvas element.
 		// This allows a remote canvas (such as one on Electron) to render everything for us and use more native
@@ -51,20 +131,19 @@ module.exports = class {
 		// For that reason we can't use setters since they don't support Promises and we don't know if the front-end
 		//   module supports synchronous ordered commands (otherwise we can assume everything would happen in-order)
 
-		await ctx.drawImage(`data:image/png;base64,${(await tiffInput.clone().png().toBuffer()).toString('base64')}`, 0, 0);
 		await ctx.setFont(`${scale.textFontHeight}px "${settings.font}"`);
 		await ctx.setTextBaseline('bottom');
 		let textBackgroundIsBlack = '';
 
 		if (scale.realHeight > scale.imageHeight) {
-			let imageIsBlack = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
+			let imageIsDark = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
 
 			// Check the luminosity and use white or black background to make it look nice
 			if (settings.belowColor === constants.colors.AUTO)
-				imageIsBlack = calculations.sumPixelLuminosity(rawImage, 0, 0, meta.width, meta.height) < .5;
+				imageIsDark = (await ctx.findLuminosity(0, 0, meta.width, meta.height)) < .5;
 
-			textBackgroundIsBlack = imageIsBlack;
-			await ctx.setFillStyle(imageIsBlack ? constants.colors.black.RGBA : constants.colors.white.RGBA);
+			textBackgroundIsBlack = imageIsDark;
+			await ctx.setFillStyle(imageIsDark ? constants.colors.black.RGBA : constants.colors.white.RGBA);
 			await ctx.fillRect(0, scale.imageHeight, scale.realWidth, scale.realHeight - scale.imageHeight);
 		} else {
 			await ctx.setFillStyle(settings.RGBA);
@@ -72,30 +151,25 @@ module.exports = class {
 		}
 
 		if (!settings.scaleColor && typeof textBackgroundIsBlack === 'string')
-			textBackgroundIsBlack = calculations.sumPixelLuminosity(rawImage, scale.x, scale.y, scale.width, scale.height) < .5;
+			textBackgroundIsBlack = (await ctx.findLuminosity(scale.x, scale.y, scale.width, scale.height)) < .5;
 
 		await ctx.setFillStyle(settings.scaleColor ? settings.scaleColor.RGBA : (textBackgroundIsBlack ? constants.colors.white.RGBA : constants.colors.black.RGBA));
 		await ctx.fillText(scale.visualScale, scale.textX, scale.textY + scale.textFontHeight);
 		await ctx.fillRect(scale.barX, scale.barY, scale.scaleLength, scale.barPixelHeight);
+		return this;
 	}
 
 	async addPoint(x, y, name='', settings={}) {
 		settings = Sanitize.pointSettings(settings);
 
+		if (this.data.scratchCtx === undefined)
+			await this.init();
+
 		const scale = this.data.scale;
 		if (scale === undefined)
 			throw 'Use addScale before calling addPoint, hopefully fixed in the future';
 
-		if (this.data.scratchCtx === undefined) {
-			const scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
-			this.data.scratchCtx = await scratchCanvas.getContext('2d');
-		}
-
-		if (this.data.canvas === undefined)
-			this.data.canvas = await this.data.Canvas.createCanvas(scale.realWidth, scale.realHeight);
-
-		const canvas = this.data.canvas;
-		const ctx = await canvas.getContext('2d');
+		const ctx = this.data.ctx;
 		await ctx.setTextBaseline('bottom');
 
 		const point = await calculations.calculatePointPosition(this.data.scratchCtx, x, y, scale.imageWidth, settings.pointSize, settings.pointFontSize, settings.pointFont);
@@ -133,6 +207,7 @@ module.exports = class {
 				await ctx.fillRect(point.centerX - point.sixteenthSize, point.topY, point.eighthSize + 1, point.pointHeight);
 				break;
 		}
+		return this;
 	}
 
 	async toUrl(settings) {
@@ -148,21 +223,28 @@ module.exports = class {
 	}
 
 	async toSharp() {
-		const {type, data} = await this.data.canvas.getBuffer('raw');
+		const width = this.data.scale ? this.data.scale.realWidth : this.data.meta.width;
+		const height = this.data.scale ? this.data.scale.realHeight : this.data.meta.height;
+
+		const {type, data} = await this.data.ctx.getImageData(0, 0, width, height);
 		switch(type) {
 			default:
 			case 'array':
-				return await sharp(Buffer.from(data), {raw: {
-						width: this.data.scale.realWidth,
-						height: this.data.scale.realHeight,
+				return await sharp(Buffer.from(data), {
+					raw: {
+						width,
+						height,
 						channels: 4
-					}});
+					}
+				});
 			case 'raw':
-				return await sharp(data, {raw: {
-					width: this.data.scale.realWidth,
-						height: this.data.scale.realHeight,
+				return await sharp(data, {
+					raw:{
+						width,
+						height,
 						channels: 4
-				}});
+					}
+				});
 			case 'image/png':
 				return await sharp(Buffer.from(data.split(',', 2)[1], 'base64'));
 		}
@@ -170,29 +252,32 @@ module.exports = class {
 
 	async write(settings={}) {
 		settings = Sanitize.writeSettings(settings);
-		let outputUri = settings.uri ? settings.uri : (this.data.files.image.substring(0, this.data.files.image.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
+		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
 
 		await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
 		return outputUri;
 	}
 
-	async createBuffer(type=undefined, settings={}, points=[]) {
+	async createBuffer(type=undefined, settings={}, points=[], layers=[]) {
 		settings = Sanitize.writeSettings(settings);
-		await this.create(type, settings, points);
+		await this.create(type, settings, points, layers);
 		return (await this.toSharp()).tiff(settings.tiff).toBuffer();
 	}
 
-	async createWrite(type=undefined, settings={}, points=[]) {
-		await this.create(type, settings, points);
+	async createWrite(type=undefined, settings={}, points=[], layers=[]) {
+		await this.create(type, settings, points, layers);
 		await this.write(settings);
+		return this;
 	}
 
-	async create(type=undefined, settings={}, points=[]) {
+	async create(type=undefined, settings={}, points=[], layers=[]) {
+		for (const layer of layers)
+			await this.addLayer(layer);
+
 		await this.addScale(type, settings);
 
-		if (points)
-			for (const {x, y, name, pointSettings=settings} of points)
-				await this.addPoint(x, y, name, pointSettings);
+		for (const {x, y, name, pointSettings=settings} of points)
+			await this.addPoint(x, y, name, pointSettings);
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))
@@ -204,17 +289,19 @@ module.exports = class {
 	serialize() {
 		return {
 			uri: this.data.uri,
+			uuid: this.data.uuid,
 			name: this.data.name,
 			integrity: this.data.integrity,
 			magnification: this.data.magnification,
 			points: Object.values(this.data.points).reduce((points, {name, type, values}) => {points[name] = {name, type, values}; return points}, {}),
+			layers: this.data.files.layers.reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
 			image: {
-				width: this.data.scale.imageWidth,
-				height: this.data.scale.imageHeight
+				width: this.data.metadata.width,
+				height: this.data.metadata.height
 			},
 			output: {
-				width: this.data.scale.realWidth,
-				height: this.data.scale.realHeight
+				width: this.data.scale.realWidth ? this.data.metadata.width : this.data.scale.realWidth,
+				height: this.data.scale.realHeight ? this.data.metadata.height : this.data.scale.realHeight
 			}
 		}
 	}

@@ -7,6 +7,13 @@
   "BETWEENMULTIPLIER": 0.0024,
   "colors": {
     "AUTO": false,
+    "green": {
+      "RGBA": "rgba(0, 255, 0, 1)",
+      "R": 0,
+      "G": 255,
+      "B": 0,
+      "A": 1
+    },
     "black": {
       "RGBA": "rgba(0, 0, 0, 1)",
       "R": 0,
@@ -65,7 +72,8 @@
     "fileFormats": {
       "IMAGERAW": ".siref",
       "OUTPUTIMAGE": ".tif",
-      "ENTRY": "Extracted Spectrum.emsa",
+      "ENTRY": ".csi",
+      "SPECTRA": "Extracted Spectrum.emsa",
       "DIRECTORYCONST": ".MAP.EDS"
     }
   },

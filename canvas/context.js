@@ -3,6 +3,16 @@ module.exports = class Context {
 		this.sendRemote = canvasRoot.sendRemote.bind(canvasRoot, uuid);
 	}
 
+	async getImageData(x, y, width, height) {
+		return {
+			data: await this.sendRemote('getImageData', [x, y, width, height])
+		}
+	}
+
+	findLuminosity(x, y, width, height) {
+		return this.sendRemote('findLuminosity', [x, y, width, height]);
+	}
+
 	drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
 		return this.sendRemote('drawImage', [image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
 	}

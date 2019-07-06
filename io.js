@@ -1,7 +1,8 @@
 const fs = require('fs');
 
 function readMASFile(uri) {
-	const rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('\r\n');
+	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('\r\n');
+	rawData = rawData.length === 1 ? rawData[0].split('\n') : rawData;
 
 	return rawData.reduce((output, line) => {
 		const [rawName, data] = line.split(':');
@@ -17,27 +18,57 @@ function readMASFile(uri) {
 	}, {});
 }
 
-function readPSEntryFile(uri) {
-	const rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('#');
+function readEntryFile(uri) {
+	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('\r\n');
+	rawData = rawData.length === 1 ? rawData[0].split('\n') : rawData;
 
-	return rawData.reduce((output, set) => {
-		if (set.startsWith('..2')) {
-			[, output[0].imageName, output[0].totalPoints] = set.split('\r\n');
-		} else {
-			const [typeLine, name, point] = set.split('\r\n');
-
-			output[1].push({
-				name,
-				type: typeLine.split(' ')[1],
-				values: point.split(',').map(num => parseInt(num))
-			});
+	let output = {
+		points: [],
+		layers: [],
+		data: {
+			spectra: '',
+			base: '',
+			grey: '',
+			raw: ''
 		}
+	};
 
-		return output
-	}, [{imageName: '', totalPoints: 0}, []])
+	for (let i = 0; i < rawData.length; i++) {
+		const data = rawData[i];
+		const ext = data.split('.').pop();
+
+		if (data.startsWith('#')) {
+			output.points.push({
+				type: data,
+				file: rawData[i + 1],
+				values: rawData[i + 2].split(',').map(num => parseInt(num))
+			});
+			i += 2;
+		} else
+			switch(ext) {
+				case 'si':
+					output.data.raw = data;
+					break;
+				case 'siref':
+				case 'psref':
+					output.data.base = data;
+					break;
+				case 'sitif':
+					output.data.grey = data;
+					break;
+				case 'simcs':
+					output.layers.push({
+						element: data.split(' ').pop().split('.')[0].toLowerCase(),
+						file: data
+					});
+					break;
+			}
+	}
+
+	return output;
 }
 
 module.exports = {
 	readMASFile,
-	readPSEntryFile
+	readEntryFile
 };

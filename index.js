@@ -12,22 +12,23 @@ const NodeCanvas = require('./canvas/nodecanvasmodule');
 function help() {
 	console.log('Usage: thermo-reimager [options] [directory]\n');
 	console.log('Options:');
-	console.log('-v, --version                          \tDisplays the version information');
-	console.log('-h, --help                             \tProvides this text');
-	console.log('-t, --ontop                            \tSets the scale bar on top of the scale value');
-	console.log('-i, --points                           \tPrints points onto image');
-	console.log('-p [pos], --position [pos]             \tPosition to print the scale');
-	console.log('-c [color], --color [color]            \tScale color');
-	console.log('-b [color], --background [color]       \t\'Below\' or if \'opaque\', background color');
-	console.log('-o [0-100], --opacity [0-100]          \tOpacity of the background for the scale (default 0)');
-	console.log('-s [µm], --scale [µm]                  \tScale to display, < 1 for auto');
-	console.log('-k [0-100], --barheight [0-100]        \tSet scale bar to a % of the text font height, < 1 for auto(8)');
-	console.log('-x [num], --pixelsize [num]            \tSets the pixel size constant for the probe calibration equation');
-	console.log('-n [pointType], --pointtype [pointType]\tSets the type used to define points (Only over 128 res)');
-	console.log('-e [textColor], --textcolor [textColor]\tSets the color to display the point names in');
-	console.log('-z [num], --textsize [num]             \tSets the font size for the point names');
-	console.log('-d [num], --pointsize [num]            \tSets the point size');
-	console.log('-f [font], --font [font]               \tSets the font to use');
+	console.log('-v, --version                            \tDisplays the version information');
+	console.log('-h, --help                               \tProvides this text');
+	console.log('-t, --ontop                              \tSets the scale bar on top of the scale value');
+	console.log('-i, --points                             \tPrints points onto image');
+	console.log('-p, --position [pos]                     \tPosition to print the scale');
+	console.log('-c, --color [color]                      \tScale color');
+	console.log('-b, --background [color]                 \t\'Below\' or if \'opaque\', background color');
+	console.log('-o, --opacity [0-100]                    \tOpacity of the background for the scale (default 0)');
+	console.log('-s, --scale [µm]                         \tScale to display, < 1 for auto');
+	console.log('-k, --barheight [0-100]                  \tSet scale bar to a % of the text font height, < 1 for auto(8)');
+	console.log('-x, --pixelsize [num]                    \tSets the pixel size constant for the probe calibration equation');
+	console.log('-n, --pointtype [pointType]              \tSets the type used to define points (Only over 128 res)');
+	console.log('-e, --textcolor [textColor]              \tSets the color to display the point names in');
+	console.log('-z, --textsize [num]                     \tSets the font size for the point names');
+	console.log('-d, --pointsize [num]                    \tSets the point size');
+	console.log('-f, --font [font]                        \tSets the font to use');
+	console.log('-l, --layer [layerName, [color, opacity]]\tTries to overlay the layer, when > 1, added in order');
 	console.log();
 	console.log('Pixel Size Constant:');
 	console.log('  Default: 116.73');
@@ -45,6 +46,12 @@ function help() {
 	console.log('w, white \t');
 	console.log('r, red   \t');
 	console.log('o, orange\t');
+	console.log();
+	console.log('Colors (Layers)');
+	console.log('a, auto  \tSelects the color automatically');
+	console.log('r, red   \t');
+	console.log('o, orange\t');
+	console.log('g, green \t');
 	console.log();
 	console.log('Fonts:');
 	console.log('o, opensans \tGood, free sans font');
@@ -94,11 +101,17 @@ let options = {
 	}
 };
 
+let layers = [];
 let points = [];
 
 let dirUri = '';
 
 for (let i = 2; i < process.argv.length; i++) {
+	let name;
+	let colorLabel;
+	let color;
+	let opacity;
+
 	if (process.argv[i].startsWith('--')) {
 		switch (process.argv[i]) {
 			case '--version':
@@ -130,6 +143,36 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 			case '--points':
 				options.addPoints = true;
+				break;
+			case '--layers':
+				name = process.argv[++i];
+				colorLabel = process.argv[++i];
+				opacity = process.argv[++i];
+				color = constants.colors.red;
+
+				if (!colorLabel || colorLabel.startsWith('-') || (process.argv.length - 1 === i && dirUri === '')) {
+					i -= 2;
+					opacity = 1;
+				} else {
+					if (!opacity || opacity.startsWith('-') || (process.argv.length - 1 === i && dirUri === '')) {
+						i--;
+						opacity = 1;
+					} else
+						opacity = opacity/100;
+
+					switch (colorLabel) {
+						case 'a':
+						case 'r':
+							color = constants.colors.red;
+							break;
+						case 'o':
+							color = constants.colors.orange;
+							break;
+						case 'g':
+							color = constants.colors.green;
+							break;
+					}
+				}
 				break;
 			case '--pointtype':
 				switch (process.argv[++i]) {
@@ -294,6 +337,42 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 			case '-i':
 				options.addPoints = true;
+				break;
+			case '-l':
+				name = process.argv[++i];
+				colorLabel = process.argv[++i];
+				opacity = process.argv[++i];
+				color = constants.colors.red;
+
+				if (!colorLabel || colorLabel.startsWith('-') || (process.argv.length - 1 === i && dirUri === '')) {
+					i -= 2;
+					opacity = 1;
+				} else {
+					if (!opacity || opacity.startsWith('-') || (process.argv.length - 1 === i && dirUri === '')) {
+						i--;
+						opacity = 1;
+					} else
+						opacity = opacity/100;
+
+					switch (colorLabel) {
+						case 'a':
+						case 'r':
+							color = constants.colors.red;
+							break;
+						case 'o':
+							color = constants.colors.orange;
+							break;
+						case 'g':
+							color = constants.colors.green;
+							break;
+					}
+				}
+
+				layers.push({
+					name,
+					color,
+					opacity: opacity ? opacity : 100
+				});
 				break;
 			case '-c':
 				switch (process.argv[++i]) {
@@ -468,6 +547,9 @@ else {
 	if (options.help)
 		help();
 	else {
+		if (layers.length === 0)
+			layers.push('base');
+
 		dirUri = dirUri.replace(/\\/gmi, '/');
 		if (!dirUri.endsWith('/'))
 			dirUri = dirUri + '/';
@@ -478,22 +560,22 @@ else {
 		const canvas = new CanvasRoot(nodeCanvas);
 		canvas.init().then(async () => {
 
-			const thermos = directory.flatMap(dir => {
+			const thermos = await Promise.all(directory.flatMap(dir => {
 				if (dir.isDirectory()) {
 					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
 					return files.filter(file => file.isFile()).map(file => {
 						file.uri = dirUri + dir.name + '/' + file.name;
 						if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-							return new PointShoot(file, canvas);
+							return new PointShoot(file, canvas).init();
 
 						if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
-							return new ExtractedMap(file, canvas);
+							return new ExtractedMap(file, canvas).init();
 					}).filter(item => item);
 				}
-			}).filter(i => i);
+			}).filter(i => i));
 
 			try {
-				await writeThermos(thermos, options, points);
+				await writeThermos(thermos, options, points, layers);
 				console.log('All images written');
 				process.exit();
 			} catch(err) {
@@ -503,9 +585,9 @@ else {
 	}
 }
 
-async function writeThermos(thermos, options, points) {
+async function writeThermos(thermos, options, points, layers) {
 	for (const thermo of thermos) {
-		await thermo.createWrite(options.position, JSON.parse(JSON.stringify(options)), points);
+		await thermo.createWrite(options.position, JSON.parse(JSON.stringify(options)), points, layers);
 		console.log(`Wrote ${thermo.data.name}`);
 	}
 }

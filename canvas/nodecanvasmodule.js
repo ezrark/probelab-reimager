@@ -1,5 +1,4 @@
 const EventEmitter = require('events');
-const fsPromises = require('fs').promises;
 
 const GenerateUuid = require('../generateuuid');
 
@@ -29,6 +28,16 @@ module.exports = class NodeCanvas extends EventEmitter {
 					data = await space[command.slice(3)];
 				else
 					switch(command) {
+						case 'getImageData':
+							data = (await space.getImageData(args[0], args[1], args[2], args[3])).data;
+							break;
+						case 'findLuminosity':
+							const pixels = await space.getImageData(args[0], args[1], args[2], args[3]);
+							let luminosity = 0;
+							for (let i = 0; i < pixels.data.length; i += 4)
+								luminosity += ((0.299 * pixels.data[i]) + (0.587 * pixels.data[i+1]) + (0.114 * pixels.data[i+2]))/768;
+							data = luminosity/(pixels.data.length/4);
+							break;
 						case 'drawImage':
 							data = await new Promise(async (resolve, reject) => {
 								const image = new this.data.Canvas.Image();

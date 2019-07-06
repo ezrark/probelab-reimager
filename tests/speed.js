@@ -37,24 +37,24 @@ async function getThermos(dirUri) {
 	const nodeCanvas = new NodeCanvas(Canvas);
 	const canvas = new CanvasRoot(nodeCanvas);
 	await canvas.init();
-	return directory.flatMap(dir => {
+	return await Promise.all(directory.flatMap(dir => {
 		if (dir.isDirectory()) {
 			const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
 			return files.filter(file => file.isFile()).map(file => {
 				file.uri = dirUri + dir.name + '/' + file.name;
 				if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-					return new PointShoot(file, canvas);
+					return new PointShoot(file, canvas).init();
 
 				if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
-					return new ExtractedMap(file, canvas);
+					return new ExtractedMap(file, canvas).init();
 			}).filter(item => item);
 		}
-	}).filter(i => i);
+	}).filter(i => i));
 }
 
 async function bufferThermos(thermos, options, points) {
 	for (const thermo of thermos)
-		await thermo.createBuffer(options.position, JSON.parse(JSON.stringify(options)), points);
+		await (await thermo.addLayer('base')).createBuffer(options.position, JSON.parse(JSON.stringify(options)), points);
 }
 
 async function speed(thermos=false, options={}) {
@@ -75,13 +75,30 @@ async function speed(thermos=false, options={}) {
 
 console.log('Operation \tdefault\tbaseOptions\tbaseOptions + Points');
 getThermos(options.dirUri).then(async thermos => {
-	for (let i = 0; i < 10; i++) {
+	const iterations = 10;
+	let totals = {
+		default: 0,
+		base: 0,
+		pointBase: 0
+	};
+
+	for (let i = 0; i < iterations; i++) {
 		const defaultTimes = await speed(thermos);
+
+		options.addPoints = false;
 		const baseOptionTimes = await speed(thermos, options);
+
 		options.addPoints = true;
 		const pointBaseOptionTimes = await speed(thermos, options);
+
+		totals.default += (defaultTimes.finished - defaultTimes.initTime);
+		totals.base += (baseOptionTimes.finished - baseOptionTimes.initTime);
+		totals.pointBase += (pointBaseOptionTimes.finished - pointBaseOptionTimes.initTime);
 
 		//console.log(`gotThermos\t${defaultTimes.gotThermosTime - defaultTimes.initTime}\t${baseOptionTimes.gotThermosTime - baseOptionTimes.initTime}\t${pointBaseOptionTimes.gotThermosTime - pointBaseOptionTimes.initTime}`);
 		console.log(`Finished  \t${defaultTimes.finished - defaultTimes.initTime}  \t${baseOptionTimes.finished - baseOptionTimes.initTime}      \t${pointBaseOptionTimes.finished - pointBaseOptionTimes.initTime}`);
 	}
+
+	console.log(`Averaged  \t${Math.round(totals.default/iterations)}  \t${Math.round(totals.base/iterations)}      \t${Math.round(totals.pointBase/iterations)}`);
+
 });

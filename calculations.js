@@ -47,21 +47,6 @@ function calculatePixelSize(magnification, width, pixelSizeConstant) {
 	}
 }
 
-function sumPixelLuminosity(image, startX, startY, width, height, hasAlpha=false) {
-	let luminosity = 0;
-	const step = (hasAlpha ? 4 : 3);
-	const init = startX*startY*step;
-	const max = init + (width*height*step);
-
-	for (let i = init; i < max; i += step)
-		luminosity += findPixelLuminosity(image[i], image[i + 1], image[i + 2]);
-	return luminosity / width / height;
-}
-
-function findPixelLuminosity(r, g, b) {
-	return ((constants.luminosity.RED * r) + (constants.luminosity.GREEN * g) + (constants.luminosity.BLUE * b))/768;
-}
-
 function pointToXY(pos, width, height) {
 	return [Math.floor((pos.values[0] / pos.values[2]) * width), Math.floor((pos.values[1] / pos.values[3]) * height)];
 }
@@ -122,12 +107,36 @@ async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, f
 	return point;
 }
 
-async function calculateScale(startImage, scratchCtx, magnification, scaleType, {scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
+async function calculateConstants(meta, scratchCtx, font) {
+	const textFontHeight = Math.round(meta.width*constants.FONTWIDTHMUTIPLIER);
+	await scratchCtx.setFont(`${textFontHeight}px "${font}"`);
+	const maxBarPixelHeight = Math.round(textFontHeight);
+
+	const metaConstants = {
+		width: meta.width,
+		height: meta.height,
+		maxWidth: meta.width,
+		maxHeight: meta.height,
+		textFontHeight,
+		lineHeight: (await scratchCtx.measureText('m')).width,
+		scaleOffsets: {
+			xOffset: Math.round(meta.width * constants.XOFFSETMULTIPLIER),
+			yOffset: Math.round(meta.width * constants.YOFFSETMULTIPLIER),
+			between: Math.round(meta.width * constants.BETWEENMULTIPLIER)
+		}
+	};
+
+	metaConstants.maxHeight += metaConstants.lineHeight + metaConstants.scaleOffsets.between + maxBarPixelHeight + (2 * metaConstants.scaleOffsets.yOffset);
+
+	return metaConstants;
+}
+
+async function calculateScale(metaConstants, scratchCtx, magnification, scaleType, {scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
 	let scale = {
-		imageHeight: startImage.height,
-		imageWidth: startImage.width,
-		realHeight: startImage.height,
-		realWidth: startImage.width,
+		imageHeight: metaConstants.height,
+		imageWidth: metaConstants.width,
+		realHeight: metaConstants.height,
+		realWidth: metaConstants.width,
 		x: 0,
 		y: 0,
 		textX: 0,
@@ -136,24 +145,27 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 		barY: 0,
 		width: 0,
 		height: 0,
-		textFontHeight: Math.round(startImage.width*constants.FONTWIDTHMUTIPLIER),
+		textFontHeight: metaConstants.textFontHeight,
 		visualScale: 0,
 		pixelSize: 0,
 		scaleLength: 0,
 		scaleIsBlack: false,
 		barPixelHeight: 0,
 		scaleOffsets: {
-			xOffset: Math.round(startImage.width*constants.XOFFSETMULTIPLIER),
-			yOffset: Math.round(startImage.width*constants.YOFFSETMULTIPLIER),
-			between: Math.round(startImage.width*constants.BETWEENMULTIPLIER)
+			xOffset: metaConstants.scaleOffsets.xOffset,
+			yOffset: metaConstants.scaleOffsets.yOffset,
+			between: metaConstants.scaleOffsets.between
 		}
 	};
 
 	if (scale.textFontHeight < 8)
 		scale.textFontHeight = 8;
 
+	if (scaleBarHeight > 1)
+		scaleBarHeight = 1;
+
 	// General easy calculations and estimations
-	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, startImage.width, pixelSizeConstant);
+	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, metaConstants.width, pixelSizeConstant);
 
 	scale.scaleLength = scaleSize > 0 ? Math.round(scaleSize / scale.pixelSize) : scale.scaleLength;
 	scale.barPixelHeight = Math.round((scaleBarHeight ? scaleBarHeight : constants.SCALEBARHEIGHTPERCENT) * scale.textFontHeight);
@@ -163,9 +175,8 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 
 	await scratchCtx.setFont(`${scale.textFontHeight}px "${font}"`);
 	const textWidth = (await scratchCtx.measureText(scale.visualScale)).width;
-	const lineHeight = (await scratchCtx.measureText('m')).width;
 
-	scale.height = lineHeight + scale.scaleOffsets.between + scale.barPixelHeight + (2 * scale.scaleOffsets.yOffset);
+	scale.height = metaConstants.lineHeight + scale.scaleOffsets.between + scale.barPixelHeight + (2 * scale.scaleOffsets.yOffset);
 	scale.width = (scale.scaleLength > textWidth ? scale.scaleLength : textWidth) + (2 * scale.scaleOffsets.xOffset);
 
 	// Calculate any changes in the image to account for scale type
@@ -173,40 +184,40 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 	switch(scaleType) {
 		case constants.scale.types.BELOWLEFT:
 			scale.x = 0;
-			scale.y = startImage.height;
+			scale.y = metaConstants.height;
 
-			scale.realHeight = startImage.height + scale.height;
-			scale.realWidth = startImage.width;
+			scale.realHeight = metaConstants.height + scale.height;
+			scale.realWidth = metaConstants.width;
 			break;
 		case constants.scale.types.BELOWRIGHT:
-			scale.x = startImage.width - scale.width;
-			scale.y = startImage.height;
+			scale.x = metaConstants.width - scale.width;
+			scale.y = metaConstants.height;
 
-			scale.realHeight = startImage.height + scale.height;
-			scale.realWidth = startImage.width;
+			scale.realHeight = metaConstants.height + scale.height;
+			scale.realWidth = metaConstants.width;
 			break;
 		default:
 		case constants.scale.types.BELOWCENTER:
-			scale.x = Math.round((startImage.width / 2) - (scale.width / 2));
-			scale.y = startImage.height;
+			scale.x = Math.round((metaConstants.width / 2) - (scale.width / 2));
+			scale.y = metaConstants.height;
 
-			scale.realHeight = startImage.height + scale.height;
-			scale.realWidth = startImage.width;
+			scale.realHeight = metaConstants.height + scale.height;
+			scale.realWidth = metaConstants.width;
 			break;
 		case constants.scale.types.LOWERCENTER:
-			scale.x = Math.round((startImage.width/2) - (scale.width/2));
-			scale.y = startImage.height - scale.height;
+			scale.x = Math.round((metaConstants.width/2) - (scale.width/2));
+			scale.y = metaConstants.height - scale.height;
 			break;
 		case constants.scale.types.LOWERRIGHT:
-			scale.x = startImage.width - scale.width;
-			scale.y = startImage.height - scale.height;
+			scale.x = metaConstants.width - scale.width;
+			scale.y = metaConstants.height - scale.height;
 			break;
 		case constants.scale.types.LOWERLEFT:
 			scale.x = 0;
-			scale.y = startImage.height - scale.height;
+			scale.y = metaConstants.height - scale.height;
 			break;
 		case constants.scale.types.UPPERRIGHT:
-			scale.x = startImage.width - scale.width;
+			scale.x = metaConstants.width - scale.width;
 			scale.y = 0;
 			break;
 		case constants.scale.types.UPPERLEFT:
@@ -219,11 +230,11 @@ async function calculateScale(startImage, scratchCtx, magnification, scaleType, 
 	scale.textX = Math.round(scale.x + (scale.width / 2) - Math.round(textWidth / 2));
 
 	if (scaleBarTop) {
-		scale.textY = scale.y + scale.height - lineHeight - Math.round(scale.scaleOffsets.yOffset / 2);
+		scale.textY = scale.y + scale.height - metaConstants.lineHeight - Math.round(scale.scaleOffsets.yOffset / 2);
 		scale.barY = scale.textY - scale.scaleOffsets.between - Math.round(scale.scaleOffsets.yOffset / 2) - scale.barPixelHeight;
 	} else {
 		scale.barY = scale.y + scale.height - scale.scaleOffsets.yOffset - scale.barPixelHeight;
-		scale.textY = scale.barY - lineHeight - scale.scaleOffsets.between;
+		scale.textY = scale.barY - metaConstants.lineHeight - scale.scaleOffsets.between;
 	}
 
 	// Return the image and scale information
@@ -235,7 +246,6 @@ module.exports = {
 	calculatePointPosition,
 	estimateVisualScale,
 	calculatePixelSize,
-	sumPixelLuminosity,
-	findPixelLuminosity,
+	calculateConstants,
 	calculateScale
 };
