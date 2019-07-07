@@ -74,6 +74,14 @@ module.exports = class {
 
 		this.data.metadata = await this.data.layers.base.metadata();
 
+		this.data.points = Object.values(this.data.points).reduce((points, point) => {
+			const [x, y] = calculations.pointToXY(point, this.data.metadata.width, this.data.metadata.height);
+			point.x = x;
+			point.y = y;
+			points[point.name] = point;
+			return points;
+		}, {});
+
 		const scratchCanvas = this.data.scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
 		this.data.scratchCtx = await scratchCanvas.getContext('2d');
 
@@ -315,7 +323,7 @@ module.exports = class {
 			name: this.data.name,
 			integrity: this.data.integrity,
 			magnification: this.data.magnification,
-			points: Object.values(this.data.points).reduce((points, {name, type, values, file}) => {points[name] = {name, type, values, file}; return points}, {}),
+			points: Object.values(this.data.points).reduce((points, {name, type, values, file, x, y}) => {points[name] = {name, type, values, file, x, y}; return points}, {}),
 			layers: this.data.files.layers.reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
 			entryFile: this.data.files.entry,
 			image: {
