@@ -44,15 +44,14 @@ module.exports = class {
 
 		this.data.points = entryData.points.reduce((points, point) => {
 			point.data = io.readMASFile((this.data.uri + point.file));
-			points[point.file] = point;
-
+			point.name = point.file.split('.')[0].split('_pt').pop();
+			points[point.name] = point;
 			return points;
 		}, {});
 
 		this.data.files.points = Object.keys(this.data.points);
 
 		this.updateFromDisk();
-
 	}
 
 	async init() {
@@ -304,7 +303,7 @@ module.exports = class {
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))
-				await this.addPoint(...calculations.pointToXY(point, this.data.scale.imageWidth, this.data.scale.imageHeight), point.name.match(/pt(\d.+)psmsa/miu)[1].slice(0, -1), settings);
+				await this.addPoint(...calculations.pointToXY(point, this.data.scale.imageWidth, this.data.scale.imageHeight), point.name, settings);
 
 		return this;
 	}
@@ -316,8 +315,9 @@ module.exports = class {
 			name: this.data.name,
 			integrity: this.data.integrity,
 			magnification: this.data.magnification,
-			points: Object.values(this.data.points).reduce((points, {name, type, values}) => {points[name] = {name, type, values}; return points}, {}),
+			points: Object.values(this.data.points).reduce((points, {name, type, values, file}) => {points[name] = {name, type, values, file}; return points}, {}),
 			layers: this.data.files.layers.reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
+			entryFile: this.data.files.entry,
 			image: {
 				width: this.data.metadata.width,
 				height: this.data.metadata.height
