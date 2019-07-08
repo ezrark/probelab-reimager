@@ -20,7 +20,7 @@ module.exports = class {
 			scratchCanvas: undefined,
 			scratchCtx: undefined,
 			integrity: true,
-			magnification: 1,
+			magnification: 0,
 			points: {},
 			layers: {},
 			files: {
@@ -29,7 +29,11 @@ module.exports = class {
 				points: [],
 				layers: []
 			},
-			metadata: {}
+			metadata: {},
+			data: {
+				point: {},
+				map: {}
+			}
 		};
 
 		const entryData = io.readEntryFile(this.data.files.entry);
@@ -50,6 +54,26 @@ module.exports = class {
 		}, {});
 
 		this.data.files.points = Object.keys(this.data.points);
+
+		try {
+			this.data.data.map = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
+			const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
+			if (this.data.magnification !== 0 && this.data.magnification !== mag)
+				this.data.integrity = false;
+			else
+				this.data.magnification = mag;
+		} catch(err) {}
+
+		try {
+			const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
+			if (this.data.magnification !== 0 && this.data.magnification !== mag)
+				this.data.integrity = false;
+			else
+				this.data.magnification = mag;
+
+			if (this.data.integrity)
+				this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
+		} catch(err) {}
 
 		this.updateFromDisk();
 	}
@@ -163,27 +187,32 @@ module.exports = class {
 
 		await ctx.setFont(`${scale.textFontHeight}px "${settings.font}"`);
 		await ctx.setTextBaseline('bottom');
-		let textBackgroundIsBlack = '';
+		let imageIsDark = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
+
+		// Check the luminosity and use white or black background to make it look nice
+		if (settings.belowColor === constants.colors.AUTO)
+			imageIsDark = (await ctx.findLuminosity(0, 0, meta.width, meta.height)) < .5;
+
+		let textBackgroundIsLight = imageIsDark;
 
 		if (scale.realHeight > scale.imageHeight) {
-			let imageIsDark = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
-
-			// Check the luminosity and use white or black background to make it look nice
-			if (settings.belowColor === constants.colors.AUTO)
-				imageIsDark = (await ctx.findLuminosity(0, 0, meta.width, meta.height)) < .5;
-
-			textBackgroundIsBlack = imageIsDark;
 			await ctx.setFillStyle(imageIsDark ? constants.colors.black.RGBA : constants.colors.white.RGBA);
 			await ctx.fillRect(0, scale.imageHeight, scale.realWidth, scale.realHeight - scale.imageHeight);
 		} else {
-			await ctx.setFillStyle(settings.RGBA);
+			await ctx.setFillStyle(settings.RGBA === constants.colors.AUTO ?
+					`rgba(${
+					imageIsDark ? constants.colors.black.R : constants.colors.white.R}, ${
+					imageIsDark ? constants.colors.black.G : constants.colors.white.G}, ${
+					imageIsDark ? constants.colors.black.B : constants.colors.white.B}, ${
+					settings.backgroundOpacity})`
+				: settings.RGBA);
 			await ctx.fillRect(scale.x, scale.y, scale.width, scale.height);
 		}
 
-		if (!settings.scaleColor && typeof textBackgroundIsBlack === 'string')
-			textBackgroundIsBlack = (await ctx.findLuminosity(scale.x, scale.y, scale.width, scale.height)) < .5;
+		if (settings.scaleColor === constants.colors.AUTO && settings.belowColor !== constants.colors.AUTO)
+			textBackgroundIsLight = (await ctx.findLuminosity(scale.x, scale.y, scale.width, scale.height)) < .5;
 
-		await ctx.setFillStyle(settings.scaleColor ? settings.scaleColor.RGBA : (textBackgroundIsBlack ? constants.colors.white.RGBA : constants.colors.black.RGBA));
+		await ctx.setFillStyle(settings.scaleColor ? settings.scaleColor.RGBA : (textBackgroundIsLight ? constants.colors.white.RGBA : constants.colors.black.RGBA));
 		await ctx.fillText(scale.visualScale, scale.textX, scale.textY + scale.textFontHeight);
 		await ctx.fillRect(scale.barX, scale.barY, scale.scaleLength, scale.barPixelHeight);
 		return this;
@@ -304,14 +333,14 @@ module.exports = class {
 		for (const layer of layers)
 			await this.addLayer(layer);
 
-		await this.addScale(type, settings);
-
 		for (const {x, y, name, pointSettings=settings} of points)
 			await this.addPoint(x, y, name, pointSettings);
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))
 				await this.addPoint(...calculations.pointToXY(point, this.data.scale.imageWidth, this.data.scale.imageHeight), point.name, settings);
+
+		await this.addScale(type, settings);
 
 		return this;
 	}
@@ -337,3 +366,18 @@ module.exports = class {
 		}
 	}
 };
+
+function checkPointIntegrity(points) {
+	const expectedData = points[0];
+
+	for (const point of points) {
+		for (const key in point.data)
+			if (!constants.pointShoot.integrity.SKIPARRAY.includes(key) && !key.startsWith('#quant_'))
+				if (expectedData.data[key].data !== point.data[key].data)
+					return false;
+		if (expectedData.values[2] !== point.values[2])
+			if (expectedData.values[3] !== point.values[3])
+				return false;
+	}
+	return true;
+}

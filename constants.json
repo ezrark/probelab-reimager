@@ -8,6 +8,7 @@
   "colors": {
     "AUTO": false,
     "green": {
+      "NAME": "green",
       "RGBA": "rgba(0, 255, 0, 1)",
       "R": 0,
       "G": 255,
@@ -15,6 +16,7 @@
       "A": 1
     },
     "black": {
+      "NAME": "black",
       "RGBA": "rgba(0, 0, 0, 1)",
       "R": 0,
       "G": 0,
@@ -22,6 +24,7 @@
       "A": 1
     },
     "white": {
+      "NAME": "white",
       "RGBA": "rgba(255, 255, 255, 1)",
       "R": 255,
       "G": 255,
@@ -29,6 +32,7 @@
       "A": 1
     },
     "orange": {
+      "NAME": "orange",
       "RGBA": "rgba(250, 130, 49, 1)",
       "R": 250,
       "G": 130,
@@ -36,6 +40,7 @@
       "A": 1
     },
     "red": {
+      "NAME": "red",
       "RGBA": "rgba(255, 63, 52, 1)",
       "R": 255,
       "G": 63,

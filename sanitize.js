@@ -14,9 +14,8 @@ function scaleSettings(inputSettings) {
 	};
 
 	output.backgroundOpacity = (inputSettings.backgroundOpacity < 0 ? 0 : (inputSettings.backgroundOpacity > 100 ? 100 : inputSettings.backgroundOpacity)) / 100;
-	output.RGBA = `rgba(${inputSettings.belowColor ? inputSettings.belowColor.R : constants.colors.white.R}, ${
-		inputSettings.belowColor ? inputSettings.belowColor.G : constants.colors.white.G}, ${
-		inputSettings.belowColor ? inputSettings.belowColor.B : constants.colors.white.B}, ${output.backgroundOpacity})`;
+	output.RGBA = inputSettings.belowColor ? `rgba(${inputSettings.belowColor.R}, ${inputSettings.belowColor.G}, ${inputSettings.belowColor.B}, ${output.backgroundOpacity})`
+		: constants.colors.AUTO;
 
 	return output;
 }
@@ -37,10 +36,10 @@ function writeSettings(inputSettings) {
 	const usePng = typeof inputSettings.png === 'object';
 	const useJpeg = typeof inputSettings.jpeg === 'object';
 
-	inputSettings.tiff = typeof inputSettings.tiff !== 'object' ? {} : inputSettings.tiff;
-	inputSettings.webp = typeof inputSettings.webp !== 'object' ? {} : inputSettings.webp;
-	inputSettings.png = typeof inputSettings.png !== 'object' ? {} : inputSettings.png;
-	inputSettings.jpeg = typeof inputSettings.jpeg !== 'object' ? {} : inputSettings.jpeg;
+	inputSettings.tiff = useTiff ? inputSettings.tiff : {};
+	inputSettings.webp = useWebp ? inputSettings.webp : {};
+	inputSettings.png = usePng ? inputSettings.png : {};
+	inputSettings.jpeg = useJpeg ? inputSettings.jpeg : {};
 
 	return {
 		uri: inputSettings.uri,

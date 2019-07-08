@@ -34,9 +34,11 @@ module.exports = class NodeCanvas extends EventEmitter {
 						case 'findLuminosity':
 							const pixels = await space.getImageData(args[0], args[1], args[2], args[3]);
 							let luminosity = 0;
+
 							for (let i = 0; i < pixels.data.length; i += 4)
-								luminosity += ((0.299 * pixels.data[i]) + (0.587 * pixels.data[i+1]) + (0.114 * pixels.data[i+2]))/768;
-							data = luminosity/(pixels.data.length/4);
+								luminosity += Math.sqrt((0.299 * pixels.data[i]^2) + (0.587 * pixels.data[i + 1]^2) + (0.114 * pixels.data[i + 2]^2)) / 16.1245154965971;
+
+							data = luminosity / args[2] / args[3];
 							break;
 						case 'drawImage':
 							data = await new Promise(async (resolve, reject) => {

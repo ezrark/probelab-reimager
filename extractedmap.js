@@ -1,5 +1,4 @@
 const constants = require('./constants');
-const io = require('./io');
 
 const Thermo = require('./thermo');
 
@@ -11,10 +10,5 @@ module.exports = class extends Thermo {
 			Canvas,
 			uri
 		);
-	}
-
-	updateFromDisk() {
-		this.data.data = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
-		this.data.magnification = parseInt(this.data.data[constants.extractedMap.MAGNIFICATIONKEY].data);
 	}
 };

@@ -150,7 +150,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				opacity = process.argv[++i];
 				color = constants.colors.red;
 
-				if (!colorLabel || colorLabel.startsWith('-') || (process.argv.length - 1 === i && dirUri === '')) {
+				if (!colorLabel || (process.argv.length === i && dirUri === '')) {
 					i -= 2;
 					opacity = 1;
 				} else {
@@ -160,19 +160,45 @@ for (let i = 2; i < process.argv.length; i++) {
 					} else
 						opacity = opacity/100;
 
+					if (isNaN(opacity)) {
+						i--;
+						opacity = 1;
+					}
+
 					switch (colorLabel) {
+						case 'auto':
 						case 'a':
+						case 'red':
 						case 'r':
 							color = constants.colors.red;
 							break;
+						case 'orange':
 						case 'o':
 							color = constants.colors.orange;
 							break;
+						case 'green':
 						case 'g':
 							color = constants.colors.green;
 							break;
+						case 'black':
+						case 'b':
+							color = constants.colors.black;
+							break;
+						case 'white':
+						case 'w':
+							color = constants.colors.white;
+							break;
+						default:
+							i--;
+							break;
 					}
 				}
+
+				layers.push({
+					name,
+					color,
+					opacity
+				});
 				break;
 			case '--pointtype':
 				switch (process.argv[++i]) {
@@ -344,7 +370,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				opacity = process.argv[++i];
 				color = constants.colors.red;
 
-				if (!colorLabel || colorLabel.startsWith('-') || (process.argv.length - 1 === i && dirUri === '')) {
+				if (!colorLabel || (process.argv.length === i && dirUri === '')) {
 					i -= 2;
 					opacity = 1;
 				} else {
@@ -354,16 +380,36 @@ for (let i = 2; i < process.argv.length; i++) {
 					} else
 						opacity = opacity/100;
 
+					if (isNaN(opacity)) {
+						i--;
+						opacity = 1;
+					}
+
 					switch (colorLabel) {
+						case 'auto':
 						case 'a':
+						case 'red':
 						case 'r':
 							color = constants.colors.red;
 							break;
+						case 'orange':
 						case 'o':
 							color = constants.colors.orange;
 							break;
+						case 'green':
 						case 'g':
 							color = constants.colors.green;
+							break;
+						case 'black':
+						case 'b':
+							color = constants.colors.black;
+							break;
+						case 'white':
+						case 'w':
+							color = constants.colors.white;
+							break;
+						default:
+							i--;
 							break;
 					}
 				}
@@ -371,7 +417,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				layers.push({
 					name,
 					color,
-					opacity: opacity ? opacity : 100
+					opacity
 				});
 				break;
 			case '-c':
@@ -548,7 +594,7 @@ else {
 		help();
 	else {
 		if (layers.length === 0)
-			layers.push('base');
+			layers.push({name: 'base'});
 
 		dirUri = dirUri.replace(/\\/gmi, '/');
 		if (!dirUri.endsWith('/'))
@@ -564,12 +610,19 @@ else {
 				if (dir.isDirectory()) {
 					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
 					return files.filter(file => file.isFile()).map(file => {
-						file.uri = dirUri + dir.name + '/' + file.name;
-						if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-							return new PointShoot(file, canvas).init();
+						try {
+							file.uri = dirUri + dir.name + '/' + file.name;
+							if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
+								return new PointShoot(file, canvas).init();
 
-						if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
-							return new ExtractedMap(file, canvas).init();
+							if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
+								return new ExtractedMap(file, canvas).init();
+						} catch(err) {
+							if (err.code === 'ENOENT')
+								console.log(`Unable to initialize a thermo, unable to find '${err.path}'`);
+							else
+								console.warn(err);
+						}
 					}).filter(item => item);
 				}
 			}).filter(i => i));
