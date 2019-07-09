@@ -224,14 +224,10 @@ module.exports = class {
 		if (this.data.scratchCtx === undefined)
 			await this.init();
 
-		const scale = this.data.scale;
-		if (scale === undefined)
-			throw 'Use addScale before calling addPoint, hopefully fixed in the future';
-
 		const ctx = this.data.ctx;
 		await ctx.setTextBaseline('bottom');
 
-		const point = await calculations.calculatePointPosition(this.data.scratchCtx, x, y, scale.imageWidth, settings.pointSize, settings.pointFontSize, settings.pointFont);
+		const point = await calculations.calculatePointPosition(this.data.scratchCtx, x, y, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
 
 		await ctx.setFillStyle(settings.textColor.RGBA);
 		await ctx.setStrokeStyle(settings.textColor.RGBA);
