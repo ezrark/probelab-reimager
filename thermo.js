@@ -6,8 +6,8 @@ const Sanitize = require('./sanitize');
 const GenerateUuid = require('./generateuuid');
 const io = require('./io');
 
-module.exports = class {
-	constructor(entryFile, name, Canvas, uri=undefined, uuid=undefined) {
+module.exports = class Thermo {
+	constructor(entryFile, name, Canvas, uri=undefined, uuid=undefined, previous=undefined) {
 		this.data = {
 			Canvas,
 			uuid: uuid ? uuid : GenerateUuid.v4(),
@@ -36,82 +36,97 @@ module.exports = class {
 			}
 		};
 
-		const entryData = io.readEntryFile(this.data.files.entry);
+		if (!previous) {
+			const entryData = io.readEntryFile(this.data.files.entry);
 
-		this.data.files.base = this.data.uri + entryData.data.base;
-		this.data.files.layers = entryData.layers;
+			this.data.files.base = this.data.uri + entryData.data.base;
+			this.data.files.layers = entryData.layers;
 
-		this.data.files.layers.push({
-			element: 'base',
-			file: this.data.files.base
-		});
+			this.data.files.layers.push({
+				element: 'base',
+				file: this.data.files.base
+			});
 
-		this.data.points = entryData.points.reduce((points, point) => {
-			point.data = io.readMASFile((this.data.uri + point.file));
-			point.name = point.file.split('.')[0].split('_pt').pop();
-			points[point.name] = point;
-			return points;
-		}, {});
+			this.data.points = entryData.points.reduce((points, point) => {
+				point.data = io.readMASFile((this.data.uri + point.file));
+				point.name = point.file.split('.')[0].split('_pt').pop();
+				points[point.name] = point;
+				return points;
+			}, {});
 
-		this.data.files.points = Object.keys(this.data.points);
+			this.data.files.points = Object.keys(this.data.points);
 
-		try {
-			this.data.data.map = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
-			const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
-			if (this.data.magnification !== 0 && this.data.magnification !== mag)
-				this.data.integrity = false;
-			else
-				this.data.magnification = mag;
-		} catch(err) {}
+			try {
+				this.data.data.map = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
+				const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
+				if (this.data.magnification !== 0 && this.data.magnification !== mag)
+					this.data.integrity = false;
+				else
+					this.data.magnification = mag;
+			} catch (err) {}
 
-		try {
-			const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
-			if (this.data.magnification !== 0 && this.data.magnification !== mag)
-				this.data.integrity = false;
-			else
-				this.data.magnification = mag;
+			try {
+				const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
+				if (this.data.magnification !== 0 && this.data.magnification !== mag)
+					this.data.integrity = false;
+				else
+					this.data.magnification = mag;
 
-			if (this.data.integrity)
-				this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
-		} catch(err) {}
+				if (this.data.integrity)
+					this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
+			} catch (err) {}
 
-		this.updateFromDisk();
+			this.updateFromDisk();
+		} else {
+			this.data.scale = JSON.parse(JSON.stringify(previous.data.scale));
+			this.data.metaConstants = JSON.parse(JSON.stringify(previous.data.metaConstants));
+			this.data.integrity = previous.data.integrity;
+			this.data.magnification = previous.data.magnification;
+			this.data.points = JSON.parse(JSON.stringify(previous.data.points));
+			this.data.layers = JSON.parse(JSON.stringify(previous.data.layers));
+			this.data.files = JSON.parse(JSON.stringify(previous.data.files));
+			this.data.metadata = JSON.parse(JSON.stringify(previous.data.metadata));
+			this.data.data = JSON.parse(JSON.stringify(previous.data.data));
+		}
 	}
 
 	async init() {
-		this.data.layers = (await Promise.all(this.data.files.layers.map(async ({file, element}) => {
-			if (element !== 'base') {
-				return {
-					element,
-					sharp: await (await (sharp(this.data.uri + file).raw()).ensureAlpha())
+		if (!this.data.layers.base) {
+			this.data.layers = (await Promise.all(this.data.files.layers.map(async ({file, element}) => {
+				if (element !== 'base') {
+					return {
+						element,
+						sharp: await (await (sharp(this.data.uri + file).raw()).ensureAlpha())
+					}
+				} else {
+					return {
+						element,
+						sharp: sharp(file)
+					}
 				}
-			} else {
-				return {
-					element,
-					sharp: sharp(file)
-				}
-			}
-		}))).reduce((layers, {sharp, element}) => {
-			layers[element] = sharp;
-			return layers;
-		}, {});
+			}))).reduce((layers, {sharp, element}) => {
+				layers[element] = sharp;
+				return layers;
+			}, {});
 
-		this.data.metadata = await this.data.layers.base.metadata();
+			this.data.metadata = await this.data.layers.base.metadata();
 
-		this.data.points = Object.values(this.data.points).reduce((points, point) => {
-			const [x, y] = calculations.pointToXY(point, this.data.metadata.width, this.data.metadata.height);
-			point.x = x;
-			point.y = y;
-			points[point.name] = point;
-			return points;
-		}, {});
+			this.data.points = Object.values(this.data.points).reduce((points, point) => {
+				const [x, y] = calculations.pointToXY(point, this.data.metadata.width, this.data.metadata.height);
+				point.x = x;
+				point.y = y;
+				points[point.name] = point;
+				return points;
+			}, {});
+		}
 
 		const scratchCanvas = this.data.scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
 		this.data.scratchCtx = await scratchCanvas.getContext('2d');
 
-		const metaConstants = this.data.metaConstants = await calculations.calculateConstants(this.data.metadata, this.data.scratchCtx, constants.fonts.OPENSANS);
+		if (!this.data.metaConstants.width)
+			this.data.metaConstants = await calculations.calculateConstants(this.data.metadata, this.data.scratchCtx, constants.fonts.OPENSANS);
 
-		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, metaConstants.maxWidth, metaConstants.maxHeight);
+		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, this.data.metaConstants.maxWidth, this.data.metaConstants.maxHeight);
 		this.data.ctx = await canvas.getContext('2d');
 		return this;
 	}
@@ -360,6 +375,10 @@ module.exports = class {
 				height: this.data.scale.realHeight ? this.data.metadata.height : this.data.scale.realHeight
 			}
 		}
+	}
+
+	clone() {
+		return new Thermo(this.data.files.entry, this.data.name, this.data.Canvas, undefined, undefined, this);
 	}
 };
 
