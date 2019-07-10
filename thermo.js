@@ -183,7 +183,7 @@ module.exports = class Thermo {
 	}
 
 	async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
-		settings = Sanitize.scaleSettings(settings);
+		settings = Sanitize.scaleSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
 			await this.init();
@@ -234,7 +234,7 @@ module.exports = class Thermo {
 	}
 
 	async addPoint(x, y, name='', settings={}) {
-		settings = Sanitize.pointSettings(settings);
+		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
 			await this.init();
@@ -281,7 +281,7 @@ module.exports = class Thermo {
 	}
 
 	async toUrl(settings) {
-		settings = Sanitize.writeSettings(settings);
+		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		if (settings.png.use)
 			return 'data:png;base64,' + (await (await this.toSharp()).png(settings.png).toBuffer()).toString('base64');
 		else if (settings.webp.use)
@@ -321,7 +321,7 @@ module.exports = class Thermo {
 	}
 
 	async write(settings={}) {
-		settings = Sanitize.writeSettings(settings);
+		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
 
 		await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
@@ -329,8 +329,8 @@ module.exports = class Thermo {
 	}
 
 	async createBuffer(type=undefined, settings={}, points=[], layers=[]) {
-		settings = Sanitize.writeSettings(settings);
 		await this.create(type, settings, points, layers);
+		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		return (await this.toSharp()).tiff(settings.tiff).toBuffer();
 	}
 
