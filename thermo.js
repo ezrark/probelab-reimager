@@ -323,15 +323,39 @@ module.exports = class Thermo {
 	async write(settings={}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
-
-		await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
+		const ext = outputUri.split('.').pop();
+		switch(ext) {
+			default:
+			case 'tiff':
+			case 'tif':
+				await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
+				break;
+			case 'jpeg':
+			case 'jpg':
+				await (await this.toSharp()).jpeg(settings.jpeg).toFile(outputUri);
+				break;
+			case 'png':
+				await (await this.toSharp()).png(settings.png).toFile(outputUri);
+				break;
+			case 'webp':
+				await (await this.toSharp()).webp(settings.webp).toFile(outputUri);
+				break;
+		}
 		return outputUri;
 	}
 
 	async createBuffer(type=undefined, settings={}, points=[], layers=[]) {
 		await this.create(type, settings, points, layers);
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
-		return (await this.toSharp()).tiff(settings.tiff).toBuffer();
+
+		if (settings.tiff.use)
+			return (await this.toSharp()).tiff(settings.tiff).toBuffer();
+		if (settings.jpeg.use)
+			return (await this.toSharp()).jpeg(settings.jpeg).toBuffer();
+		if (settings.png.use)
+			return (await this.toSharp()).png(settings.png).toBuffer();
+		if (settings.webp.use)
+			return (await this.toSharp()).webp(settings.webp).toBuffer();
 	}
 
 	async createWrite(type=undefined, settings={}, points=[], layers=[]) {
