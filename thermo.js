@@ -395,8 +395,8 @@ module.exports = class Thermo {
 				height: this.data.metadata.height
 			},
 			output: {
-				width: this.data.scale.realWidth ? this.data.metadata.width : this.data.scale.realWidth,
-				height: this.data.scale.realHeight ? this.data.metadata.height : this.data.scale.realHeight
+				width: this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
+				height: this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
 			}
 		}
 	}
