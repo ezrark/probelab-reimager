@@ -57,8 +57,11 @@ function readEntryFile(uri) {
 					output.data.grey = data;
 					break;
 				case 'simcs':
+					const name = data.toLowerCase().split(' ');
+					const element = name.pop().split('.')[0];
+					const type = name.pop();
 					output.layers.push({
-						element: data.split(' ').pop().split('.')[0].toLowerCase(),
+						element: `${element} ${type}`,
 						file: data
 					});
 					break;
