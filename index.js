@@ -609,14 +609,24 @@ else {
 			const thermos = await Promise.all(directory.flatMap(dir => {
 				if (dir.isDirectory()) {
 					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
+					let thermos = [];
 					return files.filter(file => file.isFile()).map(file => {
 						try {
 							file.uri = dirUri + dir.name + '/' + file.name;
-							if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-								return new PointShoot(file, canvas).init();
+							if (file.name.endsWith(constants.extractedMap.fileFormats.LAYER))
+								thermos.map(thermo => thermo.addLayerFile(file.uri));
 
-							if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
-								return new ExtractedMap(file, canvas).init();
+							if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
+								const thermo = new PointShoot(file, canvas);
+								thermos.push(thermo);
+								return thermo.init();
+							}
+
+							if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
+								const thermo = new ExtractedMap(file, canvas);
+								thermos.push(thermo);
+								return thermo.init();
+							}
 						} catch(err) {
 							if (err.code === 'ENOENT')
 								console.log(`Unable to initialize a thermo, unable to find '${err.path}'`);

@@ -90,26 +90,39 @@ module.exports = class Thermo {
 		}
 	}
 
+	async addLayerFile(uri) {
+		const filename = uri.toLowerCase().replace(/\\/g, '/').split('/').pop().split(' ');
+		const element = filename.pop().split('.')[0];
+		const type = filename.pop();
+		const layerElement = `${element} ${type}`;
+
+		const image = await (await sharp(uri).raw().ensureAlpha());
+
+		this.data.layers[layerElement] = {
+			element: layerElement,
+			file: uri,
+			image,
+			metadata: await image.metadata()
+		};
+	}
+
 	async init() {
 		if (!this.data.layers.base) {
-			this.data.layers = (await Promise.all(this.data.files.layers.map(async ({file, element}) => {
-				if (element !== 'base') {
-					return {
+			await Promise.all(this.data.files.layers.map(async ({file, element}) => {
+				if (element !== 'base')
+					return this.addLayerFile(this.data.uri + file);
+				else {
+					const image = sharp(file);
+					this.data.layers['base'] = {
 						element,
-						sharp: await (await (sharp(this.data.uri + file).raw()).ensureAlpha())
-					}
-				} else {
-					return {
-						element,
-						sharp: sharp(file)
+						file: this.data.uri + file,
+						image,
+						metadata: await image.metadata()
 					}
 				}
-			}))).reduce((layers, {sharp, element}) => {
-				layers[element] = sharp;
-				return layers;
-			}, {});
+			}));
 
-			this.data.metadata = await this.data.layers.base.metadata();
+			this.data.metadata = this.data.layers.base.metadata;
 
 			this.data.points = Object.values(this.data.points).reduce((points, point) => {
 				const [x, y] = calculations.pointToXY(point, this.data.metadata.width, this.data.metadata.height);
@@ -155,11 +168,11 @@ module.exports = class Thermo {
 			await this.init();
 
 		if (layerName === 'base')
-			await this.data.ctx.drawImage(`data:image/png;base64,${(await this.data.layers[layerName].clone().png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
+			await this.data.ctx.drawImage(`data:image/png;base64,${(await this.data.layers[layerName].image.clone().png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
 		else if (this.data.layers[layerName]) {
 			const image = this.data.layers[layerName];
-			const metadata = await image.metadata();
-			const rawImage = await image.toBuffer();
+			const metadata = image.metadata;
+			const rawImage = await image.image.toBuffer();
 
 			for (let i = 0; i < rawImage.length; i += 4) {
 				rawImage[i + 3] = rawImage[i]*opacity;
@@ -388,7 +401,7 @@ module.exports = class Thermo {
 			integrity: this.data.integrity,
 			magnification: this.data.magnification,
 			points: Object.values(this.data.points).reduce((points, {name, type, values, file, x, y}) => {points[name] = {name, type, values, file, x, y}; return points}, {}),
-			layers: this.data.files.layers.reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
+			layers: Object.values(this.data.layers).reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
 			entryFile: this.data.files.entry,
 			image: {
 				width: this.data.metadata.width,

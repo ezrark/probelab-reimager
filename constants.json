@@ -79,7 +79,8 @@
       "OUTPUTIMAGE": ".tif",
       "ENTRY": ".csi",
       "SPECTRA": "Extracted Spectrum.emsa",
-      "DIRECTORYCONST": ".MAP.EDS"
+      "DIRECTORYCONST": ".MAP.EDS",
+      "LAYER": ".layer"
     }
   },
   "pointShoot": {
