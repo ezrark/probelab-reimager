@@ -2,6 +2,10 @@
   "name": "thermo-reimager",
   "version": "5.2.0-pre",
   "main": "module.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bob620/thermo-reimager.git"
+  },
   "bin": {
     "thermo-reimager": "index.js"
   },
