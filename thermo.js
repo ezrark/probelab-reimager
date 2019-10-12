@@ -246,6 +246,80 @@ module.exports = class Thermo {
 		return this;
 	}
 
+	async addPoly(points, name='', settings={}) {
+		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
+
+		if (this.data.scratchCtx === undefined)
+			await this.init();
+
+		const ctx = this.data.ctx;
+		await ctx.setTextBaseline('bottom');
+
+		const poly = await calculations.calculatePoly(this.data.scratchCtx, points, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
+
+		await ctx.setFillStyle(settings.textColor.RGBA);
+		await ctx.setStrokeStyle(settings.textColor.RGBA);
+		await ctx.setFont(`${poly.fontSize}px "${settings.pointFont}"`);
+		await ctx.fillText(name, poly.fontX, poly.fontY);
+
+		await ctx.setLineWidth(poly.lineWidth);
+		await ctx.lineJoin('round');
+		await ctx.beginPath();
+		await ctx.moveTo(points[0].x, points[0].y);
+		for (const {x, y} of points)
+			await ctx.lineTo(x, y);
+
+		return this;
+	}
+
+	async addRectangle(topX, topY, botX, botY, name='', settings={}) {
+		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
+
+		if (this.data.scratchCtx === undefined)
+			await this.init();
+
+		const ctx = this.data.ctx;
+		await ctx.setTextBaseline('bottom');
+
+		const rect = await calculations.calculateRectangle(this.data.scratchCtx, topX, topY, botX, botY, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
+
+		await ctx.setFillStyle(settings.textColor.RGBA);
+		await ctx.setStrokeStyle(settings.textColor.RGBA);
+		await ctx.setFont(`${rect.fontSize}px "${settings.pointFont}"`);
+		await ctx.fillText(name, rect.fontX, rect.fontY);
+
+		await ctx.setLineWidth(rect.lineWidth);
+
+		await ctx.strokeRect(topX, topY, rect.width, rect.height);
+
+		return this;
+	}
+
+	async addCircle(x, y, radius, name='', settings={}) {
+		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
+
+		if (this.data.scratchCtx === undefined)
+			await this.init();
+
+		const ctx = this.data.ctx;
+		await ctx.setTextBaseline('bottom');
+
+		const circle = await calculations.calculateCircle(this.data.scratchCtx, x, y, radius, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
+
+		await ctx.setFillStyle(settings.textColor.RGBA);
+		await ctx.setStrokeStyle(settings.textColor.RGBA);
+		await ctx.setFont(`${circle.fontSize}px "${settings.pointFont}"`);
+		await ctx.fillText(name, circle.fontX, circle.fontY);
+
+		await ctx.setLineWidth(circle.lineWidth);
+
+		await ctx.beginPath();
+		await ctx.ellipse(x, y, radius, radius, 0, 0, 2 * Math.PI);
+		await ctx.stroke();
+
+		return this;
+	}
+
 	async addPoint(x, y, name='', settings={}) {
 		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
 
@@ -381,12 +455,56 @@ module.exports = class Thermo {
 		for (const layer of layers)
 			await this.addLayer(layer);
 
-		for (const {x, y, name, pointSettings=settings} of points)
-			await this.addPoint(x, y, name, pointSettings);
+		for (const {x, y, topX, topY, botX, botY, name, type='spot', pointSettings=settings} of points)
+			switch(type) {
+				default:
+				case 'spot':
+					await this.addPoint(x, y, name, pointSettings);
+					break;
+				case 'rect':
+					await this.addRectangle(topX, topY, botX, botY, name, pointSettings);
+					break;
+				case 'circle':
+					await this.addPoint(x, y, name, pointSettings);
+					break;
+				case 'polygon':
+					await this.addPoint(x, y, name, pointSettings);
+					break;
+			}
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))
-				await this.addPoint(...calculations.pointToXY(point, this.data.scale.imageWidth, this.data.scale.imageHeight), point.name, settings);
+				switch(point.type) {
+					default:
+					case 'spot':
+						await this.addPoint(
+							...calculations.pointToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							point.name,
+							settings
+						);
+						break;
+					case 'rect':
+						await this.addRectangle(
+							...calculations.rectToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							point.name,
+							settings
+						);
+						break;
+					case 'circle':
+						await this.addCircle(
+							...calculations.circleToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							point.name,
+							settings
+						);
+						break;
+					case 'polygon':
+						await this.addPoly(
+							calculations.polyToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							point.name,
+							settings
+						);
+						break;
+				}
 
 		await this.addScale(type, settings);
 

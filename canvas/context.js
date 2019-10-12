@@ -17,6 +17,18 @@ module.exports = class Context {
 		return this.sendRemote('drawImage', [image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
 	}
 
+	lineJoin(type) {
+		return this.sendRemote('SETlineJoin', [type]);
+	}
+
+	lineTo(x, y) {
+		return this.sendRemote('lineTo', [x, y]);
+	}
+
+	moveTo(x, y) {
+		return this.sendRemote('moveTo', [x, y]);
+	}
+
 	fillRect(x, y, width, height) {
 		return this.sendRemote('fillRect', [x, y, width, height]);
 	}

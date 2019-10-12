@@ -48,7 +48,126 @@ function calculatePixelSize(magnification, width, pixelSizeConstant) {
 }
 
 function pointToXY(pos, width, height) {
-	return [Math.floor((pos.values[0] / pos.values[2]) * width), Math.floor((pos.values[1] / pos.values[3]) * height)];
+	return [
+		Math.floor((pos.values[0] / pos.values[2]) * width),
+		Math.floor((pos.values[1] / pos.values[3]) * height)
+	];
+}
+
+function circleToXY(rect, width, height) {
+	const x = Math.floor((rect.values[0] / rect.values[2]) * width);
+	const y = Math.floor((rect.values[1] / rect.values[3]) * height);
+	const x2 = Math.floor((rect.values[4] / rect.values[2]) * width);
+	const y2 = Math.floor((rect.values[5] / rect.values[3]) * height);
+
+	return [
+		x, y,
+		Math.floor(Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2))),
+	];
+}
+
+function rectToXY(rect, width, height) {
+	return [
+		Math.floor((rect.values[0] / rect.values[2]) * width),
+		Math.floor((rect.values[1] / rect.values[3]) * height),
+		Math.floor((rect.values[4] / rect.values[2]) * width),
+		Math.floor((rect.values[5] / rect.values[3]) * height)
+	];
+}
+
+function polyToXY(rect, width, height) {
+	let points = [];
+
+	for (let i = 0; i < rect.values.length; i+=4)
+		points.push({
+			x: Math.floor((rect.values[i] / rect.values[2]) * width),
+			y: Math.floor((rect.values[i+1] / rect.values[3]) * height)
+		});
+
+	return points;
+}
+
+async function calculatePoly(scratchCtx, points, width, size, fontSize, font) {
+	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	let rect = {
+		lineWidth: Math.floor(size/8),
+		fontHeight: 0,
+		fontX: 0,
+		fontY: 0,
+		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+	};
+
+	if (rect.fontSize < 8)
+		rect.fontSize = 8;
+
+	scratchCtx.font = `${rect.fontSize}px "${font}"`;
+	rect.fontHeight = (await scratchCtx.measureText('m')).width;
+
+	if (size === 5 || size === 3)
+		rect.lineWidth = 3;
+	else
+		rect.lineWidth = rect.lineWidth === 0 ? 2 : rect.lineWidth;
+
+	rect.fontX = points[0].x;
+	rect.fontY = points[0].y - Math.round(rect.fontHeight/3);
+
+	return rect;
+}
+
+async function calculateCircle(scratchCtx, x, y, radius, width, size, fontSize, font) {
+	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	let rect = {
+		lineWidth: Math.floor(size/8),
+		fontHeight: 0,
+		fontX: 0,
+		fontY: 0,
+		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+	};
+
+	if (rect.fontSize < 8)
+		rect.fontSize = 8;
+
+	scratchCtx.font = `${rect.fontSize}px "${font}"`;
+	rect.fontHeight = (await scratchCtx.measureText('m')).width;
+
+	if (size === 5 || size === 3)
+		rect.lineWidth = 3;
+	else
+		rect.lineWidth = rect.lineWidth === 0 ? 2 : rect.lineWidth;
+
+	rect.fontX = x + radius - (radius/4);
+	rect.fontY = y - (radius/2) - Math.round(rect.fontHeight/3);
+
+	return rect;
+}
+
+async function calculateRectangle(scratchCtx, topX, topY, botX, botY, width, size, fontSize, font) {
+	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	let rect = {
+		width: botX - topX,
+		height: botY - topY,
+		lineWidth: Math.floor(size/8),
+		fontHeight: 0,
+		fontX: 0,
+		fontY: 0,
+		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+	};
+
+	if (rect.fontSize < 8)
+		rect.fontSize = 8;
+
+	scratchCtx.font = `${rect.fontSize}px "${font}"`;
+	rect.fontHeight = (await scratchCtx.measureText('m')).width;
+
+	if (size === 5 || size === 3)
+		rect.lineWidth = 3;
+	else
+		rect.lineWidth = rect.lineWidth === 0 ? 2 : rect.lineWidth;
+
+	rect.fontX = botX;
+	rect.fontY = topY - Math.round(rect.fontHeight/3);
+
+	return rect;
 }
 
 async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, font) {
@@ -242,7 +361,13 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 }
 
 module.exports = {
+	rectToXY,
+	polyToXY,
+	circleToXY,
 	pointToXY,
+	calculatePoly,
+	calculateCircle,
+	calculateRectangle,
 	calculatePointPosition,
 	estimateVisualScale,
 	calculatePixelSize,

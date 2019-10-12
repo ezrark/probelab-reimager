@@ -39,7 +39,7 @@ function readEntryFile(uri) {
 
 		if (data.startsWith('#')) {
 			output.points.push({
-				type: data,
+				type: data.split(' ')[1].toLowerCase(),
 				file: rawData[i + 1],
 				values: rawData[i + 2].split(',').map(num => parseInt(num))
 			});
