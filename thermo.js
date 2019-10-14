@@ -532,7 +532,7 @@ module.exports = class Thermo {
 			name: this.data.name,
 			integrity: this.data.integrity,
 			magnification: this.data.magnification,
-			points: Object.values(this.data.points).reduce((points, {name, type, values, file, x, y}) => {points[name] = {name, type, values, file, x, y}; return points}, {}),
+			points: Object.values(this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {points[name] = {name, type, values, file, x, y, pos}; return points}, {}),
 			layers: Object.values(this.data.layers).reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
 			entryFile: this.data.files.entry,
 			image: {
