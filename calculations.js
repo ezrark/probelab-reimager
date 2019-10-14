@@ -47,18 +47,18 @@ function calculatePixelSize(magnification, width, pixelSizeConstant) {
 	}
 }
 
-function pointToXY(pos, width, height) {
+function pointToXY(values, width, height) {
 	return [
-		Math.floor((pos.values[0] / pos.values[2]) * width),
-		Math.floor((pos.values[1] / pos.values[3]) * height)
+		Math.floor((values[0] / values[2]) * width),
+		Math.floor((values[1] / values[3]) * height)
 	];
 }
 
-function circleToXY(rect, width, height) {
-	const x = Math.floor((rect.values[0] / rect.values[2]) * width);
-	const y = Math.floor((rect.values[1] / rect.values[3]) * height);
-	const x2 = Math.floor((rect.values[4] / rect.values[2]) * width);
-	const y2 = Math.floor((rect.values[5] / rect.values[3]) * height);
+function circleToXY(values, width, height) {
+	const x = Math.floor((values[0] / values[2]) * width);
+	const y = Math.floor((values[1] / values[3]) * height);
+	const x2 = Math.floor((values[4] / values[2]) * width);
+	const y2 = Math.floor((values[5] / values[3]) * height);
 
 	return [
 		x, y,
@@ -66,22 +66,22 @@ function circleToXY(rect, width, height) {
 	];
 }
 
-function rectToXY(rect, width, height) {
+function rectToXY(values, width, height) {
 	return [
-		Math.floor((rect.values[0] / rect.values[2]) * width),
-		Math.floor((rect.values[1] / rect.values[3]) * height),
-		Math.floor((rect.values[4] / rect.values[2]) * width),
-		Math.floor((rect.values[5] / rect.values[3]) * height)
+		Math.floor((values[0] / values[2]) * width),
+		Math.floor((values[1] / values[3]) * height),
+		Math.floor((values[4] / values[2]) * width),
+		Math.floor((values[5] / values[3]) * height)
 	];
 }
 
-function polyToXY(rect, width, height) {
+function polyToXY(values, width, height) {
 	let points = [];
 
-	for (let i = 0; i < rect.values.length; i+=4)
+	for (let i = 0; i < values.length; i+=4)
 		points.push({
-			x: Math.floor((rect.values[i] / rect.values[2]) * width),
-			y: Math.floor((rect.values[i+1] / rect.values[3]) * height)
+			x: Math.floor((values[i] / values[2]) * width),
+			y: Math.floor((values[i+1] / values[3]) * height)
 		});
 
 	return points;

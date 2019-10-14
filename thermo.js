@@ -125,10 +125,22 @@ module.exports = class Thermo {
 			this.data.metadata = this.data.layers.base.metadata;
 
 			this.data.points = Object.values(this.data.points).reduce((points, point) => {
-				const [x, y] = calculations.pointToXY(point, this.data.metadata.width, this.data.metadata.height);
-				point.x = x;
-				point.y = y;
+				point.pos = calculations.pointToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+				point.x = point.pos[0];
+				point.y = point.pos[1];
 				points[point.name] = point;
+				switch(point.type) {
+					case 'rect':
+						point.pos = calculations.rectToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+						break;
+					case 'circle':
+						point.pos = calculations.circleToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+						break;
+					case 'polygon':
+						point.pos = calculations.polyToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+						break;
+				}
+
 				return points;
 			}, {});
 		}
@@ -457,7 +469,7 @@ module.exports = class Thermo {
 		for (const layer of layers)
 			await this.addLayer(layer);
 
-		for (const {x, y, topX, topY, botX, botY, name, type='spot', pointSettings=settings} of points)
+		for (const {x, y, topX, topY, botX, botY, radius, polyPoints, name, type='spot', pointSettings=settings} of points)
 			switch(type) {
 				default:
 				case 'spot':
@@ -467,10 +479,10 @@ module.exports = class Thermo {
 					await this.addRectangle(topX, topY, botX, botY, name, pointSettings);
 					break;
 				case 'circle':
-					await this.addPoint(x, y, name, pointSettings);
+					await this.addCircle(x, y, radius, name, pointSettings);
 					break;
 				case 'polygon':
-					await this.addPoint(x, y, name, pointSettings);
+					await this.addPoly(polyPoints, name, pointSettings);
 					break;
 			}
 
@@ -480,28 +492,28 @@ module.exports = class Thermo {
 					default:
 					case 'spot':
 						await this.addPoint(
-							...calculations.pointToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							...point.pos,
 							point.name,
 							settings
 						);
 						break;
 					case 'rect':
 						await this.addRectangle(
-							...calculations.rectToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							...point.pos,
 							point.name,
 							settings
 						);
 						break;
 					case 'circle':
 						await this.addCircle(
-							...calculations.circleToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							...point.pos,
 							point.name,
 							settings
 						);
 						break;
 					case 'polygon':
 						await this.addPoly(
-							calculations.polyToXY(point, this.data.metaConstants.width, this.data.metaConstants.height),
+							point.pos,
 							point.name,
 							settings
 						);

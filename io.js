@@ -61,44 +61,15 @@ function readEntryFile(uri) {
 
 			}
 
-	for (const element of rawData)
-		switch (element.shift().split(' ')[1].toLowerCase()) {
-			case 'spot':
-				output.points.push({
-					type: 'spot',
-					file: element.shift(),
-					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-				});
-				break;
-			case 'rect':
-				output.points.push({
-					type: 'rect',
-					file: element.shift(),
-					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-				});
-				break;
-			case 'circle':
-				output.points.push({
-					type: 'circle',
-					file: element.shift(),
-					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-				});
-				break;
-			case 'polygon':
-				output.points.push({
-					type: 'polygon',
-					file: element.shift(),
-					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-				});
-				break;
-			case 'imgint':
-				//output.points.push({
-				//	type: 'imgint',
-				//	file: element.shift(),
-				//	values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-				//});
-				break;
-		}
+	for (const element of rawData) {
+		let type = element.shift().split(' ')[1].toLowerCase();
+		if (type !== 'imgint')
+			output.points.push({
+				type,
+				file: element.shift(),
+				values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+			});
+	}
 
 	return output;
 }
