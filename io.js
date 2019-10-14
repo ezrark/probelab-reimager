@@ -19,8 +19,13 @@ function readMASFile(uri) {
 }
 
 function readEntryFile(uri) {
-	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('\r\n');
-	rawData = rawData.length === 1 ? rawData[0].split('\n') : rawData;
+	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('#').map(text => {
+		const data = text.split('\r\n');
+		if (data.length === 1)
+			return text.split('\n');
+		else
+			return data;
+	});
 
 	let output = {
 		points: [],
@@ -33,40 +38,67 @@ function readEntryFile(uri) {
 		}
 	};
 
-	for (let i = 0; i < rawData.length; i++) {
-		const data = rawData[i];
-		const ext = data.split('.').pop();
-
-		if (data.startsWith('#')) {
-			output.points.push({
-				type: data.split(' ')[1].toLowerCase(),
-				file: rawData[i + 1],
-				values: rawData[i + 2].split(',').map(num => parseInt(num))
-			});
-			i += 2;
-		} else
-			switch(ext) {
-				case 'si':
-					output.data.raw = data;
-					break;
-				case 'siref':
+	for (const line of rawData.shift())
+		if (line.length > 1)
+			switch (line.split('.')[1].toLowerCase()) {
 				case 'psref':
-					output.data.base = data;
+				case 'siref':
+					output.data.base = line;
+					break;
+				case 'si':
+					output.data.raw = line;
 					break;
 				case 'sitif':
-					output.data.grey = data;
+					output.data.grey = line;
 					break;
 				case 'simcs':
-					const name = data.toLowerCase().split(' ');
-					const element = name.pop().split('.')[0];
-					const type = name.pop();
+					const name = line.toLowerCase().split(' ');
 					output.layers.push({
-						element: `${element} ${type}`,
-						file: data
+						element: `${name.pop().split('.')[0]} ${name.pop()}`,
+						file: line
 					});
 					break;
+
 			}
-	}
+
+	for (const element of rawData)
+		switch (element.shift().split(' ')[1].toLowerCase()) {
+			case 'spot':
+				output.points.push({
+					type: 'spot',
+					file: element.shift(),
+					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+				});
+				break;
+			case 'rect':
+				output.points.push({
+					type: 'rect',
+					file: element.shift(),
+					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+				});
+				break;
+			case 'circle':
+				output.points.push({
+					type: 'circle',
+					file: element.shift(),
+					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+				});
+				break;
+			case 'polygon':
+				output.points.push({
+					type: 'polygon',
+					file: element.shift(),
+					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+				});
+				break;
+			case 'imgint':
+				output.points.push({
+					type: 'imgint',
+					file: element.shift(),
+					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+				});
+				break;
+		}
 
 	return output;
 }

@@ -17,10 +17,6 @@ module.exports = class Context {
 		return this.sendRemote('drawImage', [image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight]);
 	}
 
-	lineJoin(type) {
-		return this.sendRemote('SETlineJoin', [type]);
-	}
-
 	lineTo(x, y) {
 		return this.sendRemote('lineTo', [x, y]);
 	}
@@ -59,6 +55,10 @@ module.exports = class Context {
 
 	measureText(text) {
 		return this.sendRemote('measureText', [text]);
+	}
+
+	setLineJoin(type) {
+		return this.sendRemote('SETlineJoin', [type]);
 	}
 
 	setFont(font) {

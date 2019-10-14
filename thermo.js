@@ -263,11 +263,13 @@ module.exports = class Thermo {
 		await ctx.fillText(name, poly.fontX, poly.fontY);
 
 		await ctx.setLineWidth(poly.lineWidth);
-		await ctx.lineJoin('round');
+		await ctx.setLineJoin('round');
 		await ctx.beginPath();
 		await ctx.moveTo(points[0].x, points[0].y);
 		for (const {x, y} of points)
 			await ctx.lineTo(x, y);
+		await ctx.lineTo(points[0].x, points[0].y);
+		await ctx.stroke();
 
 		return this;
 	}
