@@ -92,11 +92,11 @@ function readEntryFile(uri) {
 				});
 				break;
 			case 'imgint':
-				output.points.push({
-					type: 'imgint',
-					file: element.shift(),
-					values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-				});
+				//output.points.push({
+				//	type: 'imgint',
+				//	file: element.shift(),
+				//	values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
+				//});
 				break;
 		}
 
