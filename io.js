@@ -39,7 +39,7 @@ function readEntryFile(uri) {
 	};
 
 	for (const line of rawData.shift())
-		if (line.length > 1)
+		if (line.length > 1 && line.includes('.'))
 			switch (line.split('.')[1].toLowerCase()) {
 				case 'psref':
 				case 'siref':
