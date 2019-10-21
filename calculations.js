@@ -1,7 +1,7 @@
 const constants = require('./constants');
-const scales = [1000, 500, 250, 100, 50, 25, 10, 5, 1];
+const scales = [1000, 500, 250, 100, 50, 25, 10, 5, 1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.001];
 
-function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=calculatePixelSize(magnification, width, pixelSizeConstant)) {
+function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize = calculatePixelSize(magnification, width, pixelSizeConstant)) {
 	let scaleIndex = 0;
 
 	if (40 < magnification && magnification <= 100)
@@ -16,8 +16,26 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=
 		scaleIndex = 5;
 	if (2000 < magnification && magnification <= 3000)
 		scaleIndex = 6;
-	if (3000 < magnification)
+	if (3000 < magnification && magnification <= 5000)
 		scaleIndex = 7;
+	if (5000 < magnification && magnification <= 70000)
+		scaleIndex = 8;
+	if (70000 < magnification && magnification <= 100000)
+		scaleIndex = 9;
+	if (100000 < magnification && magnification <= 150000)
+		scaleIndex = 10;
+	if (150000 < magnification && magnification <= 200000)
+		scaleIndex = 11;
+	if (200000 < magnification && magnification <= 250000)
+		scaleIndex = 12;
+	if (250000 < magnification && magnification <= 300000)
+		scaleIndex = 13;
+	if (300000 < magnification && magnification <= 400000)
+		scaleIndex = 14;
+	if (400000 < magnification && magnification <= 500000)
+		scaleIndex = 15;
+	if (500000 < magnification)
+		scaleIndex = 16;
 
 	if (Math.round(scales[scaleIndex] / pixelSize) > .3 * width)
 		scaleIndex += 1;
@@ -26,25 +44,9 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize=
 }
 
 function calculatePixelSize(magnification, width, pixelSizeConstant) {
-	const thousand = pixelSizeConstant*Math.pow(magnification, -1);
-
-	switch(width) {
-		case 4096:
-			return thousand/4;
-		case 2048:
-			return thousand/2;
-		case 1024:
-		default:
-			return thousand;
-		case 512:
-			return thousand*2;
-		case 256:
-			return thousand*4;
-		case 128:
-			return thousand*8;
-		case 64:
-			return thousand*16;
-	}
+	//  Calculated formula    "1 scale"
+	// (Constant * mag^-1) * (1024/width)
+	return (pixelSizeConstant * Math.pow(magnification, -1)) * (1024 / width);
 }
 
 function pointToXY(values, width, height) {
@@ -62,7 +64,7 @@ function circleToXY(values, width, height) {
 
 	return [
 		x, y,
-		Math.floor(Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2))),
+		Math.floor(Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2)))
 	];
 }
 
@@ -78,23 +80,23 @@ function rectToXY(values, width, height) {
 function polyToXY(values, width, height) {
 	let points = [];
 
-	for (let i = 0; i < values.length; i+=4)
+	for (let i = 0; i < values.length; i += 4)
 		points.push({
 			x: Math.floor((values[i] / values[2]) * width),
-			y: Math.floor((values[i+1] / values[3]) * height)
+			y: Math.floor((values[i + 1] / values[3]) * height)
 		});
 
 	return points;
 }
 
 async function calculatePoly(scratchCtx, points, width, size, fontSize, font) {
-	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	size = size ? Math.round(width / (100 / size) * constants.FONTWIDTHMUTIPLIER) : Math.round(width * constants.FONTWIDTHMUTIPLIER / 3);
 	let poly = {
-		lineWidth: Math.floor(size/8),
+		lineWidth: Math.floor(size / 8),
 		fontHeight: 0,
 		fontX: 0,
 		fontY: 0,
-		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+		fontSize: fontSize ? Math.round(1.5 * size * (fontSize / 100)) : size * 2
 	};
 
 	if (poly.fontSize < 8)
@@ -111,19 +113,19 @@ async function calculatePoly(scratchCtx, points, width, size, fontSize, font) {
 	const bestY = points.reduce((bestY, {y}) => bestY < y ? bestY : y, Infinity);
 
 	poly.fontX = points[0].x;
-	poly.fontY = bestY - Math.round(poly.fontHeight/6);
+	poly.fontY = bestY - Math.round(poly.fontHeight / 6);
 
 	return poly;
 }
 
 async function calculateCircle(scratchCtx, x, y, radius, width, size, fontSize, font) {
-	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	size = size ? Math.round(width / (100 / size) * constants.FONTWIDTHMUTIPLIER) : Math.round(width * constants.FONTWIDTHMUTIPLIER / 3);
 	let circle = {
-		lineWidth: Math.floor(size/8),
+		lineWidth: Math.floor(size / 8),
 		fontHeight: 0,
 		fontX: 0,
 		fontY: 0,
-		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+		fontSize: fontSize ? Math.round(1.5 * size * (fontSize / 100)) : size * 2
 	};
 
 	if (circle.fontSize < 8)
@@ -137,22 +139,22 @@ async function calculateCircle(scratchCtx, x, y, radius, width, size, fontSize, 
 	else
 		circle.lineWidth = circle.lineWidth === 0 ? 2 : circle.lineWidth;
 
-	circle.fontX = x + radius - (radius/4);
-	circle.fontY = y - (radius/2) - Math.round(circle.fontHeight/3);
+	circle.fontX = x + radius - (radius / 4);
+	circle.fontY = y - (radius / 2) - Math.round(circle.fontHeight / 3);
 
 	return circle;
 }
 
 async function calculateRectangle(scratchCtx, topX, topY, botX, botY, width, size, fontSize, font) {
-	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	size = size ? Math.round(width / (100 / size) * constants.FONTWIDTHMUTIPLIER) : Math.round(width * constants.FONTWIDTHMUTIPLIER / 3);
 	let rect = {
 		width: botX - topX,
 		height: botY - topY,
-		lineWidth: Math.floor(size/8),
+		lineWidth: Math.floor(size / 8),
 		fontHeight: 0,
 		fontX: 0,
 		fontY: 0,
-		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+		fontSize: fontSize ? Math.round(1.5 * size * (fontSize / 100)) : size * 2
 	};
 
 	if (rect.fontSize < 8)
@@ -167,13 +169,13 @@ async function calculateRectangle(scratchCtx, topX, topY, botX, botY, width, siz
 		rect.lineWidth = rect.lineWidth === 0 ? 2 : rect.lineWidth;
 
 	rect.fontX = botX;
-	rect.fontY = topY - Math.round(rect.fontHeight/3);
+	rect.fontY = topY - Math.round(rect.fontHeight / 3);
 
 	return rect;
 }
 
 async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, font) {
-	size = size ? size : Math.round(width*constants.FONTWIDTHMUTIPLIER/3);
+	size = size ? Math.round(width / (100 / size) * constants.FONTWIDTHMUTIPLIER) : Math.round(width * constants.FONTWIDTHMUTIPLIER / 3);
 	let point = {
 		centerX: x,
 		centerY: y,
@@ -182,10 +184,10 @@ async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, f
 		rightX: 0,
 		bottomY: 0,
 		size: 0,
-		halfSize: Math.floor(size/2),
-		quarterSize: Math.floor(size/4),
-		eighthSize: Math.floor(size/8),
-		sixteenthSize: Math.floor(size/16),
+		halfSize: Math.floor(size / 2),
+		quarterSize: Math.floor(size / 4),
+		eighthSize: Math.floor(size / 8),
+		sixteenthSize: Math.floor(size / 16),
 		height: 0,
 		width: 0,
 		pointHeight: 0,
@@ -193,7 +195,7 @@ async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, f
 		fontHeight: 0,
 		fontX: 0,
 		fontY: 0,
-		fontSize: fontSize ? fontSize : Math.round(width*constants.FONTWIDTHMUTIPLIER/2)
+		fontSize: fontSize ? Math.round(1.5 * size * (fontSize / 100)) : size * 2
 	};
 
 	if (point.fontSize < 8)
@@ -223,13 +225,13 @@ async function calculatePointPosition(scratchCtx, x, y, width, size, fontSize, f
 
 	point.height = point.fontHeight + point.size;
 	point.fontX = point.rightX;
-	point.fontY = point.topY - Math.round(point.fontHeight/3);
+	point.fontY = point.topY - Math.round(point.fontHeight / 3);
 
 	return point;
 }
 
 async function calculateConstants(meta, scratchCtx, font) {
-	const textFontHeight = Math.round(meta.width*constants.FONTWIDTHMUTIPLIER);
+	const textFontHeight = Math.round(meta.width * constants.FONTWIDTHMUTIPLIER);
 	await scratchCtx.setFont(`${textFontHeight}px "${font}"`);
 	const maxBarPixelHeight = Math.round(textFontHeight);
 
@@ -292,7 +294,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 	scale.barPixelHeight = Math.round((scaleBarHeight ? scaleBarHeight : constants.SCALEBARHEIGHTPERCENT) * scale.textFontHeight);
 
 	scale.visualScale = scaleSize > 0 ? scaleSize : scale.visualScale;
-	scale.visualScale = '' + scale.visualScale + 'µm';
+	scale.visualScale = '' + (scale.visualScale >= 1 ? scale.visualScale : (scale.visualScale * 1000)) + (scale.visualScale >= 1 ? 'µm' : 'nm');
 
 	await scratchCtx.setFont(`${scale.textFontHeight}px "${font}"`);
 	const textWidth = (await scratchCtx.measureText(scale.visualScale)).width;
@@ -302,7 +304,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 
 	// Calculate any changes in the image to account for scale type
 	// Also positions the scale bar's x and y positions
-	switch(scaleType) {
+	switch (scaleType) {
 		case constants.scale.types.BELOWLEFT:
 			scale.x = 0;
 			scale.y = metaConstants.height;
@@ -326,7 +328,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 			scale.realWidth = metaConstants.width;
 			break;
 		case constants.scale.types.LOWERCENTER:
-			scale.x = Math.round((metaConstants.width/2) - (scale.width/2));
+			scale.x = Math.round((metaConstants.width / 2) - (scale.width / 2));
 			scale.y = metaConstants.height - scale.height;
 			break;
 		case constants.scale.types.LOWERRIGHT:
