@@ -18,24 +18,18 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize 
 		scaleIndex = 6;
 	if (3000 < magnification && magnification <= 5000)
 		scaleIndex = 7;
-	if (5000 < magnification && magnification <= 70000)
+	if (5000 < magnification && magnification <= 25000)
 		scaleIndex = 8;
-	if (70000 < magnification && magnification <= 100000)
+	if (25000 < magnification && magnification <= 50000)
 		scaleIndex = 9;
-	if (100000 < magnification && magnification <= 150000)
+	if (50000 < magnification && magnification <= 100000)
 		scaleIndex = 10;
-	if (150000 < magnification && magnification <= 200000)
+	if (100000 < magnification && magnification <= 250000)
 		scaleIndex = 11;
-	if (200000 < magnification && magnification <= 250000)
+	if (250000 < magnification && magnification <= 500000)
 		scaleIndex = 12;
-	if (250000 < magnification && magnification <= 300000)
-		scaleIndex = 13;
-	if (300000 < magnification && magnification <= 400000)
-		scaleIndex = 14;
-	if (400000 < magnification && magnification <= 500000)
-		scaleIndex = 15;
 	if (500000 < magnification)
-		scaleIndex = 16;
+		scaleIndex = 13;
 
 	if (Math.round(scales[scaleIndex] / pixelSize) > .3 * width)
 		scaleIndex += 1;
