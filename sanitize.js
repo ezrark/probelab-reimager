@@ -35,11 +35,13 @@ function writeSettings(inputSettings) {
 	const useWebp = typeof inputSettings.webp === 'object';
 	const usePng = typeof inputSettings.png === 'object';
 	const useJpeg = typeof inputSettings.jpeg === 'object';
+	const makeAcq = typeof inputSettings.acq === 'object';
 
 	inputSettings.tiff = useTiff ? inputSettings.tiff : {};
 	inputSettings.webp = useWebp ? inputSettings.webp : {};
 	inputSettings.png = usePng ? inputSettings.png : {};
 	inputSettings.jpeg = useJpeg ? inputSettings.jpeg : {};
+	inputSettings.acq = makeAcq ? inputSettings.acq : {};
 
 	return {
 		uri: inputSettings.uri,
@@ -64,6 +66,9 @@ function writeSettings(inputSettings) {
 			use: useJpeg,
 			quality: inputSettings.jpeg.quality === undefined ? constants.export.png.quality : inputSettings.jpeg.quality,
 			chromaSubsampling: inputSettings.jpeg.chromaSubsampling === undefined ? constants.export.png.chromaSubsampling : inputSettings.jpeg.chromaSubsampling
+		},
+		acq: {
+			use: makeAcq
 		}
 	}
 }

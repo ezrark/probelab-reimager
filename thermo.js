@@ -1,3 +1,5 @@
+const fs = require('fs').promises;
+
 const sharp = require('sharp');
 
 const constants = require('./constants');
@@ -437,26 +439,34 @@ module.exports = class Thermo {
 
 	async write(settings={}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
-		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
-		const ext = outputUri.split('.').pop();
-		switch(ext) {
-			default:
-			case 'tiff':
-			case 'tif':
-				await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
-				break;
-			case 'jpeg':
-			case 'jpg':
-				await (await this.toSharp()).jpeg(settings.jpeg).toFile(outputUri);
-				break;
-			case 'png':
-				await (await this.toSharp()).png(settings.png).toFile(outputUri);
-				break;
-			case 'webp':
-				await (await this.toSharp()).webp(settings.webp).toFile(outputUri);
-				break;
+
+		if (settings.acq.use) {
+			await fs.writeFile(settings.uri, 'test');
+		} else if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
+			let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
+			const ext = outputUri.split('.').pop();
+			switch (ext) {
+				default:
+				case 'tiff':
+				case 'tif':
+					await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
+					break;
+				case 'jpeg':
+				case 'jpg':
+					await (await this.toSharp()).jpeg(settings.jpeg).toFile(outputUri);
+					break;
+				case 'png':
+					await (await this.toSharp()).png(settings.png).toFile(outputUri);
+					break;
+				case 'webp':
+					await (await this.toSharp()).webp(settings.webp).toFile(outputUri);
+					break;
+				case 'acq':
+					break;
+			}
+			return outputUri;
 		}
-		return outputUri;
+		return settings.uri;
 	}
 
 	async createBuffer(type=undefined, settings={}, points=[], layers=[]) {
