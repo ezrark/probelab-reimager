@@ -481,7 +481,7 @@ module.exports = class Thermo {
 		}
 
 		if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
-			if (!settings.uri)
+			if (!settings.uri || settings.acq.use)
 				outputUri = outputUri + (settings.acq.use ? '.jpg' : constants.pointShoot.fileFormats.OUTPUTIMAGE);
 
 			const ext = outputUri.split('.').pop();
