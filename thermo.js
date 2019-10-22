@@ -45,6 +45,9 @@ module.exports = class Thermo {
 			this.data.files.layers.push({
 				element: 'base',
 				file: this.data.files.base
+			}, {
+				element: 'solid',
+				file: ''
 			});
 
 			this.data.points = entryData.points.reduce((points, point) => {
