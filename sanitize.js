@@ -45,6 +45,7 @@ function writeSettings(inputSettings) {
 
 	return {
 		uri: inputSettings.uri,
+		pixelSizeConstant: inputSettings.pixelSizeConstant ? inputSettings.pixelSizeConstant : constants.PIXELSIZECONSTANT,
 		tiff: {
 			use: useTiff,
 			quality: inputSettings.tiff.quality === undefined ? constants.export.tiff.quality : inputSettings.tiff.quality,

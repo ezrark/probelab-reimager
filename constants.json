@@ -163,5 +163,9 @@
       "ORANGE": [250, 130, 49],
       "RED": [255, 63, 52]
     }
+  },
+  "pictureSnapApp": {
+    "TWIPSPERINCH": 1440,
+    "TWIPSPERPIXEL": 15
   }
 }

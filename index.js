@@ -28,6 +28,7 @@ function help() {
 	console.log('-z, --textsize [num]                     \tSets the font size for the point names');
 	console.log('-d, --pointsize [num]                    \tSets the point size');
 	console.log('-f, --font [font]                        \tSets the font to use');
+	console.log('-a, --acq                                \tExports an ACQ file alongside the image (Forced jpg output)');
 	console.log('-l, --layer [layerName, [color, opacity]]\tTries to overlay the layer, when > 1, added in order');
 	console.log();
 	console.log('Pixel Size Constant:');
@@ -94,11 +95,13 @@ let options = {
 	pointFontSize: constants.point.AUTOSIZE,
 	pointFont: constants.fonts.OPENSANS,
 	font: constants.fonts.OPENSANS,
+	acq: undefined,
 	tiff: {
 		quality: constants.export.tiff.quality,
 		compression: constants.export.tiff.compression,
 		predictor: constants.export.tiff.predictor
-	}
+	},
+	jpeg: {},
 };
 
 let layers = [];
@@ -143,6 +146,9 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 			case '--points':
 				options.addPoints = true;
+				break;
+			case '--acq':
+				options.acq = {};
 				break;
 			case '--layers':
 				name = process.argv[++i];
@@ -364,6 +370,9 @@ for (let i = 2; i < process.argv.length; i++) {
 			case '-i':
 				options.addPoints = true;
 				break;
+			case '-a':
+				options.acq = {};
+				break;
 			case '-l':
 				name = process.argv[++i];
 				colorLabel = process.argv[++i];
@@ -574,6 +583,9 @@ for (let i = 2; i < process.argv.length; i++) {
 							break;
 						case 'i':
 							options.addPoints = true;
+							break;
+						case 'a':
+							options.acq = {};
 							break;
 					}
 				break;

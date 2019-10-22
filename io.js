@@ -1,12 +1,11 @@
 const fs = require('fs');
 
 function readMASFile(uri) {
-	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('\r\n');
-	rawData = rawData.length === 1 ? rawData[0].split('\n') : rawData;
+	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('#');
 
-	return rawData.reduce((output, line) => {
+	return rawData.filter(data => data).reduce((output, line) => {
 		const [rawName, data] = line.split(':');
-		const [name, units] = rawName.toLowerCase().trim().substring(1).split('-');
+		const [name, units] = rawName.toLowerCase().trim().split('-');
 
 		if (name && data && name !== 'spectrum' && name !== 'endofdata')
 			output[name.trim()] = {

@@ -440,10 +440,50 @@ module.exports = class Thermo {
 	async write(settings={}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 
+		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
+
 		if (settings.acq.use) {
-			await fs.writeFile(settings.uri, 'test');
-		} else if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
-			let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)) + constants.pointShoot.fileFormats.OUTPUTIMAGE);
+			const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
+			const TWIPSHeight = this.data.metaConstants.height * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.height / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
+
+			const refPoint = this.data.points['1'];
+
+			const pixelSize = await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant);
+
+			const xPos = parseFloat(refPoint.data.xposition.data) - (refPoint.x * pixelSize / 1000);
+			const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize / 1000);
+
+			await fs.writeFile(outputUri + '.acq',
+				[
+					'[stage]',
+					'ACQFileVersion="1"',
+					'PictureSnap mode="1"',
+					`X_Polarity="${parseInt(refPoint.data.beamx.data)}"`,
+					`Y_Polarity="${parseInt(refPoint.data.beamy.data)}"`,
+					'Stage_Units=mm',
+					'ACQScreenDPI="1"',
+					'Number of calibration points="3"',
+					'Number of Z calibration points="3"',
+					`Screen reference point1 (twips)="0,0"`,
+					`Stage reference point1="${xPos},${yPos}"`,
+					`Stage Z reference point1="${refPoint.data.zposition.data}"`,
+					`Screen reference point2 (twips)="${TWIPSWidth},${TWIPSHeight}"`,
+					`Stage reference point2="${xPos + (this.data.metaConstants.width * pixelSize / 1000)},${yPos + (this.data.metaConstants.height * pixelSize / 1000)}"`,
+					`Stage Z reference point2="${refPoint.data.zposition.data}"`,
+					`Screen reference point3 (twips)="${TWIPSWidth},0"`,
+					`Stage reference point3="${xPos + (this.data.metaConstants.width * pixelSize / 1000)},${yPos}"`,
+					`Stage Z reference point3="${refPoint.data.zposition.data}"`,
+					'Screen Z reference point1 (dummy)="0"',
+					'Screen Z reference point2 (dummy)="0"',
+					'Screen Z reference point3 (dummy)="0"'
+				].join('\n')
+			);
+		}
+
+		if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
+			if (!settings.uri)
+				outputUri = outputUri + (settings.acq.use ? '.jpg' : constants.pointShoot.fileFormats.OUTPUTIMAGE);
+
 			const ext = outputUri.split('.').pop();
 			switch (ext) {
 				default:
