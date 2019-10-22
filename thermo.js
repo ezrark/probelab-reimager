@@ -181,7 +181,10 @@ module.exports = class Thermo {
 
 		if (layerName === 'base')
 			await this.data.ctx.drawImage(`data:image/png;base64,${(await this.data.layers[layerName].image.clone().png().toBuffer()).toString('base64')}`, 0, 0, this.data.metadata.width, this.data.metadata.height);
-		else if (this.data.layers[layerName]) {
+		else if (layerName === 'solid') {
+			await this.data.ctx.setFillStyle(color.RGBA);
+			await this.data.ctx.fillRect(0, 0, this.data.metadata.width, this.data.metadata.height);
+		} else if (this.data.layers[layerName]) {
 			const image = this.data.layers[layerName];
 			const metadata = image.metadata;
 			const rawImage = await image.image.toBuffer();
