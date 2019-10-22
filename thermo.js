@@ -113,7 +113,15 @@ module.exports = class Thermo {
 		if (!this.data.layers.base) {
 			await Promise.all(this.data.files.layers.map(async ({file, element}) => {
 				if (element !== 'base')
-					return this.addLayerFile(this.data.uri + file);
+					if (element !== 'solid')
+						return this.addLayerFile(this.data.uri + file);
+					else
+						this.data.layers['solid'] = {
+							element,
+							file: '',
+							image: undefined,
+							metadata: {}
+						};
 				else {
 					const image = sharp(file);
 					this.data.layers['base'] = {
