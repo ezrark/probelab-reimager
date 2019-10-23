@@ -443,23 +443,23 @@ module.exports = class Thermo {
 		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
 
 		if (settings.acq.use) {
-			const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
+			const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL - 90; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
 			const TWIPSHeight = this.data.metaConstants.height * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.height / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
 
 			const refPoint = this.data.points['1'];
 
-			const pixelSize = await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant);
+			const pixelSize = (await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant)) / 1000;
 
-			const xPos = parseFloat(refPoint.data.xposition.data) - (refPoint.x * pixelSize / 1000);
-			const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize / 1000);
+			const xPos = parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width - refPoint.x) * pixelSize) + (0.0081451525);
+			const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize) + (0.0040590275);
 
 			await fs.writeFile(outputUri + '.acq',
 				[
 					'[stage]',
 					'ACQFileVersion="1"',
 					'PictureSnap mode="1"',
-					`X_Polarity="${parseInt(refPoint.data.beamx.data)}"`,
-					`Y_Polarity="${parseInt(refPoint.data.beamy.data)}"`,
+					`X_Polarity="-1"`,
+					`Y_Polarity="-1"`,
 					'Stage_Units=mm',
 					'ACQScreenDPI="1"',
 					'Number of calibration points="3"',
@@ -467,11 +467,11 @@ module.exports = class Thermo {
 					`Screen reference point1 (twips)="0,0"`,
 					`Stage reference point1="${xPos},${yPos}"`,
 					`Stage Z reference point1="${refPoint.data.zposition.data}"`,
-					`Screen reference point2 (twips)="${TWIPSWidth},${TWIPSHeight}"`,
-					`Stage reference point2="${xPos + (this.data.metaConstants.width * pixelSize / 1000)},${yPos + (this.data.metaConstants.height * pixelSize / 1000)}"`,
+					`Screen reference point2 (twips)="${TWIPSWidth},${constants.pictureSnapApp.TWIPSPERPIXEL}"`,
+					`Stage reference point2="${xPos - (this.data.metaConstants.width * pixelSize)},${yPos + pixelSize}"`,
 					`Stage Z reference point2="${refPoint.data.zposition.data}"`,
-					`Screen reference point3 (twips)="${TWIPSWidth},0"`,
-					`Stage reference point3="${xPos + (this.data.metaConstants.width * pixelSize / 1000)},${yPos}"`,
+					`Screen reference point3 (twips)="${TWIPSWidth - constants.pictureSnapApp.TWIPSPERPIXEL},${TWIPSHeight}"`,
+					`Stage reference point3="${xPos - ((this.data.metaConstants.width - 1) * pixelSize)},${yPos + (this.data.metaConstants.height * pixelSize)}"`,
 					`Stage Z reference point3="${refPoint.data.zposition.data}"`,
 					'Screen Z reference point1 (dummy)="0"',
 					'Screen Z reference point2 (dummy)="0"',
