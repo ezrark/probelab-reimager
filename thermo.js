@@ -446,14 +446,18 @@ module.exports = class Thermo {
 			const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL - 90; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
 			const TWIPSHeight = this.data.metaConstants.height * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.height / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
 
-			const refPoint = this.data.points['1'];
+			const refPoint = this.data.points['1'] ? this.data.points['1'] : {
+				data: this.data.data.map,
+				x: this.data.metaConstants.width/2,
+				y: this.data.metaConstants.height/2
+			};
 
 			const pixelSize = (await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant)) / 1000;
 
-			const xPos = parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width - refPoint.x) * pixelSize) + (0.0081451525);
-			const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize) + (0.0040590275);
+			const xPos = parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width - refPoint.x) * pixelSize);
+			const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize);
 
-			await fs.writeFile(outputUri + '.acq',
+			await fs.writeFile(outputUri + '.ACQ',
 				[
 					'[stage]',
 					'ACQFileVersion="1"',
