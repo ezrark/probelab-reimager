@@ -69,7 +69,10 @@ function writeSettings(inputSettings) {
 			chromaSubsampling: inputSettings.jpeg.chromaSubsampling === undefined ? constants.export.png.chromaSubsampling : inputSettings.jpeg.chromaSubsampling
 		},
 		acq: {
-			use: makeAcq
+			use: makeAcq,
+			xPolarity: inputSettings.acq.xPolarity === undefined ? constants.pictureSnapApp.XPOLARITYDEFAULT : inputSettings.acq.xPolarity,
+			yPolarity: inputSettings.acq.yPolarity === undefined ? constants.pictureSnapApp.YPOLARITYDEFAULT : inputSettings.acq.yPolarity,
+			stageUnits: inputSettings.acq.stageUnits === undefined ? constants.pictureSnapApp.STAGEUNITDEFAULT : inputSettings.acq.stageUnits.toLowerCase()
 		}
 	}
 }

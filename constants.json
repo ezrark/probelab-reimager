@@ -166,6 +166,9 @@
   },
   "pictureSnapApp": {
     "TWIPSPERINCH": 1440,
-    "TWIPSPERPIXEL": 15
+    "TWIPSPERPIXEL": 15,
+    "XPOLARITYDEFAULT": -1,
+    "YPOLARITYDEFAULT": -1,
+    "STAGEUNITDEFAULT": "mm"
   }
 }

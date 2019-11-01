@@ -437,52 +437,59 @@ module.exports = class Thermo {
 		}
 	}
 
+	async createAcqFile(settings) {
+		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
+
+		const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL - 90; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
+		const TWIPSHeight = this.data.metaConstants.height * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.height / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
+
+		const points = Array.from(Object.values(this.data.points));
+
+		const refPoint = points[0] ? points[0] : {
+			data: this.data.data.map,
+			x: this.data.metaConstants.width/2,
+			y: this.data.metaConstants.height/2
+		};
+
+		const pixelSize = (await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant)) / 1000;
+
+		const xPos = parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width - refPoint.x) * pixelSize);
+		const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize);
+
+		await fs.writeFile(outputUri + '.ACQ',
+			[
+				'[stage]',
+				'ACQFileVersion="1"',
+				'PictureSnap mode="1"',
+				`X_Polarity="${settings.acq.xPolarity}"`,
+				`Y_Polarity="${settings.acq.yPolarity}"`,
+				`Stage_Units=${settings.acq.stageUnits}`,
+				'ACQScreenDPI="1"',
+				'Number of calibration points="3"',
+				'Number of Z calibration points="3"',
+				'Screen reference point1 (twips)="0,0"',
+				`Stage reference point1="${xPos},${yPos}"`,
+				`Stage Z reference point1="${refPoint.data.zposition.data}"`,
+				`Screen reference point2 (twips)="${TWIPSWidth},${constants.pictureSnapApp.TWIPSPERPIXEL}"`,
+				`Stage reference point2="${xPos - (this.data.metaConstants.width * pixelSize)},${yPos + pixelSize}"`,
+				`Stage Z reference point2="${refPoint.data.zposition.data}"`,
+				`Screen reference point3 (twips)="${TWIPSWidth - constants.pictureSnapApp.TWIPSPERPIXEL},${TWIPSHeight}"`,
+				`Stage reference point3="${xPos - ((this.data.metaConstants.width - 1) * pixelSize)},${yPos + (this.data.metaConstants.height * pixelSize)}"`,
+				`Stage Z reference point3="${refPoint.data.zposition.data}"`,
+				'Screen Z reference point1 (dummy)="0"',
+				'Screen Z reference point2 (dummy)="0"',
+				'Screen Z reference point3 (dummy)="0"'
+			].join('\n')
+		);
+	}
+
 	async write(settings={}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 
 		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
 
-		if (settings.acq.use) {
-			const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL - 90; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
-			const TWIPSHeight = this.data.metaConstants.height * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.height / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
-
-			const refPoint = this.data.points['1'] ? this.data.points['1'] : {
-				data: this.data.data.map,
-				x: this.data.metaConstants.width/2,
-				y: this.data.metaConstants.height/2
-			};
-
-			const pixelSize = (await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant)) / 1000;
-
-			const xPos = parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width - refPoint.x) * pixelSize);
-			const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize);
-
-			await fs.writeFile(outputUri + '.ACQ',
-				[
-					'[stage]',
-					'ACQFileVersion="1"',
-					'PictureSnap mode="1"',
-					`X_Polarity="-1"`,
-					`Y_Polarity="-1"`,
-					'Stage_Units=mm',
-					'ACQScreenDPI="1"',
-					'Number of calibration points="3"',
-					'Number of Z calibration points="3"',
-					`Screen reference point1 (twips)="0,0"`,
-					`Stage reference point1="${xPos},${yPos}"`,
-					`Stage Z reference point1="${refPoint.data.zposition.data}"`,
-					`Screen reference point2 (twips)="${TWIPSWidth},${constants.pictureSnapApp.TWIPSPERPIXEL}"`,
-					`Stage reference point2="${xPos - (this.data.metaConstants.width * pixelSize)},${yPos + pixelSize}"`,
-					`Stage Z reference point2="${refPoint.data.zposition.data}"`,
-					`Screen reference point3 (twips)="${TWIPSWidth - constants.pictureSnapApp.TWIPSPERPIXEL},${TWIPSHeight}"`,
-					`Stage reference point3="${xPos - ((this.data.metaConstants.width - 1) * pixelSize)},${yPos + (this.data.metaConstants.height * pixelSize)}"`,
-					`Stage Z reference point3="${refPoint.data.zposition.data}"`,
-					'Screen Z reference point1 (dummy)="0"',
-					'Screen Z reference point2 (dummy)="0"',
-					'Screen Z reference point3 (dummy)="0"'
-				].join('\n')
-			);
-		}
+		if (settings.acq.use)
+			await this.createAcqFile(settings);
 
 		if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
 			if (!settings.uri || settings.acq.use)
