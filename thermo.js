@@ -453,8 +453,8 @@ module.exports = class Thermo {
 
 		const pixelSize = (await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant)) / 1000;
 
-		const xPos = parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width - refPoint.x) * pixelSize);
-		const yPos = parseFloat(refPoint.data.yposition.data) - (refPoint.y * pixelSize);
+		const xPos = Math.round((parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width / 2) * pixelSize)) * 1000)/1000;
+		const yPos = Math.round((parseFloat(refPoint.data.yposition.data) - ((this.data.metaConstants.height / 2) * pixelSize)) * 1000)/1000;
 
 		await fs.writeFile(outputUri + '.ACQ',
 			[
@@ -471,10 +471,10 @@ module.exports = class Thermo {
 				`Stage reference point1="${xPos},${yPos}"`,
 				`Stage Z reference point1="${refPoint.data.zposition.data}"`,
 				`Screen reference point2 (twips)="${TWIPSWidth},${constants.pictureSnapApp.TWIPSPERPIXEL}"`,
-				`Stage reference point2="${xPos - (this.data.metaConstants.width * pixelSize)},${yPos + pixelSize}"`,
+				`Stage reference point2="${xPos - (Math.round(this.data.metaConstants.width * pixelSize * 1000) / 1000)},${yPos + (Math.round(pixelSize * 1000) / 1000)}"`,
 				`Stage Z reference point2="${refPoint.data.zposition.data}"`,
 				`Screen reference point3 (twips)="${TWIPSWidth - constants.pictureSnapApp.TWIPSPERPIXEL},${TWIPSHeight}"`,
-				`Stage reference point3="${xPos - ((this.data.metaConstants.width - 1) * pixelSize)},${yPos + (this.data.metaConstants.height * pixelSize)}"`,
+				`Stage reference point3="${xPos - (Math.round((this.data.metaConstants.width - 1) * pixelSize * 1000) / 1000)},${yPos + (Math.round(this.data.metaConstants.height * pixelSize * 1000) / 1000)}"`,
 				`Stage Z reference point3="${refPoint.data.zposition.data}"`,
 				'Screen Z reference point1 (dummy)="0"',
 				'Screen Z reference point2 (dummy)="0"',
