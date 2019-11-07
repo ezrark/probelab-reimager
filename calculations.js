@@ -341,17 +341,34 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 			scale.x = 0;
 			scale.y = 0;
 			break;
+		case constants.scale.types.JEOL:
+			break;
 	}
 
-	scale.barX = Math.round(scale.x + (scale.width / 2) - Math.round(scale.scaleLength / 2));
-	scale.textX = Math.round(scale.x + (scale.width / 2) - Math.round(textWidth / 2));
+	if (scaleType === constants.scale.types.JEOL) {
+		scale.barPixelHeight = metaConstants.height * .015;
+		scale.textFontHeight = metaConstants.height * .025;
+		scale.barX = metaConstants.width / 100 * 48;
+		scale.barY = metaConstants.height * .94;
+		scale.textX = scale.barX + scale.width;
+		scale.textY = scale.barY;
 
-	if (scaleBarTop) {
-		scale.textY = scale.y + scale.height - metaConstants.lineHeight - Math.round(scale.scaleOffsets.yOffset / 2);
-		scale.barY = scale.textY - scale.scaleOffsets.between - Math.round(scale.scaleOffsets.yOffset / 2) - scale.barPixelHeight;
+		scale.height = scale.textFontHeight * 1.05;
+		scale.width = scale.scaleLength + (textWidth * .8);
+
+		scale.x = scale.barX;
+		scale.y = scale.barY - 2;
 	} else {
-		scale.barY = scale.y + scale.height - scale.scaleOffsets.yOffset - scale.barPixelHeight;
-		scale.textY = scale.barY - metaConstants.lineHeight - scale.scaleOffsets.between;
+		scale.barX = Math.round(scale.x + (scale.width / 2) - Math.round(scale.scaleLength / 2));
+		scale.textX = Math.round(scale.x + (scale.width / 2) - Math.round(textWidth / 2));
+
+		if (scaleBarTop) {
+			scale.textY = scale.y + scale.height - metaConstants.lineHeight - Math.round(scale.scaleOffsets.yOffset / 2);
+			scale.barY = scale.textY - scale.scaleOffsets.between - Math.round(scale.scaleOffsets.yOffset / 2) - scale.barPixelHeight;
+		} else {
+			scale.barY = scale.y + scale.height - scale.scaleOffsets.yOffset - scale.barPixelHeight;
+			scale.textY = scale.barY - metaConstants.lineHeight - scale.scaleOffsets.between;
+		}
 	}
 
 	// Return the image and scale information

@@ -123,7 +123,9 @@
       "UPPERRIGHT": 4,
       "LOWERCENTER": 5,
       "BELOWRIGHT": 6,
-      "BELOWCENTER": 7
+      "BELOWCENTER": 7,
+      "NONE": 8,
+      "JEOL": 9
     },
     "sizes": {
       "TINY": "tiny",
@@ -170,5 +172,18 @@
     "XPOLARITYDEFAULT": -1,
     "YPOLARITYDEFAULT": -1,
     "STAGEUNITDEFAULT": "mm"
+  },
+  "pfe": {
+    "fileFormats": {
+      "ENTRY": ".mdb",
+      "IMAGE": ".bim"
+    }
+  },
+  "jeol": {
+    "fileFormats": {
+      "ENTRY": ".txt",
+      "IMAGE": ".tif",
+      "OUTPUTIMAGE": ".png"
+    }
   }
 }

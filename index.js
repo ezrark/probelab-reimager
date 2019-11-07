@@ -2,12 +2,14 @@ const fs = require('fs');
 
 const Canvas = require('canvas');
 
-const constants = require('./constants');
+const constants = require('./constants.json');
 
-const ExtractedMap = require('./extractedmap');
-const PointShoot = require('./pointshoot');
-const CanvasRoot = require('./canvas/canvasroot');
-const NodeCanvas = require('./canvas/nodecanvasmodule');
+const ExtractedMap = require('./extractedmap.js');
+const PointShoot = require('./pointshoot.js');
+const PFEImage = require('./pfeimage.js');
+const JeolImage = require('./jeolimage.js');
+const CanvasRoot = require('./canvas/canvasroot.js');
+const NodeCanvas = require('./canvas/nodecanvasmodule.js');
 
 function help() {
 	console.log('Usage: thermo-reimager [options] [directory]\n');
@@ -68,6 +70,8 @@ function help() {
 	console.log('ll, lowerleft   \tScale is in the Lower Left');
 	console.log('lr, loweright   \tScale is in the Lower Right');
 	console.log('lc, lowercenter \tScale is in the Lower Center');
+	console.log('n, none \tNo scale shown');
+	console.log('j, jeol \tScale is placed overtop JEOL bar');
 	console.log();
 	console.log('Point Types:');
 	console.log('t, thermo\tThermo\'s point icon');
@@ -344,6 +348,14 @@ for (let i = 2; i < process.argv.length; i++) {
 					case 'lowercenter':
 						options.position = constants.scale.types.LOWERCENTER;
 						break;
+					case 'n':
+					case 'none':
+						options.position = constants.scale.types.NONE;
+						break;
+					case 'j':
+					case 'jeol':
+						options.position = constants.scale.types.JEOL;
+						break;
 				}
 				break;
 		}
@@ -567,6 +579,14 @@ for (let i = 2; i < process.argv.length; i++) {
 					case 'lowercenter':
 						options.position = constants.scale.types.LOWERCENTER;
 						break;
+					case 'n':
+					case 'none':
+						options.position = constants.scale.types.NONE;
+						break;
+					case 'j':
+					case 'jeol':
+						options.position = constants.scale.types.JEOL;
+						break;
 				}
 				break;
 			default:
@@ -608,53 +628,108 @@ else {
 		if (layers.length === 0)
 			layers.push({name: 'base'});
 
-		dirUri = dirUri.replace(/\\/gmi, '/');
-		if (!dirUri.endsWith('/'))
-			dirUri = dirUri + '/';
-
-		const directory = fs.readdirSync(dirUri, {withFileTypes: true});
-
 		const nodeCanvas = new NodeCanvas(Canvas);
 		const canvas = new CanvasRoot(nodeCanvas);
 		canvas.init().then(async () => {
+			if (!dirUri.endsWith(constants.pfe.fileFormats.ENTRY)) {
+				dirUri = dirUri.replace(/\\/gmi, '/');
+				if (!dirUri.endsWith('/'))
+					dirUri = dirUri + '/';
 
-			const thermos = await Promise.all(directory.flatMap(dir => {
-				if (dir.isDirectory()) {
-					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
-					let thermos = [];
-					return files.filter(file => file.isFile()).map(file => {
+				const directory = fs.readdirSync(dirUri, {withFileTypes: true});
+
+				const thermos = await Promise.all(directory.flatMap(dir => {
+					if (dir.isDirectory()) {
+						const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
+						let thermos = [];
+						return files.filter(file => file.isFile()).map(file => {
+							try {
+								file.uri = dirUri + dir.name + '/' + file.name;
+								const name = file.name.toLowerCase();
+								if (name.endsWith(constants.extractedMap.fileFormats.LAYER))
+									thermos.map(thermo => thermo.addLayerFile(file.uri));
+
+								if (name.endsWith(constants.pfe.fileFormats.ENTRY)) {
+									const thermo = new PFEImage(dirUri + '?5', canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+
+								if (name.endsWith(constants.jeol.fileFormats.ENTRY)) {
+									const thermo = new JeolImage(file, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+
+								if (name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
+									const thermo = new PointShoot(file, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+
+								if (name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
+									const thermo = new ExtractedMap(file, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+							} catch (err) {
+								if (err.code === 'ENOENT')
+									console.log(`Unable to initialize a thermo, unable to find '${err.path}'`);
+								else
+									console.warn(err);
+							}
+						}).filter(item => item);
+					} else {
+						dir.uri = dirUri + dir.name;
+						let thermos = [];
+
 						try {
-							file.uri = dirUri + dir.name + '/' + file.name;
-							if (file.name.endsWith(constants.extractedMap.fileFormats.LAYER))
-								thermos.map(thermo => thermo.addLayerFile(file.uri));
+							const name = dir.name.toLowerCase();
+							if (name.endsWith(constants.extractedMap.fileFormats.LAYER))
+								thermos.map(thermo => thermo.addLayerFile(dir.uri));
 
-							if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
-								const thermo = new PointShoot(file, canvas);
+							if (name.endsWith(constants.pfe.fileFormats.ENTRY)) {
+								const thermo = new PFEImage(dir.uri + '?5', canvas);
 								thermos.push(thermo);
 								return thermo.init();
 							}
 
-							if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
-								const thermo = new ExtractedMap(file, canvas);
-								thermos.push(thermo);
-								return thermo.init();
+							if (name.endsWith(constants.jeol.fileFormats.ENTRY)) {
+								try {
+									const thermo = new JeolImage(dir, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								} catch(err) {}
 							}
-						} catch(err) {
+						} catch (err) {
 							if (err.code === 'ENOENT')
 								console.log(`Unable to initialize a thermo, unable to find '${err.path}'`);
 							else
 								console.warn(err);
 						}
-					}).filter(item => item);
-				}
-			}).filter(i => i));
 
-			try {
-				await writeThermos(thermos, options, points, layers);
-				console.log('All images written');
-				process.exit();
-			} catch(err) {
-				console.warn(err);
+						return thermos;
+					}
+				}).filter(i => i));
+
+				try {
+					await writeThermos(thermos, options, points, layers);
+					console.log('All images written');
+					process.exit();
+				} catch (err) {
+					console.warn(err);
+				}
+			} else {
+				const thermo = new PFEImage(dirUri + '?5', canvas);
+				await thermo.init();
+
+				try {
+					await writeThermos([thermo], options, points, layers);
+					console.log('All images written');
+					process.exit();
+				} catch (err) {
+					console.warn(err);
+				}
 			}
 		});
 	}

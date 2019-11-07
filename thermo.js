@@ -35,52 +35,12 @@ module.exports = class Thermo {
 			data: {
 				point: {},
 				map: {}
-			}
+			},
+			outputFormat: constants.pointShoot.fileFormats.OUTPUTIMAGE
 		};
 
 		if (!previous) {
-			const entryData = io.readEntryFile(this.data.files.entry);
-
-			this.data.files.base = this.data.uri + entryData.data.base;
-			this.data.files.layers = entryData.layers;
-
-			this.data.files.layers.push({
-				element: 'base',
-				file: this.data.files.base
-			}, {
-				element: 'solid',
-				file: ''
-			});
-
-			this.data.points = entryData.points.reduce((points, point) => {
-				point.data = io.readMASFile((this.data.uri + point.file));
-				point.name = point.file.split('.')[0].split('_pt').pop();
-				points[point.name] = point;
-				return points;
-			}, {});
-
-			this.data.files.points = Object.keys(this.data.points);
-
-			try {
-				this.data.data.map = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
-				const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
-				if (this.data.magnification !== 0 && this.data.magnification !== mag)
-					this.data.integrity = false;
-				else
-					this.data.magnification = mag;
-			} catch (err) {}
-
-			try {
-				const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
-				if (this.data.magnification !== 0 && this.data.magnification !== mag)
-					this.data.integrity = false;
-				else
-					this.data.magnification = mag;
-
-				if (this.data.integrity)
-					this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
-			} catch (err) {}
-
+			this.staticInit();
 			this.updateFromDisk();
 		} else {
 			this.data.scale = JSON.parse(JSON.stringify(previous.data.scale));
@@ -95,20 +55,48 @@ module.exports = class Thermo {
 		}
 	}
 
-	async addLayerFile(uri) {
-		const filename = uri.toLowerCase().replace(/\\/g, '/').split('/').pop().split(' ');
-		const element = filename.pop().split('.')[0];
-		const type = filename.pop();
-		const layerElement = `${element} ${type}`;
+	staticInit() {
+		const entryData = io.readNSSEntry(this.data.files.entry);
 
-		const image = await (await sharp(uri).raw().ensureAlpha());
+		this.data.files.base = this.data.uri + entryData.data.base;
+		this.data.files.layers = entryData.layers;
 
-		this.data.layers[layerElement] = {
-			element: layerElement,
-			file: uri,
-			image,
-			metadata: await image.metadata()
-		};
+		this.data.files.layers.push({
+			element: 'base',
+			file: this.data.files.base
+		}, {
+			element: 'solid',
+			file: ''
+		});
+
+		this.data.points = entryData.points.reduce((points, point) => {
+			point.data = io.readMASFile((this.data.uri + point.file));
+			point.name = point.file.split('.')[0].split('_pt').pop();
+			points[point.name] = point;
+			return points;
+		}, {});
+
+		this.data.files.points = Object.keys(this.data.points);
+
+		try {
+			this.data.data.map = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
+			const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
+			if (this.data.magnification !== 0 && this.data.magnification !== mag)
+				this.data.integrity = false;
+			else
+				this.data.magnification = mag;
+		} catch (err) {}
+
+		try {
+			const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
+			if (this.data.magnification !== 0 && this.data.magnification !== mag)
+				this.data.integrity = false;
+			else
+				this.data.magnification = mag;
+
+			if (this.data.integrity)
+				this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
+		} catch (err) {}
 	}
 
 	async init() {
@@ -128,35 +116,39 @@ module.exports = class Thermo {
 					const image = sharp(file);
 					this.data.layers['base'] = {
 						element,
-						file: this.data.uri + file,
+						file,
 						image,
 						metadata: await image.metadata()
 					}
 				}
 			}));
-
-			this.data.metadata = this.data.layers.base.metadata;
-
-			this.data.points = Object.values(this.data.points).reduce((points, point) => {
-				point.pos = calculations.pointToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-				point.x = point.pos[0];
-				point.y = point.pos[1];
-				points[point.name] = point;
-				switch(point.type) {
-					case 'rect':
-						point.pos = calculations.rectToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-						break;
-					case 'circle':
-						point.pos = calculations.circleToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-						break;
-					case 'polygon':
-						point.pos = calculations.polyToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-						break;
-				}
-
-				return points;
-			}, {});
 		}
+
+		return await this.internalInit();
+	}
+
+	async internalInit() {
+		this.data.metadata = this.data.layers.base.metadata;
+
+		this.data.points = Object.values(this.data.points).reduce((points, point) => {
+			point.pos = calculations.pointToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+			point.x = point.pos[0];
+			point.y = point.pos[1];
+			points[point.name] = point;
+			switch(point.type) {
+				case 'rect':
+					point.pos = calculations.rectToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+					break;
+				case 'circle':
+					point.pos = calculations.circleToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+					break;
+				case 'polygon':
+					point.pos = calculations.polyToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+					break;
+			}
+
+			return points;
+		}, {});
 
 		const scratchCanvas = this.data.scratchCanvas = await this.data.Canvas.getOrCreateCanvas('scratchCanvas', 300, 300);
 		this.data.scratchCtx = await scratchCanvas.getContext('2d');
@@ -167,6 +159,22 @@ module.exports = class Thermo {
 		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, this.data.metaConstants.maxWidth, this.data.metaConstants.maxHeight);
 		this.data.ctx = await canvas.getContext('2d');
 		return this;
+	}
+
+	async addLayerFile(uri) {
+		const filename = uri.toLowerCase().replace(/\\/g, '/').split('/').pop().split(' ');
+		const element = filename.pop().split('.')[0];
+		const type = filename.pop();
+		const layerElement = `${element} ${type}`;
+
+		const image = await (await sharp(uri).raw().ensureAlpha());
+
+		this.data.layers[layerElement] = {
+			element: layerElement,
+			file: uri,
+			image,
+			metadata: await image.metadata()
+		};
 	}
 
 	async deleteCanvas() {
@@ -224,6 +232,9 @@ module.exports = class Thermo {
 	}
 
 	async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
+		if (type === constants.scale.types.NONE)
+			return this;
+
 		settings = Sanitize.scaleSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
@@ -243,11 +254,16 @@ module.exports = class Thermo {
 
 		await ctx.setFont(`${scale.textFontHeight}px "${settings.font}"`);
 		await ctx.setTextBaseline('bottom');
-		let imageIsDark = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
+		let imageIsDark = true;
 
-		// Check the luminosity and use white or black background to make it look nice
-		if (settings.belowColor === constants.colors.AUTO)
-			imageIsDark = (await ctx.findLuminosity(0, 0, meta.width, meta.height)) < .5;
+		if (type !== constants.scale.types.JEOL) {
+			imageIsDark = typeof settings.belowColor === 'object' && settings.belowColor.RGBA === constants.colors.black.RGBA;
+
+			// Check the luminosity and use white or black background to make it look nice
+			if (settings.belowColor === constants.colors.AUTO)
+				imageIsDark = (await ctx.findLuminosity(0, 0, meta.width, meta.height)) < .5;
+		} else
+			settings.backgroundOpacity = 1;
 
 		let textBackgroundIsLight = imageIsDark;
 
@@ -486,14 +502,18 @@ module.exports = class Thermo {
 	async write(settings={}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 
-		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
+		const splitBaseName = this.data.files.base.split('.');
+		if (splitBaseName.length > 1)
+			splitBaseName.pop();
+
+		let outputUri = settings.uri ? settings.uri : (splitBaseName.join('.'));
 
 		if (settings.acq.use)
 			await this.createAcqFile(settings);
 
 		if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
 			if (!settings.uri || settings.acq.use)
-				outputUri = outputUri + (settings.acq.use ? '.jpg' : constants.pointShoot.fileFormats.OUTPUTIMAGE);
+				outputUri = outputUri + (settings.acq.use ? '.jpg' : this.data.outputFormat);
 
 			const ext = outputUri.split('.').pop();
 			switch (ext) {
