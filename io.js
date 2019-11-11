@@ -102,7 +102,11 @@ async function readPFEEntry(databaseUri) {
 			Database: uri.replace(/\//g, '\\\\')
 		});
 
+		const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
 		const image = (await connection.query(`SELECT * FROM [Image] WHERE ImageNumber = ${parseInt(imageNum)}`))[0];
+
+		await connection.close();
+
 		const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
 		const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
 		const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
@@ -111,7 +115,7 @@ async function readPFEEntry(databaseUri) {
 		const xDiff = Math.abs(xLarge - xSmall);
 		const yDiff = Math.abs(yLarge - ySmall);
 
-		const points = (await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`))
+		const points = initialPoints
 			.map(({Number, StageX, StageY, LineToRow}) => {
 				return {
 					name: Number,
