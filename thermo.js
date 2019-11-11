@@ -628,23 +628,41 @@ module.exports = class Thermo {
 	}
 
 	serialize() {
+		return this.internalSerialize();
+	}
+
+	internalSerialize(serial={}) {
+		if (serial.scale) {
+			if (serial.scale.realWidth === undefined)
+				serial.scale.realWidth = this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width;
+
+			if (serial.scale.realHeight === undefined)
+				serial.scale.realHeight = this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height;
+		} else
+			serial.scale = {
+				realWidth: this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
+				realHeight: this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
+			};
+
 		return {
-			uri: this.data.uri,
-			uuid: this.data.uuid,
-			name: this.data.name,
-			integrity: this.data.integrity,
-			magnification: this.data.magnification,
-			points: Object.values(this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {points[name] = {name, type, values, file, x, y, pos}; return points}, {}),
-			layers: Object.values(this.data.layers).reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
-			entryFile: this.data.files.entry,
-			jeolFile: this.data.metaConstants.fullHeight !== this.data.metaConstants.height,
+			uri: serial.uri ? serial.uri : this.data.uri,
+			uuid: serial.uuid ? serial.uuid : this.data.uuid,
+			name: serial.name ? serial.name : this.data.name,
+			integrity: serial.integrity ? serial.integrity : this.data.integrity,
+			magnification: serial.magnification ? serial.magnification : this.data.magnification,
+			points: Object.values(serial.points ? serial.points : this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {points[name] = {name, type, values, file, x, y, pos}; return points}, {}),
+			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
+			entryFile: serial.files && serial.files.entry ? serial.files.entry : this.data.files.entry,
+			jeolFile: serial.metaConstants && serial.metaConstants.fullHeight ? serial.metaConstants.fullHeight : this.data.metaConstants.fullHeight
+						!==
+					  serial.metaConstants && serial.metaConstants.height ? serial.metaConstants.height : this.data.metaConstants.height,
 			image: {
-				width: this.data.metadata.width,
-				height: this.data.metadata.height
+				width: serial.metaConstants && serial.metaConstants.width ? serial.metaConstants.width : this.data.metaConstants.width,
+				height: serial.metaConstants && serial.metaConstants.height ? serial.metaConstants.height : this.data.metaConstants.height
 			},
 			output: {
-				width: this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
-				height: this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
+				width: serial.scale.realWidth ? serial.scale.realWidth : serial.metadata.width,
+				height: serial.scale.realHeight ? serial.scale.realHeight : serial.metadata.height
 			}
 		}
 	}

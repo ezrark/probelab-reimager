@@ -78,4 +78,10 @@ module.exports = class extends Thermo {
 
 		return await this.internalInit();
 	}
+
+	serialize() {
+		return this.internalSerialize({
+			name: this.data.name + '?' + this.data.uri.split('?').pop()
+		});
+	}
 };
