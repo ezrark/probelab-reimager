@@ -16,6 +16,8 @@ module.exports = class extends Thermo {
 	}
 
 	staticInit() {
+		io.checkBIMExists(this.data.files.entry.split('?')[0]);
+
 		this.data.files.base = this.data.files.entry;
 		this.data.files.layers = [{
 			element: 'base',

@@ -77,6 +77,23 @@ function readNSSEntry(uri) {
 	return output;
 }
 
+async function getPFEExpectedImages(databaseUri) {
+	const uri = databaseUri.split('?')[0];
+
+	try {
+		const connection = Adodb.open({
+			Database: uri.replace(/\//g, '\\\\')
+		});
+
+		const images = (await connection.query(`SELECT * FROM [Image]`));
+
+		return images.length;
+
+	} catch(err) {
+		throw 'Unable to open and read PFE mdb file';
+	}
+}
+
 async function readPFEEntry(databaseUri) {
 	const [uri, imageNum='1'] = databaseUri.split('?');
 
@@ -162,11 +179,17 @@ function checkJeolExists(uri) {
 	return fs.accessSync(uri, fs.constants.R_OK);
 }
 
+function checkBIMExists(uri) {
+	return fs.accessSync(uri, fs.constants.R_OK);
+}
+
 module.exports = {
 	readMASFile,
 	readNSSEntry,
+	getPFEExpectedImages,
 	readPFEEntry,
 	readJeolEntry,
 	readBIM,
-	checkJeolExists
+	checkJeolExists,
+	checkBIMExists
 };
