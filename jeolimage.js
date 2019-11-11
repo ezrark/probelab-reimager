@@ -11,11 +11,11 @@ module.exports = class extends Thermo {
 			Canvas
 		);
 
-		this.data.outputFormat = constants.jeol.fileFormats.OUTPUTIMAGE
+		this.data.outputFormat = constants.jeol.fileFormats.OUTPUTIMAGE;
 	}
 
 	staticInit() {
-		const entryFile = io.readJeolEntry(this.data.files.entry);
+		const entryData = io.readJeolEntry(this.data.files.entry);
 		try {
 			this.data.files.base = this.data.uri + this.data.name + constants.jeol.fileFormats.IMAGE;
 
@@ -23,7 +23,8 @@ module.exports = class extends Thermo {
 
 			this.data.files.layers = [{
 				element: 'base',
-				file: this.data.files.base
+				file: this.data.files.base,
+				cutoffHeight: parseInt(entryData['cm_full_size'][1])
 			}, {
 				element: 'solid',
 				file: ''
@@ -32,7 +33,7 @@ module.exports = class extends Thermo {
 			this.data.points = {};
 			this.data.files.points = [];
 			this.data.data.map = {};
-			this.data.magnification = entryFile['cm_mag'];
+			this.data.magnification = parseInt(entryData['cm_mag']);
 		} catch (err) {
 			throw 'Not an operable JEOL file';
 		}

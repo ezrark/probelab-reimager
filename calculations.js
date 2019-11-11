@@ -231,9 +231,10 @@ async function calculateConstants(meta, scratchCtx, font) {
 
 	const metaConstants = {
 		width: meta.width,
-		height: meta.height,
+		height: meta.cutoffHeight ? meta.cutoffHeight : meta.height,
 		maxWidth: meta.width,
 		maxHeight: meta.height,
+		fullHeight: meta.height,
 		textFontHeight,
 		lineHeight: (await scratchCtx.measureText('m')).width,
 		scaleOffsets: {
@@ -250,9 +251,9 @@ async function calculateConstants(meta, scratchCtx, font) {
 
 async function calculateScale(metaConstants, scratchCtx, magnification, scaleType, {scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
 	let scale = {
-		imageHeight: metaConstants.height,
+		imageHeight: scaleType === constants.scale.types.JEOL ? metaConstants.fullHeight : metaConstants.height,
 		imageWidth: metaConstants.width,
-		realHeight: metaConstants.height,
+		realHeight: scaleType === constants.scale.types.JEOL ? metaConstants.fullHeight : metaConstants.height,
 		realWidth: metaConstants.width,
 		x: 0,
 		y: 0,
@@ -346,18 +347,21 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 	}
 
 	if (scaleType === constants.scale.types.JEOL) {
-		scale.barPixelHeight = metaConstants.height * .015;
-		scale.textFontHeight = metaConstants.height * .025;
-		scale.barX = metaConstants.width / 100 * 48;
-		scale.barY = metaConstants.height * .94;
-		scale.textX = scale.barX + scale.width;
+		const heightDiff = Math.abs(metaConstants.height - metaConstants.fullHeight);
+
+		scale.barPixelHeight = (heightDiff / 4);
+		scale.textFontHeight = heightDiff * .40;
+
+		scale.height = scale.textFontHeight;
+
+		scale.barX = metaConstants.width - scale.scaleLength - (metaConstants.width * .3) - textWidth;
+		scale.barY = metaConstants.height + heightDiff / 16 - 2;
+		scale.textX = metaConstants.width - (metaConstants.width * .285) - textWidth;
 		scale.textY = scale.barY;
 
-		scale.height = scale.textFontHeight * 1.05;
-		scale.width = scale.scaleLength + (textWidth * .8);
-
-		scale.x = scale.barX;
-		scale.y = scale.barY - 2;
+		scale.width = metaConstants.width * .738;
+		scale.x = 0;
+		scale.y = scale.barY;
 	} else {
 		scale.barX = Math.round(scale.x + (scale.width / 2) - Math.round(scale.scaleLength / 2));
 		scale.textX = Math.round(scale.x + (scale.width / 2) - Math.round(textWidth / 2));

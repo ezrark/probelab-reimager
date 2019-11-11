@@ -124,6 +124,9 @@ module.exports = class Thermo {
 			}));
 		}
 
+		if (this.data.files.layers[0].cutoffHeight)
+			this.data.layers.base.metadata.cutoffHeight = this.data.files.layers[0].cutoffHeight;
+
 		return await this.internalInit();
 	}
 
@@ -207,7 +210,6 @@ module.exports = class Thermo {
 			await this.data.ctx.fillRect(0, 0, this.data.metadata.width, this.data.metadata.height);
 		} else if (this.data.layers[layerName]) {
 			const image = this.data.layers[layerName];
-			const metadata = image.metadata;
 			const rawImage = await image.image.toBuffer();
 
 			for (let i = 0; i < rawImage.length; i += 4) {
@@ -219,8 +221,8 @@ module.exports = class Thermo {
 
 			const newImage = sharp(Buffer.from(rawImage), {
 				raw: {
-					width: metadata.width,
-					height: metadata.height,
+					width: this.data.metadata.width,
+					height: this.data.metadata.height,
 					channels: 4
 				}
 			});
@@ -500,44 +502,49 @@ module.exports = class Thermo {
 	}
 
 	async write(settings={}) {
-		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
+		for (let i = 0; i < 5; i++)
+			try {
+				settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 
-		const splitBaseName = this.data.files.base.split('.');
-		if (splitBaseName.length > 1)
-			splitBaseName.pop();
+				const splitBaseName = this.data.files.base.split('.');
+				if (splitBaseName.length > 1)
+					splitBaseName.pop();
 
-		let outputUri = settings.uri ? settings.uri : (splitBaseName.join('.'));
+				let outputUri = settings.uri ? settings.uri : (splitBaseName.join('.'));
 
-		if (settings.acq.use)
-			await this.createAcqFile(settings);
+				if (settings.acq.use)
+					await this.createAcqFile(settings);
 
-		if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
-			if (!settings.uri || settings.acq.use)
-				outputUri = outputUri + (settings.acq.use ? '.jpg' : this.data.outputFormat);
+				if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
+					if (!settings.uri || settings.acq.use)
+						outputUri = outputUri + (settings.acq.use ? '.jpg' : this.data.outputFormat);
 
-			const ext = outputUri.split('.').pop();
-			switch (ext) {
-				default:
-				case 'tiff':
-				case 'tif':
-					await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
-					break;
-				case 'jpeg':
-				case 'jpg':
-					await (await this.toSharp()).jpeg(settings.jpeg).toFile(outputUri);
-					break;
-				case 'png':
-					await (await this.toSharp()).png(settings.png).toFile(outputUri);
-					break;
-				case 'webp':
-					await (await this.toSharp()).webp(settings.webp).toFile(outputUri);
-					break;
-				case 'acq':
-					break;
-			}
-			return outputUri;
-		}
-		return settings.uri;
+					const ext = outputUri.split('.').pop();
+					switch (ext) {
+						default:
+						case 'tiff':
+						case 'tif':
+							await (await this.toSharp()).tiff(settings.tiff).toFile(outputUri);
+							break;
+						case 'jpeg':
+						case 'jpg':
+							await (await this.toSharp()).jpeg(settings.jpeg).toFile(outputUri);
+							break;
+						case 'png':
+							await (await this.toSharp()).png(settings.png).toFile(outputUri);
+							break;
+						case 'webp':
+							await (await this.toSharp()).webp(settings.webp).toFile(outputUri);
+							break;
+						case 'acq':
+							break;
+					}
+					return outputUri;
+				}
+				return settings.uri;
+			} catch(err) {}
+
+		throw `Failed to write ${this.data.name} to disk`;
 	}
 
 	async createBuffer(type=undefined, settings={}, points=[], layers=[]) {
@@ -630,6 +637,7 @@ module.exports = class Thermo {
 			points: Object.values(this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {points[name] = {name, type, values, file, x, y, pos}; return points}, {}),
 			layers: Object.values(this.data.layers).reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
 			entryFile: this.data.files.entry,
+			jeolFile: this.data.metaConstants.fullHeight !== this.data.metaConstants.height,
 			image: {
 				width: this.data.metadata.width,
 				height: this.data.metadata.height
