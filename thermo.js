@@ -9,7 +9,7 @@ const GenerateUuid = require('./generateuuid');
 const io = require('./io');
 
 module.exports = class Thermo {
-	constructor(entryFile, name, Canvas, uri=undefined, uuid=undefined, previous=undefined) {
+	constructor(entryFile, name, Canvas, uri = undefined, uuid = undefined, previous = undefined) {
 		this.data = {
 			Canvas,
 			uuid: uuid ? uuid : GenerateUuid.v4(),
@@ -85,7 +85,8 @@ module.exports = class Thermo {
 				this.data.integrity = false;
 			else
 				this.data.magnification = mag;
-		} catch (err) {}
+		} catch (err) {
+		}
 
 		try {
 			const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
@@ -96,7 +97,8 @@ module.exports = class Thermo {
 
 			if (this.data.integrity)
 				this.data.integrity = checkPointIntegrity(this.data.files.points.map(file => this.data.points[file]));
-		} catch (err) {}
+		} catch (err) {
+		}
 	}
 
 	async init() {
@@ -119,7 +121,7 @@ module.exports = class Thermo {
 						file,
 						image,
 						metadata: await image.metadata()
-					}
+					};
 				}
 			}));
 		}
@@ -138,7 +140,7 @@ module.exports = class Thermo {
 			point.x = point.pos[0];
 			point.y = point.pos[1];
 			points[point.name] = point;
-			switch(point.type) {
+			switch (point.type) {
 				case 'rect':
 					point.pos = calculations.rectToXY(point.values, this.data.metadata.width, this.data.metadata.height);
 					break;
@@ -195,9 +197,10 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	updateFromDisk() {}
+	updateFromDisk() {
+	}
 
-	async addLayer({name: layerName='', color=constants.colors.white, opacity=0.5}, settings={}) {
+	async addLayer({name: layerName = '', color = constants.colors.white, opacity = 0.5}, settings = {}) {
 		layerName = layerName.toLowerCase();
 
 		if (this.data.scratchCtx === undefined)
@@ -213,7 +216,7 @@ module.exports = class Thermo {
 			const rawImage = await image.image.toBuffer();
 
 			for (let i = 0; i < rawImage.length; i += 4) {
-				rawImage[i + 3] = rawImage[i]*opacity;
+				rawImage[i + 3] = rawImage[i] * opacity;
 				rawImage[i] = color.R;
 				rawImage[i + 1] = color.G;
 				rawImage[i + 2] = color.B;
@@ -233,7 +236,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async addScale(type=constants.scale.types.BELOWCENTER, settings={}) {
+	async addScale(type = constants.scale.types.BELOWCENTER, settings = {}) {
 		if (type === constants.scale.types.NONE)
 			return this;
 
@@ -274,7 +277,7 @@ module.exports = class Thermo {
 			await ctx.fillRect(0, scale.imageHeight, scale.realWidth, scale.realHeight - scale.imageHeight);
 		} else {
 			await ctx.setFillStyle(settings.RGBA === constants.colors.AUTO ?
-					`rgba(${
+				`rgba(${
 					imageIsDark ? constants.colors.black.R : constants.colors.white.R}, ${
 					imageIsDark ? constants.colors.black.G : constants.colors.white.G}, ${
 					imageIsDark ? constants.colors.black.B : constants.colors.white.B}, ${
@@ -292,7 +295,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async addPoly(points, name='', settings={}) {
+	async addPoly(points, name = '', settings = {}) {
 		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
@@ -320,7 +323,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async addRectangle(topX, topY, botX, botY, name='', settings={}) {
+	async addRectangle(topX, topY, botX, botY, name = '', settings = {}) {
 		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
@@ -343,7 +346,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async addCircle(x, y, radius, name='', settings={}) {
+	async addCircle(x, y, radius, name = '', settings = {}) {
 		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
@@ -368,7 +371,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async addPoint(x, y, name='', settings={}) {
+	async addPoint(x, y, name = '', settings = {}) {
 		settings = Sanitize.pointSettings(JSON.parse(JSON.stringify(settings)));
 
 		if (this.data.scratchCtx === undefined)
@@ -389,7 +392,7 @@ module.exports = class Thermo {
 		if (point.size <= 4)
 			settings.pointType = constants.point.types.CIRCLE;
 
-		switch(settings.pointType) {
+		switch (settings.pointType) {
 			case constants.point.types.CIRCLE:
 				await ctx.beginPath();
 				await ctx.ellipse(point.centerX, point.centerY, point.halfSize, point.halfSize, 0, 0, 2 * Math.PI);
@@ -432,7 +435,7 @@ module.exports = class Thermo {
 		const height = this.data.scale ? this.data.scale.realHeight : this.data.meta.height;
 
 		const {type, data} = await this.data.ctx.getImageData(0, 0, width, height);
-		switch(type) {
+		switch (type) {
 			default:
 			case 'array':
 				return await sharp(Buffer.from(data), {
@@ -444,7 +447,7 @@ module.exports = class Thermo {
 				});
 			case 'raw':
 				return await sharp(data, {
-					raw:{
+					raw: {
 						width,
 						height,
 						channels: 4
@@ -465,14 +468,14 @@ module.exports = class Thermo {
 
 		const refPoint = points[0] ? points[0] : {
 			data: this.data.data.map,
-			x: this.data.metaConstants.width/2,
-			y: this.data.metaConstants.height/2
+			x: this.data.metaConstants.width / 2,
+			y: this.data.metaConstants.height / 2
 		};
 
 		const pixelSize = (await calculations.calculatePixelSize(this.data.magnification, this.data.metaConstants.width, settings.pixelSizeConstant)) / 1000;
 
-		const xPos = Math.round((parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width / 2) * pixelSize)) * 1000)/1000;
-		const yPos = Math.round((parseFloat(refPoint.data.yposition.data) - ((this.data.metaConstants.height / 2) * pixelSize)) * 1000)/1000;
+		const xPos = Math.round((parseFloat(refPoint.data.xposition.data) + ((this.data.metaConstants.width / 2) * pixelSize)) * 1000) / 1000;
+		const yPos = Math.round((parseFloat(refPoint.data.yposition.data) - ((this.data.metaConstants.height / 2) * pixelSize)) * 1000) / 1000;
 
 		await fs.writeFile(outputUri + '.ACQ',
 			[
@@ -501,7 +504,7 @@ module.exports = class Thermo {
 		);
 	}
 
-	async write(settings={}) {
+	async write(settings = {}) {
 		for (let i = 0; i < 5; i++)
 			try {
 				settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
@@ -542,12 +545,13 @@ module.exports = class Thermo {
 					return outputUri;
 				}
 				return settings.uri;
-			} catch(err) {}
+			} catch (err) {
+			}
 
 		throw `Failed to write ${this.data.name} to disk`;
 	}
 
-	async createBuffer(type=undefined, settings={}, points=[], layers=[]) {
+	async createBuffer(type = undefined, settings = {}, points = [], layers = []) {
 		await this.create(type, settings, points, layers);
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 
@@ -561,18 +565,18 @@ module.exports = class Thermo {
 			return (await this.toSharp()).webp(settings.webp).toBuffer();
 	}
 
-	async createWrite(type=undefined, settings={}, points=[], layers=[]) {
+	async createWrite(type = undefined, settings = {}, points = [], layers = []) {
 		await this.create(type, settings, points, layers);
 		await this.write(settings);
 		return this;
 	}
 
-	async create(type=undefined, settings={}, points=[], layers=[]) {
+	async create(type = undefined, settings = {}, points = [], layers = []) {
 		for (const layer of layers)
 			await this.addLayer(layer);
 
-		for (const {x, y, topX, topY, botX, botY, radius, polyPoints, name, type='spot', pointSettings=settings} of points)
-			switch(type) {
+		for (const {x, y, topX, topY, botX, botY, radius, polyPoints, name, type = 'spot', pointSettings = settings} of points)
+			switch (type) {
 				default:
 				case 'spot':
 					await this.addPoint(x, y, name, pointSettings);
@@ -590,7 +594,7 @@ module.exports = class Thermo {
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))
-				switch(point.type) {
+				switch (point.type) {
 					default:
 					case 'spot':
 						await this.addPoint(
@@ -631,7 +635,7 @@ module.exports = class Thermo {
 		return this.internalSerialize();
 	}
 
-	internalSerialize(serial={}) {
+	internalSerialize(serial = {}) {
 		if (serial.scale) {
 			if (serial.scale.realWidth === undefined)
 				serial.scale.realWidth = this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width;
@@ -650,12 +654,18 @@ module.exports = class Thermo {
 			name: serial.name ? serial.name : this.data.name,
 			integrity: serial.integrity ? serial.integrity : this.data.integrity,
 			magnification: serial.magnification ? serial.magnification : this.data.magnification,
-			points: Object.values(serial.points ? serial.points : this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {points[name] = {name, type, values, file, x, y, pos}; return points}, {}),
-			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {file, element}) => {layers[element] = {file, element}; return layers}, {}),
+			points: Object.values(serial.points ? serial.points : this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {
+				points[name] = {name, type, values, file, x, y, pos};
+				return points;
+			}, {}),
+			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {file, element}) => {
+				layers[element] = {file, element};
+				return layers;
+			}, {}),
 			entryFile: serial.files && serial.files.entry ? serial.files.entry : this.data.files.entry,
-			jeolFile: serial.metaConstants && serial.metaConstants.fullHeight ? serial.metaConstants.fullHeight : this.data.metaConstants.fullHeight
-						!==
-					  serial.metaConstants && serial.metaConstants.height ? serial.metaConstants.height : this.data.metaConstants.height,
+			jeolFile: (serial.metaConstants && serial.metaConstants.fullHeight ? serial.metaConstants.fullHeight : this.data.metaConstants.fullHeight)
+				!==
+				(serial.metaConstants && serial.metaConstants.height ? serial.metaConstants.height : this.data.metaConstants.height),
 			image: {
 				width: serial.metaConstants && serial.metaConstants.width ? serial.metaConstants.width : this.data.metaConstants.width,
 				height: serial.metaConstants && serial.metaConstants.height ? serial.metaConstants.height : this.data.metaConstants.height
@@ -664,7 +674,7 @@ module.exports = class Thermo {
 				width: serial.scale.realWidth ? serial.scale.realWidth : serial.metadata.width,
 				height: serial.scale.realHeight ? serial.scale.realHeight : serial.metadata.height
 			}
-		}
+		};
 	}
 
 	clone() {
