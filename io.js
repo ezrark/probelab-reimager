@@ -97,11 +97,11 @@ async function getPFEExpectedImages(databaseUri) {
 async function readPFEEntry(databaseUri) {
 	const [uri, imageNum='1'] = databaseUri.split('?');
 
-	try {
-		const connection = Adodb.open({
-			Database: uri.replace(/\//g, '\\\\')
-		});
+	const connection = Adodb.open({
+		Database: uri.replace(/\//g, '\\\\')
+	});
 
+	try {
 		const image = (await connection.query(`SELECT * FROM [Image] WHERE ImageNumber = ${parseInt(imageNum)}`))[0];
 
 		const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
@@ -128,6 +128,7 @@ async function readPFEEntry(databaseUri) {
 
 		return {image, points}
 	} catch(err) {
+		await connection.close();
 		throw 'Unable to open and read PFE mdb file';
 	}
 }
