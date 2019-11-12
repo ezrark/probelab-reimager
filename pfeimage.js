@@ -5,10 +5,7 @@ const io = require('./io.js');
 const Thermo = require('./thermo.js');
 
 module.exports = class extends Thermo {
-	constructor(mdbUri, Canvas) {
-		const dataName = mdbUri.split('/').pop().split('.');
-		dataName.pop();
-
+	constructor(pfe, Canvas, imageNum) {
 		super({uri: mdbUri},
 			dataName.join('.'),
 			Canvas

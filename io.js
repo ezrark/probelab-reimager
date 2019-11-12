@@ -77,56 +77,46 @@ function readNSSEntry(uri) {
 	return output;
 }
 
-async function getPFEExpectedImages(databaseUri) {
-	const uri = databaseUri.split('?')[0];
-
-	try {
-		const connection = Adodb.open({
-			Database: uri.replace(/\//g, '\\\\')
-		});
-
-		const images = (await connection.query(`SELECT * FROM [Image]`));
-
-		return images.length;
-
-	} catch(err) {
-		throw 'Unable to open and read PFE mdb file';
-	}
-}
-
-async function readPFEEntry(databaseUri) {
-	const [uri, imageNum='1'] = databaseUri.split('?');
-
+async function readPFE(uri) {
 	const connection = Adodb.open({
 		Database: uri.replace(/\//g, '\\\\')
 	});
 
 	try {
-		const image = (await connection.query(`SELECT * FROM [Image] WHERE ImageNumber = ${parseInt(imageNum)}`))[0];
-
-		const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
-		const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
-		const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
-		const yLarge = image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin;
-
-		const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
-
+		const allImages = await connection.query('SELECT * FROM [Image]');
+		const allPoints = await connection.query('SELECT * FROM [Line]');
 		await connection.close();
 
-		const xDiff = Math.abs(xLarge - xSmall);
-		const yDiff = Math.abs(yLarge - ySmall);
+		return {
+			points: allPoints.reduce((points, point) => {
+				points.set(point.Number, point);
+				return points;
+			}, new Map()),
+			images: allImages.map(image => {
+				const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
+				const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
+				const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
+				const yLarge = image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin;
 
-		const points = initialPoints
-			.map(({Number, StageX, StageY, LineToRow}) => {
-				return {
-					name: Number,
-					analysis: LineToRow,
-					type: 'spot',
-					values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
-				}
-			});
+				const xDiff = Math.abs(xLarge - xSmall);
+				const yDiff = Math.abs(yLarge - ySmall);
 
-		return {image, points}
+				image.points = allPoints.filter(({StageX, StageY}) => xSmall <= StageX && xLarge >= StageX && ySmall <= StageY && yLarge >= StageY)
+					.map(({Number, StageX, StageY, LineToRow}) => {
+						return {
+							name: Number,
+							analysis: LineToRow,
+							type: 'spot',
+							values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
+						}
+					});
+
+				return image;
+			}).reduce((images, image) => {
+				images.set(image.Number, image);
+				return images;
+			}, new Map())
+		};
 	} catch(err) {
 		await connection.close();
 		throw 'Unable to open and read PFE mdb file';
@@ -192,8 +182,7 @@ function checkBIMExists(uri) {
 module.exports = {
 	readMASFile,
 	readNSSEntry,
-	getPFEExpectedImages,
-	readPFEEntry,
+	readPFE,
 	readJeolEntry,
 	readBIM,
 	checkJeolExists,
