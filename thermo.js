@@ -301,18 +301,9 @@ module.exports = class Thermo {
 		if (this.data.scratchCtx === undefined)
 			await this.init();
 
-		const ctx = this.data.ctx;
-		await ctx.setTextBaseline('bottom');
-
 		const poly = await calculations.calculatePoly(this.data.scratchCtx, points, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
+		const ctx = await this.setUpCanvas(settings, poly, name);
 
-		await ctx.setFillStyle(settings.textColor.RGBA);
-		await ctx.setStrokeStyle(settings.textColor.RGBA);
-		await ctx.setFont(`${poly.fontSize}px "${settings.pointFont}"`);
-		await ctx.fillText(name, poly.fontX, poly.fontY);
-
-		await ctx.setLineWidth(poly.lineWidth);
-		await ctx.setLineJoin('round');
 		await ctx.beginPath();
 		await ctx.moveTo(points[0].x, points[0].y);
 		for (const {x, y} of points)
@@ -329,17 +320,8 @@ module.exports = class Thermo {
 		if (this.data.scratchCtx === undefined)
 			await this.init();
 
-		const ctx = this.data.ctx;
-		await ctx.setTextBaseline('bottom');
-
 		const rect = await calculations.calculateRectangle(this.data.scratchCtx, topX, topY, botX, botY, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
-
-		await ctx.setFillStyle(settings.textColor.RGBA);
-		await ctx.setStrokeStyle(settings.textColor.RGBA);
-		await ctx.setFont(`${rect.fontSize}px "${settings.pointFont}"`);
-		await ctx.fillText(name, rect.fontX, rect.fontY);
-
-		await ctx.setLineWidth(rect.lineWidth);
+		const ctx = await this.setUpCanvas(settings, rect, name);
 
 		await ctx.strokeRect(topX, topY, rect.width, rect.height);
 
@@ -352,17 +334,8 @@ module.exports = class Thermo {
 		if (this.data.scratchCtx === undefined)
 			await this.init();
 
-		const ctx = this.data.ctx;
-		await ctx.setTextBaseline('bottom');
-
 		const circle = await calculations.calculateCircle(this.data.scratchCtx, x, y, radius, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
-
-		await ctx.setFillStyle(settings.textColor.RGBA);
-		await ctx.setStrokeStyle(settings.textColor.RGBA);
-		await ctx.setFont(`${circle.fontSize}px "${settings.pointFont}"`);
-		await ctx.fillText(name, circle.fontX, circle.fontY);
-
-		await ctx.setLineWidth(circle.lineWidth);
+		const ctx = await this.setUpCanvas(settings, circle, name);
 
 		await ctx.beginPath();
 		await ctx.ellipse(x, y, radius, radius, 0, 0, 2 * Math.PI);
@@ -377,17 +350,8 @@ module.exports = class Thermo {
 		if (this.data.scratchCtx === undefined)
 			await this.init();
 
-		const ctx = this.data.ctx;
-		await ctx.setTextBaseline('bottom');
-
 		const point = await calculations.calculatePointPosition(this.data.scratchCtx, x, y, this.data.metadata.width, settings.pointSize, settings.pointFontSize, settings.pointFont);
-
-		await ctx.setFillStyle(settings.textColor.RGBA);
-		await ctx.setStrokeStyle(settings.textColor.RGBA);
-		await ctx.setFont(`${point.fontSize}px "${settings.pointFont}"`);
-		await ctx.fillText(name, point.fontX, point.fontY);
-
-		await ctx.setLineWidth(point.eighthSize);
+		const ctx = await this.setUpCanvas(settings, point, name);
 
 		if (point.size <= 4)
 			settings.pointType = constants.point.types.CIRCLE;
@@ -418,6 +382,19 @@ module.exports = class Thermo {
 		return this;
 	}
 
+	async setUpCanvas(settings, item, name) {
+		await this.data.ctx.setTextBaseline('bottom');
+		await this.data.ctx.setFillStyle(settings.textColor.RGBA);
+		await this.data.ctx.setStrokeStyle(settings.textColor.RGBA);
+		await this.data.ctx.setFont(`${item.fontSize}px "${settings.pointFont}"`);
+		await this.data.ctx.fillText(name, item.fontX, item.fontY);
+
+		await this.data.ctx.setLineWidth(item.lineWidth);
+		await this.data.ctx.setLineJoin('round');
+
+		return this.data.ctx;
+	}
+
 	async toUrl(settings) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		if (settings.png.use)
@@ -438,7 +415,7 @@ module.exports = class Thermo {
 		switch (type) {
 			default:
 			case 'array':
-				return await sharp(Buffer.from(data), {
+				return sharp(Buffer.from(data), {
 					raw: {
 						width,
 						height,
@@ -446,7 +423,7 @@ module.exports = class Thermo {
 					}
 				});
 			case 'raw':
-				return await sharp(data, {
+				return sharp(data, {
 					raw: {
 						width,
 						height,
@@ -454,7 +431,7 @@ module.exports = class Thermo {
 					}
 				});
 			case 'image/png':
-				return await sharp(Buffer.from(data.split(',', 2)[1], 'base64'));
+				return sharp(Buffer.from(data.split(',', 2)[1], 'base64'));
 		}
 	}
 
