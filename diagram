@@ -1,0 +1,27 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+    JeolText ----|---- MSA
+				 |
+  ThermoInfo ----|---- Layer
+				 |
+  ElementMap ----|---- File ---|
+					    |	   |
+					    |	   |   reimager
+  JeolImage ----|	    |	   |	  |
+				|	    |	   |	  |
+   PFEImage ----|---- image    | dirInterface
+				|					|	|
+ThermoImage ----|			|-------|	|-------|
+							|					|
+						Directory			 PFEMDB

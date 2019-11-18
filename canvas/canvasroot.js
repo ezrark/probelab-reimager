@@ -5,6 +5,7 @@ module.exports = class CanvasRoot {
 	constructor(remote) {
 		this.data = {
 			remote,
+			initialized: false,
 			sentCommands: new Map()
 		};
 
@@ -25,9 +26,14 @@ module.exports = class CanvasRoot {
 		});
 	}
 
+	isInitialized() {
+		return this.data.initialized;
+	}
+
 	async init() {
 		await this.registerFont(`${__dirname}/../fonts/OpenSans-Bold.ttf`, { family: 'Open Sans Bold', });
 		await this.registerFont(`${__dirname}/../fonts/Comic Sans MS.ttf`, { family: 'Comic Sans MS' });
+		this.data.initialized = true;
 	}
 
 	sendRemote(namespace, command, args=[]) {

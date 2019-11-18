@@ -13,8 +13,8 @@
     "test": "node index.js ./tests/data"
   },
   "dependencies": {
-    "sharp": "^0.22.1",
-    "database-js-adodb": "latest"
+    "database-js-adodb": "latest",
+    "sharp": "^0.22.1"
   },
   "optionalDependencies": {
     "canvas": "^2.5.0"

@@ -1,0 +1,109 @@
+DON'T TRUST THERMO, MAKE SURE YOU SPACE SANITIZE, THERE MIGHT BE non-breaking SPACES!
+
+reimager:
+	top-level control of directories (and thus nerve center of image processing)
+	sub-process spawner for handling it's builtin canvas interface (assuming one not passed)
+
+dirInterface:
+	Interface to a directory; Provides file names, contents, etc.
+
+image:
+	A set of functions, settings, and information to modify an image
+	Allows for exportation of that image in various formats or directly to a file
+
+PFEImage:
+	.bim file segment
+
+JeolImage:
+	.tif with a corresponding JeolText
+
+ThermoImage:
+	.siref
+	.psref
+
+
+
+ElementMap:
+	.simcs (pre-colored, need to make b-w)
+
+Layer:
+	.layer (Converted tif, b-w)
+
+PFEMDB:
+	.mdb
+
+JeolText:
+	.txt (Assuming first character is a $ and there is corresponding .tif)
+		Similar to the MSA format
+		$  - Standard key
+		$$ - Custom key
+
+		```
+			$<KEY> <value><? <value> <etc>>
+			$$<KEY> <value><? <value> <etc>>
+		```
+
+ThermoInfo:
+	.p_s
+		maxX/maxY are always the same, can be disregarded after the first pair.
+		SPOT is a single set of 4 values, RECT and CIRCLE are both set of 2, 4 values
+		RECT is the top left, bottom right
+		CIRCLE is center and a position on the edge (dist between is radius)
+		POLYGON is a multiline set of 4 values
+		IMGINT is a multiline set of 3 values, the y position and the x start x end
+
+		```
+			..2
+			<name>.psref
+			<int of analyses>
+			#<#> <SPOT|RECT|CIRCLE> <#>
+			<name>_pt<#>.psmsa
+			<x> <y> <maxX> <maxY>
+			<#>.0,<#>.0,<#>.0,<#>.0<?\n|,><#>.0,<#>.0,<#>.0,<#>.0 <etc>
+
+			#<#> POLYGON <#>
+			<name>_pt<#>.psmsa
+			<x> <y> <maxX> <maxY>
+			<#>.0,<#>.0,<#>.0,<#>.0
+			<#>.0,<#>.0,<#>.0,<#>.0
+			<etc>
+			<0>
+
+			#<#> IMGINT <#>
+			<name>_pt<#>.psmsa
+			<y> <x> <x>
+			<#> <#> <#>
+			<etc>
+			<0>
+		```
+	.csi
+		First block is always expected
+		Second block is the number of WDS spectrometers
+		  followed by the spectrometer tif (colored)
+
+		```
+			<#>
+			<name>.si
+			<name>.siref
+			<name> Grey.sitif
+			<#>
+			<name> Spec<#> <element>.simcs
+
+			0
+			<etc>
+		```
+
+MSA:
+	.psmsa
+	.emsa
+		Both follow the MSA standard format
+		#  - Standard key
+		## - Custom key
+
+		```
+			#<KEY>\t:<?(-<unit>)>: <value>
+			##<KEY>\t:<?(-<unit>)>: <value>
+			#SPECTRUM\t:
+			<pos>,\t<value>
+			#ENDOFDATA\t:
+		```
