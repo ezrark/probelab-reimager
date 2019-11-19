@@ -1,0 +1,78 @@
+{
+  "inputStruct": {
+    "parseTypes": {
+      "WHOLEEXT": 0,
+      "STARTS": 1,
+      "ENDS": 2
+    }
+  },
+  "inputStructures": [
+    {
+      "type": "layer",
+      "file": "/files/layer.js",
+      "req": [
+        {
+          "ext": "layer",
+          "uses": "/msa"
+        },
+        {"ext": "simcs"}
+      ]
+    },
+    {
+      "type": "msa",
+      "file": "/files/msa.js",
+      "req": [
+        {"ext": "*sa"},
+        {"ext": "*se"}
+      ]
+    },
+    {
+      "type": "elementMap",
+      "file": "/files/elementmap.js",
+      "req": [
+        {"ext": "tif"},
+        {"ext": "*me"},
+        {"ext": "*ma"}
+      ]
+    },
+    {
+      "type": "pfemdb",
+      "file": "/files/pfe.js",
+      "req": [
+        {"ext": "mdb"}
+      ]
+    },
+    {
+      "type": "jeolImage",
+      "file": "/images/jeol.js",
+      "req": [{
+          "ext": "txt",
+          "needs": ["tif"]
+        }]
+    },
+    {
+      "type": "thermoImage",
+      "file": "/images/thermo.js",
+      "req": [
+        {
+          "ext": "*ref",
+          "needs": ["p_s"],
+          "uses": ["msa"]
+        },
+        {
+          "ext": "*ref",
+          "needs": ["csi"],
+          "uses": ["emsa"]
+        }
+      ]
+    },
+    {
+      "type": "pfeImage",
+      "file": "/images/pfe.js",
+      "req": [{
+        "ext": "bim",
+        "uses": ["pfemdb"]
+      }]
+    }
+  ]
+}

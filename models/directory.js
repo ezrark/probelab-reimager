@@ -1,14 +1,20 @@
 const fs = require('fs').promises;
 
+const constants = require('../newConstants.json');
 const GeneralFile = require('./file.js');
+const ThermoInfo = require('../files/thermoinfo.js');
+const MSA = require('../files/msa.js');
+const Layer = require('../files/layer.js');
+const InputStructure = require('../inputstructure.js');
 
 module.exports = class Directory {
-    constructor(uri, reimager) {
+    constructor(uri, reimager, inputStructure=new InputStructure(constants.inputStructures)) {
         this.data = {
             uri,
             reimager,
             files: new Map(),
-            subDirs: new Map()
+            subDirs: new Map(),
+            inputStructure
         };
     }
 
@@ -50,24 +56,6 @@ module.exports = class Directory {
             new Directory(`${this.data.uri}/${dir.name}`, this.data.reimager)
         ]));
 
-        this.data.files = files.map(file => {
-            switch(file.name.split('.').pop()) {
-                default:
-                    return [file.name, new GeneralFile(`${this.getUri()}/${file.name}`, this.data.reimager)];
-                case 'psmsa':
-                case 'emsa':
-                    return [file.name, new MSAFile(`${this.getUri()}/${file.name}`, this.data.reimager)];
-                case 'p_s':
-                    return [file.name, new ThermoInfo(`${this.getUri()}/${file.name}`, this.data.reimager)];
-                case 'txt':
-                    return [file.name, new JeolText(`${this.getUri()}/${file.name}`, this.data.reimager)];
-                case 'mdb':
-                    return [file.name, new PFEMDB(`${this.getUri()}/${file.name}`, this.data.reimager)];
-                case 'layer':
-                    return [file.name, new Layer(`${this.getUri()}/${file.name}`, this.data.reimager)];
-                case 'simcs':
-                    return [file.name, new ElementMap(`${this.getUri()}/${file.name}`, this.data.reimager)];
-            }
-        });
+        this.data.files = await this.data.inputStructure.process(files, this.data.subDirs);
     }
 };
