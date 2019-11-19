@@ -23,11 +23,20 @@ ThermoImage:
 
 
 
+
 ElementMap:
-	.simcs (pre-colored, need to make b-w)
+	.tif
+	.*me
+	.*ma
+	.em (?)
+	    rgba Thermo-generated map tif
+	    rgba Thermo-generated map tif
 
 Layer:
-	.layer (Converted tif, b-w)
+	.layer
+	    (personally) Converted b-w tif of a Thermo-generated map tif
+	.simcs
+	    Natively generated b-w tif of a WDS map
 
 PFEMDB:
 	.mdb
@@ -94,8 +103,8 @@ ThermoInfo:
 		```
 
 MSA:
-	.psmsa
-	.emsa
+	.*sa
+	.*se
 		Both follow the MSA standard format
 		#  - Standard key
 		## - Custom key
