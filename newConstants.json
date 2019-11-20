@@ -1,10 +1,6 @@
 {
   "inputStruct": {
-    "parseTypes": {
-      "WHOLEEXT": 0,
-      "STARTS": 1,
-      "ENDS": 2
-    }
+
   },
   "inputStructures": [
     {
@@ -13,9 +9,16 @@
       "req": [
         {
           "ext": "layer",
-          "uses": "/msa"
+          "uses": "msa:/"
         },
         {"ext": "simcs"}
+      ]
+    },
+    {
+      "type": "thermoInfo",
+      "file": "/files/thermoinfo.js",
+      "req": [
+        {"ext": "p_s"}
       ]
     },
     {
@@ -47,7 +50,7 @@
       "file": "/images/jeol.js",
       "req": [{
           "ext": "txt",
-          "needs": ["tif"]
+          "uses": ["tif"]
         }]
     },
     {
@@ -56,13 +59,12 @@
       "req": [
         {
           "ext": "*ref",
-          "needs": ["p_s"],
-          "uses": ["msa"]
+          "uses": ["msa", "p_s"]
         },
         {
           "ext": "*ref",
           "needs": ["csi"],
-          "uses": ["emsa"]
+          "uses": ["msa:Extracted Spectrum"]
         }
       ]
     },
