@@ -9,7 +9,7 @@
       "req": [
         {
           "ext": "layer",
-          "uses": "msa:/"
+          "uses": ["msa:/"]
         },
         {"ext": "simcs"}
       ]
@@ -18,7 +18,8 @@
       "type": "thermoInfo",
       "file": "/files/thermoinfo.js",
       "req": [
-        {"ext": "p_s"}
+        {"ext": "p_s"},
+        {"ext": "csi"}
       ]
     },
     {
@@ -50,7 +51,7 @@
       "file": "/images/jeol.js",
       "req": [{
           "ext": "txt",
-          "uses": ["tif"]
+          "needs": ["tif"]
         }]
     },
     {
@@ -59,7 +60,7 @@
       "req": [
         {
           "ext": "*ref",
-          "uses": ["msa", "p_s"]
+          "uses": ["msa", "thermoInfo"]
         },
         {
           "ext": "*ref",
@@ -74,6 +75,20 @@
       "req": [{
         "ext": "bim",
         "uses": ["pfemdb"]
+      }]
+    },
+    {
+      "type": "pfePointSet",
+      "file": "/points/pfe.js",
+      "req": [{
+        "uses": ["pfemdb"]
+      }]
+    },
+    {
+      "type": "thermoPointSet",
+      "file": "/points/thermo.js",
+      "req": [{
+        "uses": ["msa", "thermoInfo:<msa>_pt*"]
       }]
     }
   ]

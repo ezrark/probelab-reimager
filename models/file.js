@@ -1,14 +1,18 @@
 module.exports = class GeneralFile {
     constructor(uri, reimager) {
-        let name = uri.split('/').pop();
-        name.pop();
+        const name = uri.split('/').pop().split('.');
 
         this.data = {
             uri,
-            extension: uri.split('.').pop(),
-            name,
+            dirUri: uri.slice(0, uri.lastIndexOf('/')),
+            extension: name.pop(),
+            name: name.join('.'),
             reimager
         }
+    }
+
+    getDirectoryUri() {
+        return this.data.dirUri;
     }
 
     getUri() {
@@ -21,6 +25,10 @@ module.exports = class GeneralFile {
 
     getName() {
         return this.data.name;
+    }
+
+    getFullName() {
+        return `${this.data.name}.${this.data.extension}`;
     }
 
     getData() {

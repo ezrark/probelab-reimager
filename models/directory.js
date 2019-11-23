@@ -18,6 +18,14 @@ module.exports = class Directory {
 		};
 	}
 
+	getFullName() {
+		return this.data.uri.split('/').pop();
+	}
+
+	getName() {
+		return this.data.uri.split('/').pop();
+	}
+
 	getUri() {
 		return this.data.uri;
 	}
@@ -44,8 +52,13 @@ module.exports = class Directory {
 		return this.data.subDirs.get(name);
 	}
 
-	getFile(name) {
-		return this.data.files.get(name);
+	getFile(name, type) {
+		if (type)
+			return this.data.files.get(type).get(name);
+
+		for (const [, files] of this.data.files)
+			if (files.has(name))
+				return files.get(name);
 	}
 
 	getImage(name) {

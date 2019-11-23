@@ -2,8 +2,11 @@ const GeneralImage = require('../models/image.js');
 const JeolText = require('../files/jeoltext.js');
 
 module.exports = class JeolImage extends GeneralImage {
-	constructor(imageUri, reimager, [tif], [metadata]) {
-		const {x=undefined, y=undefined, z=undefined} = {};
+	constructor(imageUri, reimager, [tif], metadata) {
+		if (tif.getName() !== imageUri.split('/').pop().split('.')[0])
+			throw 'Invalid JeolImage Setup';
+
+		const {x=0, y=0, z=0} = {};
 
 		const position = {
 			x: x !== undefined ? x : metadata.cm_stage_pos.slice(0, 1),
