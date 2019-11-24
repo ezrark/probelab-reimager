@@ -1,12 +1,13 @@
 module.exports = class GeneralFile {
-    constructor(uri, reimager) {
+    constructor({uri, stats}, reimager) {
         const name = uri.split('/').pop().split('.');
 
         this.data = {
             uri,
             dirUri: uri.slice(0, uri.lastIndexOf('/')),
-            extension: name.pop(),
+            extension: name.length > 1 ? name.pop() : '',
             name: name.join('.'),
+            stats,
             reimager
         }
     }
@@ -28,7 +29,17 @@ module.exports = class GeneralFile {
     }
 
     getFullName() {
+        if (this.data.extension === '')
+            return this.data.name;
         return `${this.data.name}.${this.data.extension}`;
+    }
+
+    getModifiedTime() {
+        return this.data.stats.mtimeMs;
+    }
+
+    getStats() {
+        return this.data.stats;
     }
 
     getData() {

@@ -174,18 +174,18 @@ module.exports = class InputStructure {
 
 		for (const {parse, ext, type} of this.baseTypes) {
 			const typeConstructor = this.types.get(type);
-			for (const {uri} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
+			for (const {uri, stats} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
 				try {
-					resolved.resolve(type, new typeConstructor(uri, reimager));
+					resolved.resolve(type, new typeConstructor({uri, stats}, reimager));
 				} catch (err) {
 				}
 		}
 
 		for (const {parse, ext, type, needs} of this.needTypes) {
 			const typeConstructor = this.types.get(type);
-			for (const {name, uri} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
+			for (const {name, uri, stats} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
 				try {
-					resolved.resolve(type, new typeConstructor(uri, reimager,
+					resolved.resolve(type, new typeConstructor({uri, stats}, reimager,
 						needs.map(str => getRequiredFile(name, type, str))
 					));
 				} catch (err) {
@@ -194,9 +194,9 @@ module.exports = class InputStructure {
 
 		for (const {parse, ext, type, needs = [], uses} of this.useTypes) {
 			const typeConstructor = this.types.get(type);
-			for (let {name, uri} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
+			for (let {name, uri, stats} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
 				try {
-					resolved.resolve(type, new typeConstructor(uri, reimager,
+					resolved.resolve(type, new typeConstructor({uri, stats}, reimager,
 						needs.map(str => getRequiredFile(name, type, str)),
 						uses.map(({type, filename: str}) => getRequiredFile(name, type, str, false))
 					));

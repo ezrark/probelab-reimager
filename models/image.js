@@ -1,8 +1,8 @@
 const GeneralFile = require('./file.js');
 
 module.exports = class GeneralImage extends GeneralFile {
-	constructor(imageUri, reimager, metaFile=undefined, {x, y, z}) {
-		super(imageUri, reimager);
+	constructor({uri, stats}, reimager, metaFile=undefined, {x, y, z}) {
+		super({uri, stats}, reimager);
 
 		if (metaFile !== undefined)
 			this.data.metadata = metaFile;

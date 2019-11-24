@@ -4,6 +4,6 @@ module.exports = class PfePointSet extends Point {
 	constructor(uri, reimager, [mdb]) {
 		if (mdb === undefined)
 			throw 'MDB required to extract a point set';
-		super(uri, reimager);
+		super({uri, stats: mdb.getStats()}, reimager);
 	}
 };
