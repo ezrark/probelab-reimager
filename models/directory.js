@@ -4,16 +4,17 @@ const constants = require('../newConstants.json');
 const InputStructure = require('../inputstructure.js');
 
 module.exports = class Directory {
-	constructor(uri, reimager, inputStructure = new InputStructure(constants.inputStructures)) {
-		let nameTest = uri.split('/');
+	constructor({uri, stats, name}, reimager, inputStructure = new InputStructure(constants.inputStructures)) {
+		let nameTest = name ? [name] : uri.split('/');
 		if (nameTest[nameTest.length - 1].length === 0)
 			nameTest.pop();
 
 		this.data = {
 			uri: uri.endsWith('/') ? uri : uri + '/',
 			dirName: nameTest.pop(),
+			stats,
 			reimager,
-			files: new Map(),
+			files: undefined,
 			subDirs: new Map(),
 			inputStructure
 		};
@@ -46,43 +47,55 @@ module.exports = class Directory {
 	}
 
 	getFile(name, type) {
-		this.data.files.findFile(name, type);
+		if (this.data.files)
+			this.data.files.findFile(name, type);
 	}
 
 	getAllSubFiles(type) {
-		try {
-			let files = Array.from(this.getFiles(type).values());
-			try {
-				if (files.length > 0)
-					files = files.flatMap(e => Array.from(e.values()));
-			} catch(err) {
-			}
+		if (Array.isArray(type))
+			return type.flatMap(this.getAllSubFiles.bind(this));
 
-			return Array.from(files.values()).map(file => file.getUri())
-			.concat(Array.from(this.getSubDirectories().values()).flatMap(dir => dir.getAllSubFiles(type)));
-		} catch (err) {
-		}
+		let files = this.getFiles(type);
 
-		return Array.from(this.getSubDirectories().values()).flatMap(dir => dir.getAllSubFiles(type));
+		if (files)
+			files = Array.from(files.values());
+		else
+			files = [];
+
+		if (type === undefined)
+			files = files.flatMap(e => Array.from(e.values()));
+
+		return Array.from(files).concat(Array.from(this.getSubDirectories().values()).flatMap(dir => dir.getAllSubFiles(type)));
 	}
 
 	async refresh() {
-		const {files, dirs} = (await fs.readdir(this.getUri(), {
-			withFileTypes: true
-		}))
-		.map(file => {
-			file.uri = `${this.getUri()}${file.name}`;
-			return file;
+		const {files, dirs} = (await Promise.all((await fs.readdir(this.getUri()))
+		.map(async name => {
+			try {
+				const uri = `${this.getUri()}${name}`;
+				return {
+					name,
+					uri,
+					stats: await fs.stat(uri)
+				}
+			} catch(err) {}
+		})))
+		.filter(file => {
+			if (file) {
+				const existingFile = this.getFile(file.name);
+				if (existingFile === undefined || existingFile.getModifiedTime() < file.stats.mtimeMs)
+					return true;
+			}
 		})
 		.reduce((data, file) => {
-			if (file.isFile())
+			if (file.stats.isFile())
 				data.files.push(file);
-			else if (file.isDirectory())
+			else if (file.stats.isDirectory())
 				data.dirs.push(file);
 			return data;
 		}, {files: [], dirs: []});
 
-		const subDirs = await Promise.all(dirs.map(dir => (new Directory(`${this.data.uri}${dir.name}`, this.data.reimager, this.data.inputStructure)).refresh()));
+		const subDirs = await Promise.all(dirs.map(dir => (new Directory(dir, this.data.reimager, this.data.inputStructure)).refresh()));
 
 		this.data.subDirs = new Map(subDirs.map(dir => [dir.getName(), dir]));
 
