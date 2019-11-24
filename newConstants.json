@@ -88,7 +88,7 @@
       "type": "thermoPointSet",
       "file": "/points/thermo.js",
       "req": [{
-        "uses": ["msa", "thermoInfo:<msa>_pt*"]
+        "uses": ["thermoInfo", "msa:<thermoInfo>_pt*"]
       }]
     }
   ]

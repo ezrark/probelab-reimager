@@ -1,5 +1,4 @@
 const GeneralImage = require('../models/image.js');
-const JeolText = require('../files/jeoltext.js');
 
 module.exports = class JeolImage extends GeneralImage {
 	constructor(imageUri, reimager, [tif], metadata) {

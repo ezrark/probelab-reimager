@@ -1,5 +1,66 @@
 const constants = require('./newConstants.json');
 
+function resolveName(input, refs = []) {
+	let parse = undefined;
+	const path = input.split('/');
+	input = path.pop();
+
+	if (input) {
+		if (input.startsWith('*')) {
+			parse = 'endsWith';
+			input = input.slice(1);
+		} else if (input.endsWith('*')) {
+			parse = 'startsWith';
+			input = input.slice(0, input.length - 1);
+		}
+
+		for (const [type, value] of refs)
+			input = input.replace(new RegExp(`(<${type}>)`, 'g'), value);
+	}
+
+	return {parse, name: path.join('/') + input};
+}
+
+class FileSet {
+	constructor() {
+		this.files = new Map();
+	}
+
+	getFiles() {
+		return this.files;
+	}
+
+	getType(type) {
+		return this.files.get(type);
+	}
+
+	findFile(name, type=undefined) {
+		if (type) {
+			const easy = this.files.get(type).get(name);
+			if (easy)
+				return easy;
+
+			for (const [, file] of this.files.get(type))
+				if (file.getName() === name)
+					return file;
+		} else {
+			for (const [, files] of this.files)
+				if (files.has(name))
+					return files.get(name);
+		}
+	}
+
+	resolve(type, file) {
+		let resolvedType = this.files.get(type);
+		if (resolvedType === undefined) {
+			resolvedType = new Map();
+			this.files.set(type, resolvedType);
+		}
+
+		resolvedType.set(file.getFullName(), file);
+	}
+}
+
 module.exports = class InputStructure {
 	constructor(structure) {
 		this.types = new Map();
@@ -40,7 +101,7 @@ module.exports = class InputStructure {
 										type,
 										filename
 									};
-								}), resolvesIn: Infinity
+								})
 							});
 						else
 							this.needTypes.push({parse, ext: ext.replace(/\*/, ''), type, needs});
@@ -52,7 +113,7 @@ module.exports = class InputStructure {
 									type,
 									filename
 								};
-							}), resolvesIn: Infinity
+							})
 						});
 					else
 						this.baseTypes.push({parse, ext: ext.replace(/\*/, ''), type});
@@ -88,71 +149,44 @@ module.exports = class InputStructure {
 			} else
 				resolve2 = resolved.get(type2);
 
-			return resolve1 - resolve2;
+			return resolve1 + resolve2;
 		});
 	}
 
 	process(reimager, files, subDirs = new Map()) {
-		let resolved = new Map();
-
-		const resolveFile = (type, file) => {
-			let resolvedType = resolved.get(type);
-			if (resolvedType === undefined) {
-				resolvedType = new Map();
-				resolved.set(type, resolvedType);
-			}
-
-			resolvedType.set(file.getFullName(), file);
-		};
-
-		const findFile = (name, type) => {
-			if (type) {
-				const easy = resolved.get(type).get(name);
-				if (easy)
-					return easy;
-
-				for (const [, file] of resolved.get(type))
-					if (file.getName() === name)
-						return file;
-			} else {
-				for (const [, files] of resolved)
-					if (files.has(name))
-						return files.get(name);
-			}
-		};
+		let resolved = new FileSet();
 
 		const getRequiredFile = (name, type, str, prependName = true) => {
 			if (str) {
 				const location = str.split('/').filter(e => e);
-				if (location.length === 1) {
-					return findFile(`${prependName ? `${name.split('.')[0]}.` : ''}${location[0]}`, prependName ? undefined : type);
-				} else {
+				if (location.length === 1)
+					return resolved.findFile(`${prependName ? `${name.split('.')[0]}.` : ''}${location[0]}`, prependName ? undefined : type);
+				else {
 					let file = subDirs.get(location.pop());
 					while (location.length > 1)
 						file = file.getSubDirectory(location);
 
 					return file.getFile(file.name, type);
 				}
-			} else {
-				return findFile(name.split('.')[0], type);
-			}
+			} else
+				return resolved.findFile(name.split('.')[0], type);
 		};
 
 		for (const {parse, ext, type} of this.baseTypes) {
 			const typeConstructor = this.types.get(type);
-			for (const file of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop() === ext) : (name[parse](ext))))
+			for (const {uri} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
 				try {
-					resolveFile(type, new typeConstructor(file.uri, reimager));
+					resolved.resolve(type, new typeConstructor(uri, reimager));
 				} catch (err) {
 				}
 		}
 
 		for (const {parse, ext, type, needs} of this.needTypes) {
 			const typeConstructor = this.types.get(type);
-			for (const file of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop() === ext) : (name[parse](ext))))
+			for (const {name, uri} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
 				try {
-					resolveFile(type, new typeConstructor(file.uri, reimager,
-						needs.map(str => getRequiredFile(file.name, type, str))
+					resolved.resolve(type, new typeConstructor(uri, reimager,
+						needs.map(str => getRequiredFile(name, type, str))
 					));
 				} catch (err) {
 				}
@@ -160,57 +194,49 @@ module.exports = class InputStructure {
 
 		for (const {parse, ext, type, needs = [], uses} of this.useTypes) {
 			const typeConstructor = this.types.get(type);
-			for (const file of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop() === ext) : (name[parse](ext))))
+			for (let {name, uri} of files.filter(({name}) => (parse === undefined) ? (name.split('.').pop().toLowerCase() === ext) : (name.toLowerCase()[parse](ext))))
 				try {
-					resolveFile(type, new typeConstructor(file.uri, reimager,
-						needs.map(str => getRequiredFile(file.name, type, str)),
-						uses.map(({type, filename: str}) => getRequiredFile(file.name, type, str, false))
+					resolved.resolve(type, new typeConstructor(uri, reimager,
+						needs.map(str => getRequiredFile(name, type, str)),
+						uses.map(({type, filename: str}) => getRequiredFile(name, type, str, false))
 					));
 				} catch (err) {
 				}
 		}
 
-		for (const {type, needs = [], uses} of this.useFakeTypes) {
-			const typeConstructor = this.types.get(type);
+		for (const {type, uses} of this.useFakeTypes)
+			try {
+				const typeConstructor = this.types.get(type);
 
-			if (uses.length === 1) {
-				const potential = resolved.get(uses[0].type);
-				if (uses[0].filename !== '') {
-					for (const [name, data] of potential)
-						if (name === uses[0].filename)
-							resolveFile(type, new typeConstructor(data.getDirectoryUri(), reimager, [data]));
+				if (uses.length === 1) {
+					const potential = resolved.getType(uses[0].type);
+					if (potential === undefined)
+						continue;
+					if (uses[0].filename) {
+						for (const [name, data] of potential)
+							if (name === uses[0].filename)
+								resolved.resolve(type, new typeConstructor(data.getDirectoryUri(), reimager, [data]));
+					} else
+						for (const [, data] of potential)
+							resolved.resolve(type, new typeConstructor(data.getDirectoryUri(), reimager, [data]));
 				} else
-					for (const [, data] of potential)
-						resolveFile(type, new typeConstructor(data.getDirectoryUri(), reimager, [data]));
-			} else {
-				for (const [usesType, data] of resolved.get(uses[0].type)) {
-					let filename = (uses[1].filename === '' || uses[1].filename === undefined) ? data.getName() : uses[1].filename.replace(new RegExp(`(<${usesType}>)`, 'g'), data.getName());
-					let parse = undefined;
+					for (const [, data] of resolved.getType(uses[0].type)) {
+						const {parse, name} = resolveName(uses[1].filename, [[uses[0].type, data.getName()]]);
 
-					if (uses[1].filename)
-						if (uses[1].filename.startsWith('*')) {
-							parse = 'endsWith';
-							filename = filename.slice(1);
-						} else if (uses[1].filename.endsWith('*')) {
-							parse = 'startsWith';
-							filename = filename.slice(0, filename.length - 1)
-						}
+						let wantedFiles = [];
 
-					let wantedFiles = [];
-
-					for (const [, files] of resolved)
-						for (const [, otherData] of files) {
-							if (parse === undefined) {
-								if (otherData.getName() === filename)
+						for (const [, files] of resolved.getFiles())
+							for (const [, otherData] of files)
+								if (parse === undefined) {
+									if (otherData.getName() === name)
+										wantedFiles.push(otherData);
+								} else if (otherData.getName()[parse](name))
 									wantedFiles.push(otherData);
-							} else if (otherData.getName()[parse](filename))
-								wantedFiles.push(otherData);
-						}
 
-					resolveFile(type, new typeConstructor(data.getDirectoryUri(), reimager, [data, wantedFiles]));
-				}
+						resolved.resolve(type, new typeConstructor(data.getDirectoryUri(), reimager, [data, wantedFiles]));
+					}
+			} catch (err) {
 			}
-		}
 
 		return resolved;
 	}
