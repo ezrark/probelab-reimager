@@ -1,16 +1,17 @@
 const fs = require('fs').promises;
 
 const constants = require('../newConstants.json');
-const GeneralFile = require('./file.js');
-const ThermoInfo = require('../files/thermoinfo.js');
-const MSA = require('../files/msa.js');
-const Layer = require('../files/layer.js');
 const InputStructure = require('../inputstructure.js');
 
 module.exports = class Directory {
 	constructor(uri, reimager, inputStructure = new InputStructure(constants.inputStructures)) {
+		let nameTest = uri.split('/');
+		if (nameTest[nameTest.length - 1].length === 0)
+			nameTest.pop();
+
 		this.data = {
-			uri,
+			uri: uri.endsWith('/') ? uri : uri + '/',
+			dirName: nameTest.pop(),
 			reimager,
 			files: new Map(),
 			subDirs: new Map(),
@@ -19,29 +20,21 @@ module.exports = class Directory {
 	}
 
 	getFullName() {
-		return this.data.uri.split('/').pop();
+		return this.data.dirName;
 	}
 
 	getName() {
-		return this.data.uri.split('/').pop();
+		return this.data.dirName;
 	}
 
 	getUri() {
 		return this.data.uri;
 	}
 
-	getFiles() {
-		return this.data.files;
-	}
-
-	getImages() {
-		return this.data.images;
-	}
-
-	getAllImages() {
-		return Array.from(this.getSubDirectories().values()).flatMap(dir =>
-			dir.getAllImages()
-		);
+	getFiles(type) {
+		if (type)
+			return this.data.files.getType(type);
+		return this.data.files.getFiles();
 	}
 
 	getSubDirectories() {
@@ -53,22 +46,35 @@ module.exports = class Directory {
 	}
 
 	getFile(name, type) {
-		if (type)
-			return this.data.files.get(type).get(name);
-
-		for (const [, files] of this.data.files)
-			if (files.has(name))
-				return files.get(name);
+		this.data.files.findFile(name, type);
 	}
 
-	getImage(name) {
-		return this.data.images.get(name);
+	getAllSubFiles(type) {
+		try {
+			let files = Array.from(this.getFiles(type).values());
+			try {
+				if (files.length > 0)
+					files = files.flatMap(e => Array.from(e.values()));
+			} catch(err) {
+			}
+
+			return Array.from(files.values()).map(file => file.getUri())
+			.concat(Array.from(this.getSubDirectories().values()).flatMap(dir => dir.getAllSubFiles(type)));
+		} catch (err) {
+		}
+
+		return Array.from(this.getSubDirectories().values()).flatMap(dir => dir.getAllSubFiles(type));
 	}
 
 	async refresh() {
-		const {files, dirs} = await fs.readdir(this.getUri(), {
+		const {files, dirs} = (await fs.readdir(this.getUri(), {
 			withFileTypes: true
-		}).reduce((data, file) => {
+		}))
+		.map(file => {
+			file.uri = `${this.getUri()}${file.name}`;
+			return file;
+		})
+		.reduce((data, file) => {
 			if (file.isFile())
 				data.files.push(file);
 			else if (file.isDirectory())
@@ -76,11 +82,12 @@ module.exports = class Directory {
 			return data;
 		}, {files: [], dirs: []});
 
-		this.data.subDirs = new Map(dirs.map(dir => [
-			dir.name,
-			new Directory(`${this.data.uri}/${dir.name}`, this.data.reimager)
-		]));
+		const subDirs = await Promise.all(dirs.map(dir => (new Directory(`${this.data.uri}${dir.name}`, this.data.reimager, this.data.inputStructure)).refresh()));
 
-		this.data.files = await this.data.inputStructure.process(files, this.data.subDirs);
+		this.data.subDirs = new Map(subDirs.map(dir => [dir.getName(), dir]));
+
+		this.data.files = await this.data.inputStructure.process(this.data.reimager, files, this.data.subDirs);
+
+		return this;
 	}
 };
