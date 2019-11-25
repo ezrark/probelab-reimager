@@ -46,9 +46,34 @@ module.exports = class Directory {
 		return this.data.subDirs.get(name);
 	}
 
+	resolveSomeDirectory(path) {
+		if (!Array.isArray(path))
+			path = path.split('/').filter(e => e);
+
+		if (path.length >= 1) {
+			const subDir = this.getSubDirectory(path.shift());
+			if (subDir && path.length !== 0)
+				return subDir.resolveSomeDirectory(path);
+			return subDir;
+		}
+	}
+
+	resolveSomeFile(path, type) {
+		if (!Array.isArray(path))
+			path = path.split('/').filter(e => e);
+		const file = path.pop();
+		let dir = this;
+
+		if (path.length !== 0)
+			dir = this.resolveSomeDirectory(path);
+
+		if (dir !== undefined)
+			return dir.getFile(file, type);
+	}
+
 	getFile(name, type) {
 		if (this.data.files)
-			this.data.files.findFile(name, type);
+			return this.data.files.findFile(name, type);
 	}
 
 	getAllSubFiles(type) {
@@ -77,8 +102,9 @@ module.exports = class Directory {
 					name,
 					uri,
 					stats: await fs.stat(uri)
-				}
-			} catch(err) {}
+				};
+			} catch (err) {
+			}
 		})))
 		.filter(file => {
 			if (file) {

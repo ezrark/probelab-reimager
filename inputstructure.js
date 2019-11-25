@@ -34,20 +34,27 @@ class FileSet {
 		return this.files.get(type);
 	}
 
-	findFile(name, type=undefined) {
+	findFile(name, type=undefined, operation=undefined) {
 		if (type) {
 			const easy = this.files.get(type).get(name);
 			if (easy)
 				return easy;
 
 			for (const [, file] of this.files.get(type))
-				if (file.getName() === name)
+				if (operation === undefined) {
+					if (file.getName() === name)
+						return file;
+				} else if ((file.getName())[operation](name))
 					return file;
-		} else {
+
+		} else
 			for (const [, files] of this.files)
-				if (files.has(name))
-					return files.get(name);
-		}
+				for (const [, file] of files)
+					if (operation === undefined) {
+						if (file.getName() === name)
+							return file;
+					} else if ((file.getName())[operation](name))
+						return file;
 	}
 
 	resolve(type, file) {
@@ -158,9 +165,10 @@ module.exports = class InputStructure {
 
 		const getRequiredFile = (name, type, str, prependName = true) => {
 			if (str) {
-				const location = str.split('/').filter(e => e);
+				const {name: resolvedStr, parse} = resolveName(str, [['name', name.split('.')[0]]]);
+				const location = resolvedStr.split('/').filter(e => e);
 				if (location.length === 1)
-					return resolved.findFile(`${prependName ? `${name.split('.')[0]}.` : ''}${location[0]}`, prependName ? undefined : type);
+					return resolved.findFile(`${prependName ? `${name.split('.')[0]}.` : ''}${location[0]}`, prependName ? undefined : type, parse);
 				else {
 					let file = subDirs.get(location.pop());
 					while (location.length > 1)
@@ -169,7 +177,7 @@ module.exports = class InputStructure {
 					return file.getFile(file.name, type);
 				}
 			} else
-				return resolved.findFile(name.split('.')[0], type);
+				return resolved.findFile(name, type);
 		};
 
 		for (const {parse, ext, type} of this.baseTypes) {
