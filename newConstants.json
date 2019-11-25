@@ -60,7 +60,7 @@
       "req": [
         {
           "ext": "*ref",
-          "uses": ["msa", "thermoInfo"]
+          "uses": ["msa:<name>_pt*"]
         },
         {
           "ext": "*ref",
