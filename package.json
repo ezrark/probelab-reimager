@@ -10,7 +10,8 @@
     "thermo-reimager": "index.js"
   },
   "scripts": {
-    "test": "node index.js ./tests/data"
+    "test": "node index.js ./tests/data",
+    "test-speed": "node tests/speed.js"
   },
   "dependencies": {
     "sharp": "^0.23.4"

@@ -7,7 +7,7 @@ const constants = require('../constants');
 const { PointShoot, ExtractedMap, CanvasRoot, NodeCanvas } = require('../module');
 
 let options = {
-	dirUri: './data/',
+	dirUri: 'tests/data/',
 	position: constants.scale.types.BELOWCENTER,
 	scaleColor: constants.colors.AUTO,
 	belowColor: constants.colors.AUTO,
