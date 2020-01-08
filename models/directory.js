@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 
 const constants = require('../newConstants.json');
-const InputStructure = require('../inputstructure.js');
+const InputStructure = require('../dependancytree.js');
 
 module.exports = class Directory {
 	constructor({uri, stats, name}, reimager, inputStructure = new InputStructure(constants.inputStructures)) {

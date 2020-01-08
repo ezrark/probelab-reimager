@@ -5,7 +5,7 @@ const Canvas = require('canvas');
 const constants = require('./newConstants.json');
 const NodeCanvas = require('./canvas/nodecanvasmodule.js');
 const CanvasRoot = require('./canvas/canvasroot.js');
-const InputStructure = require('./inputstructure.js');
+const InputStructure = require('./dependancytree.js');
 
 const Directory = require('./models/directory.js');
 

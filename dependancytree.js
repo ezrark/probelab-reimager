@@ -1,4 +1,69 @@
-const constants = require('./newConstants.json');
+const constants = require('./depandancies.json');
+
+class DependencyTree {
+	constructor(jsonTree, logger) {
+		this.data = {
+			logger,
+			types: new Map()
+		};
+
+		// Grab all the types from the json and do some basic parsing through them
+		//  to make sure that everything is capable of being created.
+		for (const {type, module, versions} of jsonTree) {
+			let generatedType = {
+				type,
+				module: require(module),
+				versions: []
+			};
+
+			for (const {entry, files = [], modules = []} of versions) {
+				let version = {
+					type: entry.type,
+					name: new RegExp(entry.name, 'i')
+				};
+				
+				switch (entry.type) {
+					default:
+					case 'file':
+						// entry.extension; regex
+						// entry.name;      regex
+						version.extension = new RegExp(entry.extension, 'i');
+						break;
+					case 'module':
+						// entry.module;    string
+						// entry.name;      regex
+						version.module = entry.module;
+						break;
+				}
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function resolveName(input, refs = []) {
 	let parse = undefined;

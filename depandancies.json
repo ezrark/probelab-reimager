@@ -2,16 +2,32 @@
   "inputStruct": {
 
   },
-  "inputStructures": [
+  "moduleTypes": [
     {
       "type": "layer",
-      "file": "/files/layer.js",
-      "req": [
+      "module": "/files/layer.js",
+      "versions": [
         {
-          "ext": "layer",
-          "uses": ["msa:/"]
+          "entry": {
+            "type": "file",
+            "extension": "layer"
+          },
+          "files": [],
+          "modules": [
+            {
+              "type": "mas",
+              "location": "."
+            }
+          ]
         },
-        {"ext": "mcs"}
+        {
+          "entry": {
+            "type": "file",
+            "extension": ".+?mcs"
+          },
+          "files": [],
+          "modules": []
+        }
       ]
     },
     {

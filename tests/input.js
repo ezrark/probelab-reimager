@@ -1,5 +1,5 @@
 const constants = require('../newConstants.json');
-const InputStructure = require('../inputstructure.js');
+const InputStructure = require('../dependancytree.js');
 
 const input = new InputStructure(constants.inputStructures);
 
