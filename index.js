@@ -32,7 +32,7 @@ function help() {
 	console.log('-l, --layer [layerName, [color, opacity]]\tTries to overlay the layer, when > 1, added in order');
 	console.log();
 	console.log('Pixel Size Constant:');
-	console.log('  Default: 116.73');
+	console.log('\tDefault: 116.73');
 	console.log('Default was with the UMN Probelab\'s JEOL JAX 8530F Plus and is the constant of the calibration curve.');
 	console.log('The calibration curve seems to always be CONST*x^(-1) or close enough to it for scale estimations.');
 	console.log();
@@ -59,7 +59,7 @@ function help() {
 	console.log('c, comicsans\tWhy');
 	console.log();
 	console.log('Positions:');
-	console.log('d, default      \tScale is Underneath the image, Centered');
+	console.log('d,  default     \tScale is Underneath the image, Centered');
 	console.log('bl, belowleft   \tScale is Under the image, Left');
 	console.log('br, belowright  \tScale is Under the image, Right');
 	console.log('bc, belowcenter \tScale is Under the image, Centered');
@@ -68,8 +68,8 @@ function help() {
 	console.log('ll, lowerleft   \tScale is in the Lower Left');
 	console.log('lr, loweright   \tScale is in the Lower Right');
 	console.log('lc, lowercenter \tScale is in the Lower Center');
-	console.log('n, none \tNo scale shown');
-	console.log('j, jeol \tScale is placed overtop JEOL bar');
+	console.log('j,  jeol        \tScale is placed overtop JEOL bar');
+	console.log('n,  none        \tNo scale shown');
 	console.log();
 	console.log('Point Types:');
 	console.log('t, thermo\tThermo\'s point icon');
