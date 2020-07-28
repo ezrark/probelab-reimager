@@ -1,6 +1,10 @@
 const fs = require('fs');
+let Adodb;
 
-const Adodb = require('database-js-adodb');
+try {
+	Adodb = require('database-js-adodb');
+} catch (err) {
+}
 
 const constants = require('./constants.json');
 
@@ -97,11 +101,13 @@ async function getPFEExpectedImages(databaseUri) {
 async function readPFEEntry(databaseUri) {
 	const [uri, imageNum='1'] = databaseUri.split('?');
 
-	const connection = Adodb.open({
-		Database: uri.replace(/\//g, '\\\\')
-	});
+	let connection;
 
 	try {
+		connection = Adodb.open({
+			Database: uri.replace(/\//g, '\\\\')
+		});
+
 		const image = (await connection.query(`SELECT * FROM [Image] WHERE ImageNumber = ${parseInt(imageNum)}`))[0];
 
 		const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
@@ -128,7 +134,8 @@ async function readPFEEntry(databaseUri) {
 
 		return {image, points}
 	} catch(err) {
-		await connection.close();
+		if (connection)
+			await connection.close();
 		throw 'Unable to open and read PFE mdb file';
 	}
 }
