@@ -224,8 +224,8 @@ module.exports = class Thermo {
 
 			const newImage = sharp(Buffer.from(rawImage), {
 				raw: {
-					width: this.data.metadata.width,
-					height: this.data.metadata.height,
+					width: image.metadata.width,
+					height: image.metadata.height,
 					channels: 4
 				}
 			});

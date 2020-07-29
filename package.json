@@ -10,11 +10,14 @@
     "thermo-reimager": "index.js"
   },
   "scripts": {
-    "test": "node index.js ./tests/data",
-    "test-speed": "node tests/speed.js"
+    "test": "node index.js test/data",
+    "test-speed": "node test/speed.js"
+  },
+  "devDependencies": {
+    "canvas": "^2.5.0",
+    "mocha": "^8.0.1"
   },
   "dependencies": {
-    "canvas": "^2.5.0",
     "sharp": "^0.25.4"
   },
   "optionalDependencies": {

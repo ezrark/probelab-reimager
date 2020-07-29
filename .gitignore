@@ -1,3 +1,6 @@
+tests/data/*/*.tif
+.idea
+
 # Logs
 logs
 *.log
