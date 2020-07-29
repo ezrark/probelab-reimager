@@ -1,0 +1,21 @@
+{
+  "points": [
+    {
+      "type": "spot",
+      "file": "1024(1)_pt1.psmsa",
+      "values": [
+        360,
+        253,
+        731,
+        547
+      ]
+    }
+  ],
+  "layers": [],
+  "data": {
+    "spectra": "",
+    "base": "1024(1).psref",
+    "grey": "",
+    "raw": ""
+  }
+}
