@@ -1,5 +1,8 @@
 const fs = require('fs');
 
+// Require sharp, lest it crashes on windows
+// No fucking clue
+require('sharp');
 const Canvas = require('canvas');
 
 const constants = require('./constants.json');
@@ -650,7 +653,7 @@ else {
 									thermos.map(thermo => thermo.addLayerFile(file.uri));
 
 								if (name.endsWith(constants.pfe.fileFormats.ENTRY)) {
-									const thermo = new PFEImage(dirUri + '?5', canvas);
+									const thermo = new PFEImage(file.uri + '?5', canvas);
 									thermos.push(thermo);
 									return thermo.init();
 								}
