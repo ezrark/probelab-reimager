@@ -1,5 +1,4 @@
 const hash = require('crypto').createHash;
-const fs = require('fs');
 
 const assert = require('assert');
 const {describe, it} = require('mocha');
@@ -147,6 +146,28 @@ describe('Calculations', () => {
             assert.deepStrictEqual(
                 calc.estimateVisualScale(500000, 1024, 116),
                 [0.05, 216, 0.000232]
+            );
+        });
+    });
+
+    describe('#pointToXY', () => {
+        it('should calculate the lowest corner', () => {
+            assert.deepStrictEqual(
+                calc.pointToXY([256, 256, 256, 256], 1024, 1024),
+                [1024, 1024]
+            );
+        });
+
+        it('should calculate the highest corner', () => {
+            assert.deepStrictEqual(
+                calc.pointToXY([0, 0, 256, 256], 1024, 1024),
+                [0, 0]
+            );
+        });
+        it('should calculate between extremes', () => {
+            assert.deepStrictEqual(
+                calc.pointToXY([128, 24, 256, 256], 1024, 1024),
+                [512, 96]
             );
         });
     });
