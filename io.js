@@ -1,4 +1,12 @@
 const fs = require('fs');
+let Adodb;
+
+try {
+	Adodb = require('database-js-adodb');
+} catch (err) {
+}
+
+const constants = require('./constants.json');
 
 function readMASFile(uri) {
 	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('#');
@@ -73,7 +81,128 @@ function readNSSEntry(uri) {
 	return output;
 }
 
+async function getPFEExpectedImages(databaseUri) {
+	const uri = databaseUri.split('?')[0];
+
+	try {
+		const connection = Adodb.open({
+			Database: uri.replace(/\//g, '\\\\')
+		});
+
+		const images = (await connection.query(`SELECT * FROM [Image]`));
+
+		return images.length;
+
+	} catch(err) {
+		throw 'Unable to open and read PFE mdb file';
+	}
+}
+
+async function readPFEEntry(databaseUri) {
+	const [uri, imageNum='1'] = databaseUri.split('?');
+
+	let connection;
+
+	try {
+		connection = Adodb.open({
+			Database: uri.replace(/\//g, '\\\\')
+		});
+
+		const image = (await connection.query(`SELECT * FROM [Image] WHERE ImageNumber = ${parseInt(imageNum)}`))[0];
+
+		const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
+		const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
+		const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
+		const yLarge = image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin;
+
+		const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
+
+		await connection.close();
+
+		const xDiff = Math.abs(xLarge - xSmall);
+		const yDiff = Math.abs(yLarge - ySmall);
+
+		const points = initialPoints
+			.map(({Number, StageX, StageY, LineToRow}) => {
+				return {
+					name: Number,
+					analysis: LineToRow,
+					type: 'spot',
+					values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
+				}
+			});
+
+		return {image, points}
+	} catch(err) {
+		if (connection)
+			await connection.close();
+		throw 'Unable to open and read PFE mdb file';
+	}
+}
+
+async function readBIM(bimUri) {
+	let [uri, index='1'] = bimUri.split('?');
+	index = parseInt(index);
+
+	const data = Buffer.from(await fs.promises.readFile(uri.slice(0, uri.length - constants.pfe.fileFormats.ENTRY.length) + constants.pfe.fileFormats.IMAGE, {encoding: null}));
+	const maxLength = data.byteLength;
+	let offset = 0;
+	let fileIndex = 1;
+
+	while (offset < maxLength) {
+		const width = data.readUInt32LE(offset);
+		const height = data.readUInt32LE(offset + 4);
+		offset += 8;
+
+		if (fileIndex === index) {
+			let pixels = [];
+			let largest = 0;
+
+			for (let i = 0; i < width * height; i++) {
+				const value = data.readUInt8(offset + (i * 4) + 1);
+
+				if (value > largest)
+					largest = value;
+
+				pixels.push(value);
+			}
+
+			if (largest !== 255)
+				pixels = pixels.map(pixel => pixel / largest * 255);
+
+			return Buffer.from(pixels);
+		}
+		offset += width * height * 4;
+		fileIndex++;
+	}
+}
+
+function readJeolEntry(uri) {
+	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('$');
+
+	return rawData.filter(data => data).reduce((output, line) => {
+		const [prop, ...data] = line.trim().toLowerCase().split(' ');
+		output[prop] = data.length === 1 ? data[0] : data;
+
+		return output;
+	}, {});
+}
+
+function checkJeolExists(uri) {
+	return fs.accessSync(uri, fs.constants.R_OK);
+}
+
+function checkBIMExists(uri) {
+	return fs.accessSync(uri, fs.constants.R_OK);
+}
+
 module.exports = {
 	readMASFile,
-	readNSSEntry
+	readNSSEntry,
+	getPFEExpectedImages,
+	readPFEEntry,
+	readJeolEntry,
+	readBIM,
+	checkJeolExists,
+	checkBIMExists
 };

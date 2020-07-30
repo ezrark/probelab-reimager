@@ -1,11 +1,15 @@
 const fs = require('fs');
 
+// Require sharp, lest it crashes on windows
+// No fucking clue
+require('sharp');
 const Canvas = require('canvas');
 
 const constants = require('./constants.json');
 
 const ExtractedMap = require('./extractedmap.js');
 const PointShoot = require('./pointshoot.js');
+const JeolImage = require('./jeolimage.js');
 const CanvasRoot = require('./canvas/canvasroot.js');
 const NodeCanvas = require('./canvas/nodecanvasmodule.js');
 
@@ -629,33 +633,69 @@ else {
 		const nodeCanvas = new NodeCanvas(Canvas);
 		const canvas = new CanvasRoot(nodeCanvas);
 		canvas.init().then(async () => {
-			dirUri = dirUri.replace(/\\/gmi, '/');
-			if (!dirUri.endsWith('/'))
-				dirUri = dirUri + '/';
+			if (!dirUri.endsWith(constants.pfe.fileFormats.ENTRY)) {
+				dirUri = dirUri.replace(/\\/gmi, '/');
+				if (!dirUri.endsWith('/'))
+					dirUri = dirUri + '/';
 
-			const directory = fs.readdirSync(dirUri, {withFileTypes: true});
+				const directory = fs.readdirSync(dirUri, {withFileTypes: true});
 
-			const thermos = await Promise.all(directory.flatMap(dir => {
-				if (dir.isDirectory()) {
-					const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
-					let thermos = [];
-					return files.filter(file => file.isFile()).map(file => {
+				const thermos = await Promise.all(directory.flatMap(dir => {
+					if (dir.isDirectory()) {
+						const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
+						let thermos = [];
+						return files.filter(file => file.isFile()).map(file => {
+							try {
+								file.uri = dirUri + dir.name + '/' + file.name;
+								const name = file.name.toLowerCase();
+								if (name.endsWith(constants.extractedMap.fileFormats.LAYER))
+									thermos.map(thermo => thermo.addLayerFile(file.uri));
+
+								if (name.endsWith(constants.jeol.fileFormats.ENTRY)) {
+									const thermo = new JeolImage(file, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+
+								if (name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
+									const thermo = new PointShoot(file, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+
+								if (name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
+									const thermo = new ExtractedMap(file, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								}
+							} catch (err) {
+								if (err.code === 'ENOENT')
+									console.log(`Unable to initialize a thermo, unable to find '${err.path}'`);
+								else
+									console.warn(err);
+							}
+						}).filter(item => item);
+					} else {
+						dir.uri = dirUri + dir.name;
+						let thermos = [];
+
 						try {
-							file.uri = dirUri + dir.name + '/' + file.name;
-							const name = file.name.toLowerCase();
+							const name = dir.name.toLowerCase();
 							if (name.endsWith(constants.extractedMap.fileFormats.LAYER))
-								thermos.map(thermo => thermo.addLayerFile(file.uri));
+								thermos.map(thermo => thermo.addLayerFile(dir.uri));
 
-							if (name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
-								const thermo = new PointShoot(file, canvas);
+							if (name.endsWith(constants.pfe.fileFormats.ENTRY)) {
+								const thermo = new PFEImage(dir.uri + '?5', canvas);
 								thermos.push(thermo);
 								return thermo.init();
 							}
 
-							if (name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
-								const thermo = new ExtractedMap(file, canvas);
-								thermos.push(thermo);
-								return thermo.init();
+							if (name.endsWith(constants.jeol.fileFormats.ENTRY)) {
+								try {
+									const thermo = new JeolImage(dir, canvas);
+									thermos.push(thermo);
+									return thermo.init();
+								} catch(err) {}
 							}
 						} catch (err) {
 							if (err.code === 'ENOENT')
@@ -663,16 +703,18 @@ else {
 							else
 								console.warn(err);
 						}
-					}).filter(item => item);
-				}
-			}).filter(i => i));
 
-			try {
-				await writeThermos(thermos, options, points, layers);
-				console.log('All images written');
-				process.exit();
-			} catch (err) {
-				console.warn(err);
+						return thermos;
+					}
+				}).filter(i => i));
+
+				try {
+					await writeThermos(thermos, options, points, layers);
+					console.log('All images written');
+					process.exit();
+				} catch (err) {
+					console.warn(err);
+				}
 			}
 		});
 	}

@@ -4,5 +4,6 @@ module.exports = {
 	constants: require('./constants.json'),
 	calculations: require('./calculations.js'),
 	PointShoot: require('./pointshoot.js'),
-	ExtractedMap: require('./extractedmap.js')
+	ExtractedMap: require('./extractedmap.js'),
+	JeolImage: require('./jeolimage.js'),
 };
