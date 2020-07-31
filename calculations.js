@@ -43,6 +43,7 @@ function calculatePixelSize(magnification, width, pixelSizeConstant) {
 	return (pixelSizeConstant * Math.pow(magnification, -1)) * (1024 / width);
 }
 
+// Values: [pos-x, pos-y, max-x, max-y]
 function pointToXY(values, width, height) {
 	return [
 		Math.floor((values[0] / values[2]) * width),

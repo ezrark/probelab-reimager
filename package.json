@@ -1,6 +1,6 @@
 {
   "name": "thermo-reimager",
-  "version": "2020.203.0",
+  "version": "2020.211.1",
   "main": "module.js",
   "repository": {
     "type": "git",
@@ -10,13 +10,20 @@
     "thermo-reimager": "index.js"
   },
   "scripts": {
-    "test": "node index.js ./tests/data",
-    "test-speed": "node tests/speed.js"
+    "test": "node index.js test/data",
+    "test-speed": "node test/speed.js"
+  },
+  "devDependencies": {
+    "canvas": "^2.5.0",
+    "mocha": "^8.0.1"
   },
   "dependencies": {
     "sharp": "^0.25.4"
   },
   "optionalDependencies": {
+    "database-js-adodb": "^1.1.3"
+  },
+  "peerDependencies": {
     "canvas": "^2.5.0"
   }
 }
