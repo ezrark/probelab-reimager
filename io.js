@@ -1,4 +1,6 @@
 const fs = require('fs');
+
+const iconv = require("iconv-lite");
 let Adodb;
 
 try {
@@ -178,7 +180,7 @@ async function readBIM(bimUri) {
 }
 
 function readJeolEntry(uri) {
-	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('$');
+	let rawData = iconv.decode(fs.readFileSync(uri), 'win1251').split('$');
 
 	return rawData.filter(data => data).reduce((output, line) => {
 		const [prop, ...data] = line.trim().toLowerCase().split(' ');
