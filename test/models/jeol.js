@@ -146,7 +146,6 @@ describe('Initialize', () => {
 	});
 });
 
-
 describe('Async Initialize', async () => {
 	let canvas;
 
@@ -169,5 +168,119 @@ describe('Async Initialize', async () => {
 	it('should async initialize the correct base metadata for a txt entry file with a .bmp', () => {
 		const jeol = new JeolImage({name: '4.txt', uri: './test/data/jeol-images/4.txt'}, canvas);
 		assert.doesNotThrow(jeol.init.bind(jeol));
+	});
+});
+
+describe('Thermo Functions', () => {
+	let jeolTif;
+	let jeolJpg;
+	let jeolBmp;
+
+	before(async () => {
+		const nodeCanvas = new NodeCanvas(Canvas);
+		const canvas = new CanvasRoot(nodeCanvas);
+		await canvas.init();
+		jeolTif = new JeolImage({name: '2.txt', uri: './test/data/jeol-images/2.txt'}, canvas);
+		jeolJpg = new JeolImage({name: '5.txt', uri: './test/data/jeol-images/5.txt'}, canvas);
+		jeolBmp = new JeolImage({name: '4.txt', uri: './test/data/jeol-images/4.txt'}, canvas);
+		await jeolTif.init();
+		await jeolJpg.init();
+		await jeolBmp.init();
+	});
+
+	it('should correctly serialize', () => {
+		assert.deepStrictEqual(jeolTif.serialize(), {
+			"entryFile": "./test/data/jeol-images/2.txt",
+			"image": {
+				"height": 1920,
+				"width": 2560
+			},
+			"integrity": true,
+			"jeolFile": true,
+			"layers": {
+				"base": {
+					"element": "base",
+					"file": "./test/data/jeol-images/2.tif"
+				},
+				"solid": {
+					"element": "solid",
+					"file": ""
+				}
+			},
+			"magnification": 370,
+			"name": "2",
+			"output": {
+				"height": 2048,
+				"width": 2560
+			},
+			"points": {},
+			"uri": "./test/data/jeol-images/",
+			"uuid": jeolTif.data.uuid
+		});
+		assert.deepStrictEqual(jeolJpg.serialize(), {
+			"entryFile": "./test/data/jeol-images/5.txt",
+			"image": {
+				"height": 960,
+				"width": 1280
+			},
+			"integrity": true,
+			"jeolFile": true,
+			"layers": {
+				"base": {
+					"element": "base",
+					"file": "./test/data/jeol-images/5.jpg"
+				},
+				"solid": {
+					"element": "solid",
+					"file": ""
+				}
+			},
+			"magnification": 95,
+			"name": "5",
+			"output": {
+				"height": 1024,
+				"width": 1280
+			},
+			"points": {},
+			"uri": "./test/data/jeol-images/",
+			"uuid": jeolJpg.data.uuid
+		});
+		assert.deepStrictEqual(jeolBmp.serialize(), {
+			"entryFile": "./test/data/jeol-images/4.txt",
+			"image": {
+				"height": 960,
+				"width": 1280
+			},
+			"integrity": true,
+			"jeolFile": true,
+			"layers": {
+				"base": {
+					"element": "base",
+					"file": "./test/data/jeol-images/4.bmp"
+				},
+				"solid": {
+					"element": "solid",
+					"file": ""
+				}
+			},
+			"magnification": 1800,
+			"name": "4",
+			"output": {
+				"height": 1024,
+				"width": 1280
+			},
+			"points": {},
+			"uri": "./test/data/jeol-images/",
+			"uuid": jeolBmp.data.uuid
+		});
+	});
+
+	it('should correctly clone', () => {
+		let clone = jeolTif.clone(jeolTif.data.uuid);
+		assert.deepStrictEqual(jeolTif.serialize(), clone.serialize());
+		clone = jeolJpg.clone(jeolJpg.data.uuid);
+		assert.deepStrictEqual(jeolJpg.serialize(), clone.serialize());
+		clone = jeolBmp.clone(jeolBmp.data.uuid);
+		assert.deepStrictEqual(jeolBmp.serialize(), clone.serialize());
 	});
 });

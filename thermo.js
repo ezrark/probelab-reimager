@@ -691,8 +691,8 @@ module.exports = class Thermo {
 		};
 	}
 
-	clone() {
-		return new Thermo(this.data.files.entry, this.data.name, this.data.Canvas, undefined, undefined, this);
+	clone(uuid=undefined) {
+		return new Thermo({uri: this.data.files.entry}, this.data.name, this.data.Canvas, undefined, uuid, this);
 	}
 };
 

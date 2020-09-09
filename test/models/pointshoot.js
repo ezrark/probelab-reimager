@@ -1,7 +1,10 @@
 const assert = require('assert');
-const {describe, it} = require('mocha');
+const {describe, it, before} = require('mocha');
 
-//const Canvas = require('../../canvas/canvas.js');
+require('sharp');
+const Canvas = require('canvas');
+const CanvasRoot = require('../../canvas/canvasroot.js');
+const NodeCanvas = require('../../canvas/nodecanvasmodule.js');
 const PointShoot = require('../../pointshoot.js');
 
 describe('Initialize', () => {
@@ -465,5 +468,71 @@ describe('Initialize', () => {
 			},
 			'outputFormat': '.tif'
 		});
+	});
+});
+
+describe('Thermo Functions', () => {
+	let pointShoot;
+
+	before(async () => {
+		const nodeCanvas = new NodeCanvas(Canvas);
+		const canvas = new CanvasRoot(nodeCanvas);
+		await canvas.init();
+		pointShoot = new PointShoot({name: '64.p_s', uri: './test/data/64.PS.EDS/64.p_s'}, canvas);
+		await pointShoot.init();
+	});
+
+	it('should correctly serialize', () => {
+		assert.deepStrictEqual(pointShoot.serialize(), {
+			"entryFile": "./test/data/64.PS.EDS/64.p_s",
+			"image": {
+				"height": 48,
+				"width": 64
+			},
+			"integrity": true,
+			"jeolFile": false,
+			"layers": {
+				"base": {
+					"element": "base",
+					"file": "./test/data/64.PS.EDS/64.psref"
+				},
+				"solid": {
+					"element": "solid",
+					"file": ""
+				}
+			},
+			"magnification": 40,
+			"name": "64",
+			"output": {
+				"height": 48,
+				"width": 64
+			},
+			"points": {
+				"1": {
+					"file": "64_pt1.psmsa",
+					"name": "1",
+					"pos": [
+						34,
+						21
+					],
+					"type": "spot",
+					"values": [
+						394,
+						241,
+						731,
+						547
+					],
+					"x": 34,
+					"y": 21
+				}
+			},
+			"uri": "./test/data/64.PS.EDS/",
+			"uuid": pointShoot.data.uuid
+		});
+	});
+
+	it('should correctly clone', () => {
+		let clone = pointShoot.clone(pointShoot.data.uuid);
+		assert.deepStrictEqual(pointShoot.serialize(), clone.serialize());
 	});
 });
