@@ -256,3 +256,19 @@ describe('#checkJeolExists', () => {
 		assert.doesNotThrow(io.checkJeolExists.bind(undefined, 'test/data/jeol-images/4.bmp'));
 	});
 });
+
+describe('#readBmp', () => {
+	it('should throw when file is not found', () => {
+		assert.throws(io.readBmp.bind(undefined, 'test/data/jeol-images/1'));
+	});
+
+	it('should throw when file is not found', () => {
+		const {pixels, height, width} = io.readBmp('test/data/jeol-images/4.bmp');
+
+		assert.deepStrictEqual(width, 1280);
+		assert.deepStrictEqual(height, 1024);
+
+		for (const pixel of Array.from(pixels))
+			assert.match('' + pixel, /0|1|255/);
+	});
+});
