@@ -115,7 +115,21 @@ module.exports = class Thermo {
 							metadata: {}
 						};
 				else {
-					const image = sharp(file);
+					let image;
+
+					if (file.endsWith('.bmp')) {
+						const {pixels, height, width} = io.readBmp(file);
+						image = sharp(pixels, {
+							raw: {
+								width,
+								height,
+								channels: 1
+							}
+						});
+					} else {
+						image = sharp(file);
+					}
+
 					this.data.layers['base'] = {
 						element,
 						file,
