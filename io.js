@@ -219,6 +219,11 @@ function readBmp(uri) {
 	const planes = data.getInt16(26, true);
 	const colorDepth = data.getInt16(28, true);
 	const compressionMethod = data.getInt32(30, true);
+//	const imageSize = data.getInt32(34, true);
+//	const horizontalRes = data.getInt32(38, true);
+//	const verticalRes = data.getInt32(42, true);
+//	const colorPallet = data.getInt32(46, true);
+//	const importantColors = data.getInt32(50, true);
 
 	if (planes !== 1 || colorDepth !== 8)
 		throw new Error('Unsupported bmp format');
@@ -226,9 +231,20 @@ function readBmp(uri) {
 	if (compressionMethod !== 0)
 		throw new Error('Unsupported compression method');
 
+//	const mask = data.buffer.slice(54, offset);
+
 	let pixels = [];
-	for (let i = 0; i < width * height; i++)
-		pixels.push(data.getInt8(offset + i));
+	let w = 0;
+	let h = height;
+	for (let i = 0; i < width * height; i++, w++) {
+		if (i % width - 1 === 0) {
+			h--;
+			w = 0;
+		}
+
+		const pixelOffset = w + (h * width - 1);
+		pixels[pixelOffset] = data.getInt8(offset + i);
+	}
 
 	return {
 		pixels: Buffer.from(pixels),
