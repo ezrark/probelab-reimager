@@ -5,6 +5,7 @@ const {describe, it} = require('mocha');
 
 require('./io/test.js');
 require('./models/test.js');
+require('./sanitize/test.js');
 
 describe('Calculations', () => {
 	const calc = require('../calculations.js');
