@@ -15,7 +15,7 @@ module.exports = class Thermo {
 			uuid: uuid ? uuid : GenerateUuid.v4(),
 			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 			name,
-			scale: {},
+			scale: undefined,
 			metaConstants: {},
 			canvas: undefined,
 			ctx: undefined,
@@ -432,7 +432,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async toUrl(settings) {
+	async toUrl(settings = {}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		if (settings.png.use)
 			return 'data:png;base64,' + (await (await this.toSharp()).png(settings.png).toBuffer()).toString('base64');
@@ -445,8 +445,8 @@ module.exports = class Thermo {
 	}
 
 	async toSharp() {
-		const width = this.data.scale ? this.data.scale.realWidth : this.data.meta.width;
-		const height = this.data.scale ? this.data.scale.realHeight : this.data.meta.height;
+		const width = this.data.scale ? this.data.scale.realWidth : this.data.metadata.width;
+		const height = this.data.scale ? this.data.scale.realHeight : this.data.metadata.height;
 
 		const {type, data} = await this.data.ctx.getImageData(0, 0, width, height);
 		switch (type) {
