@@ -652,14 +652,14 @@ module.exports = class Thermo {
 	internalSerialize(serial = {}) {
 		if (serial.scale) {
 			if (serial.scale.realWidth === undefined)
-				serial.scale.realWidth = this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width;
+				serial.scale.realWidth = this.data.scale && this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width;
 
 			if (serial.scale.realHeight === undefined)
-				serial.scale.realHeight = this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height;
+				serial.scale.realHeight = this.data.scale && this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height;
 		} else
 			serial.scale = {
-				realWidth: this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
-				realHeight: this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
+				realWidth: this.data.scale && this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
+				realHeight: this.data.scale && this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
 			};
 
 		return {
