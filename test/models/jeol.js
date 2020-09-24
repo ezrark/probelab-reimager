@@ -24,7 +24,7 @@ describe('Initialize', () => {
 			'uuid': jeol.data.uuid,
 			'uri': './test/data/jeol-images/',
 			'name': '1',
-			'scale': {},
+			'scale': undefined,
 			'scratchCanvas': undefined,
 			'scratchCtx': undefined,
 			'canvas': undefined,
@@ -67,7 +67,7 @@ describe('Initialize', () => {
 			'uuid': jeol.data.uuid,
 			'uri': './test/data/jeol-images/',
 			'name': '5',
-			'scale': {},
+			'scale': undefined,
 			'scratchCanvas': undefined,
 			'scratchCtx': undefined,
 			'canvas': undefined,
@@ -110,7 +110,7 @@ describe('Initialize', () => {
 			'uuid': jeol.data.uuid,
 			'uri': './test/data/jeol-images/',
 			'name': '4',
-			'scale': {},
+			'scale': undefined,
 			'scratchCanvas': undefined,
 			'scratchCtx': undefined,
 			'canvas': undefined,
@@ -175,6 +175,7 @@ describe('Thermo Functions', () => {
 	let jeolTif;
 	let jeolJpg;
 	let jeolBmp;
+	let jeolBroken;
 
 	before(async () => {
 		const nodeCanvas = new NodeCanvas(Canvas);
@@ -183,9 +184,11 @@ describe('Thermo Functions', () => {
 		jeolTif = new JeolImage({name: '2.txt', uri: './test/data/jeol-images/2.txt'}, canvas);
 		jeolJpg = new JeolImage({name: '5.txt', uri: './test/data/jeol-images/5.txt'}, canvas);
 		jeolBmp = new JeolImage({name: '4.txt', uri: './test/data/jeol-images/4.txt'}, canvas);
+		jeolBroken = new JeolImage({name: 'Standard_BSE_640-800.txt', uri: './test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt'}, canvas);
 		await jeolTif.init();
 		await jeolJpg.init();
 		await jeolBmp.init();
+		await jeolBroken.init();
 	});
 
 	it('should correctly serialize', () => {
@@ -273,6 +276,34 @@ describe('Thermo Functions', () => {
 			"uri": "./test/data/jeol-images/",
 			"uuid": jeolBmp.data.uuid
 		});
+		assert.deepStrictEqual(jeolBroken.serialize(), {
+			"entryFile": "./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt",
+			"image": {
+				"height": 480,
+				"width": 640
+			},
+			"integrity": true,
+			"jeolFile": true,
+			"layers": {
+				"base": {
+					"element": "base",
+					"file": "./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.bmp"
+				},
+				"solid": {
+					"element": "solid",
+					"file": ""
+				}
+			},
+			"magnification": 43,
+			"name": "Standard_BSE_640-800",
+			"output": {
+				"height": 512,
+				"width": 640
+			},
+			"points": {},
+			"uri": "./test/data/2020-09-16_JEOL bmp/",
+			"uuid": jeolBroken.data.uuid
+		});
 	});
 
 	it('should correctly clone', () => {
@@ -282,5 +313,7 @@ describe('Thermo Functions', () => {
 		assert.deepStrictEqual(jeolJpg.serialize(), clone.serialize());
 		clone = jeolBmp.clone(jeolBmp.data.uuid);
 		assert.deepStrictEqual(jeolBmp.serialize(), clone.serialize());
+		clone = jeolBroken.clone(jeolBroken.data.uuid);
+		assert.deepStrictEqual(jeolBroken.serialize(), clone.serialize());
 	});
 });

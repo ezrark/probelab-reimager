@@ -43,7 +43,7 @@ module.exports = class Thermo {
 			this.staticInit();
 			this.updateFromDisk();
 		} else {
-			this.data.scale = JSON.parse(JSON.stringify(previous.data.scale));
+			this.data.scale = previous.data.scale ? JSON.parse(JSON.stringify(previous.data.scale)) : undefined;
 			this.data.metaConstants = JSON.parse(JSON.stringify(previous.data.metaConstants));
 			this.data.integrity = previous.data.integrity;
 			this.data.magnification = previous.data.magnification;

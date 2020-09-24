@@ -20,7 +20,7 @@ describe('Initialize', () => {
 			'uuid': ps.data.uuid,
 			'uri': './test/data/64.PS.EDS/',
 			'name': '64',
-			'scale': {},
+			'scale': undefined,
 			'scratchCanvas': undefined,
 			'scratchCtx': undefined,
 			'canvas': undefined,
