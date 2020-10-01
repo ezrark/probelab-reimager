@@ -9,7 +9,6 @@ const constants = require('./constants.json');
 
 const ExtractedMap = require('./extractedmap.js');
 const PointShoot = require('./pointshoot.js');
-const PFEImage = require('./pfeimage.js');
 const JeolImage = require('./jeolimage.js');
 const CanvasRoot = require('./canvas/canvasroot.js');
 const NodeCanvas = require('./canvas/nodecanvasmodule.js');
@@ -652,12 +651,6 @@ else {
 								if (name.endsWith(constants.extractedMap.fileFormats.LAYER))
 									thermos.map(thermo => thermo.addLayerFile(file.uri));
 
-								if (name.endsWith(constants.pfe.fileFormats.ENTRY)) {
-									const thermo = new PFEImage(file.uri + '?5', canvas);
-									thermos.push(thermo);
-									return thermo.init();
-								}
-
 								if (name.endsWith(constants.jeol.fileFormats.ENTRY)) {
 									const thermo = new JeolImage(file, canvas);
 									thermos.push(thermo);
@@ -717,17 +710,6 @@ else {
 
 				try {
 					await writeThermos(thermos, options, points, layers);
-					console.log('All images written');
-					process.exit();
-				} catch (err) {
-					console.warn(err);
-				}
-			} else {
-				const thermo = new PFEImage(dirUri + '?5', canvas);
-				await thermo.init();
-
-				try {
-					await writeThermos([thermo], options, points, layers);
 					console.log('All images written');
 					process.exit();
 				} catch (err) {
