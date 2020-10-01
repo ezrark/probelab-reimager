@@ -1,6 +1,6 @@
 {
   "name": "thermo-reimager",
-  "version": "2020.250.0",
+  "version": "2020.275.0",
   "main": "module.js",
   "repository": {
     "type": "git",
