@@ -1,0 +1,136 @@
+5
+MonzogabbroExample.si
+MonzogabbroExample.siref
+MonzogabbroExample Grey.sitif
+0
+
+
+
+10
+MonzogabbroExample CP1.pcsa
+MonzogabbroExample CP1.pcma
+3,C 1 Segment 1,23,513,8.595785,255,C 1 Segment 2,513,921,30.621338,65280,C 1 Segment 3,921,1000,0.555420,16711680
+MonzogabbroExample CP2.pcsa
+MonzogabbroExample CP2.pcma
+1,C 2 Segment 1,35,1000,19.191488,255
+MonzogabbroExample CP3.pcsa
+MonzogabbroExample CP3.pcma
+4,C 3 Segment 1,19,262,9.234619,255,C 3 Segment 2,262,462,4.752604,65280,C 3 Segment 3,462,749,6.349691,16711680,C 3 Segment 4,749,1000,5.299886,65535
+MonzogabbroExample CP4.pcsa
+MonzogabbroExample CP4.pcma
+4,C 4 Segment 1,43,490,3.371175,255,C 4 Segment 2,490,733,0.490316,65280,C 4 Segment 3,733,917,0.718180,16711680,C 4 Segment 4,917,1000,0.026449,65535
+MonzogabbroExample CP5.pcsa
+MonzogabbroExample CP5.pcma
+2,C 5 Segment 1,15,792,25.366211,255,C 5 Segment 2,792,1000,8.229574,65280
+MonzogabbroExample CP6.pcsa
+MonzogabbroExample CP6.pcma
+3,C 6 Segment 1,86,619,8.044434,255,C 6 Segment 2,619,866,1.049805,65280,C 6 Segment 3,866,1000,1.556396,16711680
+MonzogabbroExample CP7.pcsa
+MonzogabbroExample CP7.pcma
+4,C 7 Segment 1,19,352,17.112223,255,C 7 Segment 2,352,560,1.881917,65280,C 7 Segment 3,560,792,1.772054,16711680,C 7 Segment 4,792,1000,1.326497,65535
+MonzogabbroExample CP8.pcsa
+MonzogabbroExample CP8.pcma
+1,C 8 Segment 1,921,1000,0.002035,255
+MonzogabbroExample CP9.pcsa
+MonzogabbroExample CP9.pcma
+7,C 9 Segment 1,27,235,7.403564,255,C 9 Segment 2,235,329,2.036540,65280,C 9 Segment 3,329,431,2.345785,16711680,C 9 Segment 4,431,588,3.845215,65535,C 9 Segment 5,588,733,4.465739,16711935,C 9 Segment 6,733,835,2.689616,16776960,C 9 Segment 7,835,1000,1.017253,255
+MonzogabbroExample CP10.pcsa
+MonzogabbroExample CP10.pcma
+8,C 10 Segment 1,23,203,10.992432,255,C 10 Segment 2,203,407,0.974528,65280,C 10 Segment 3,407,521,0.095622,16711680,C 10 Segment 4,521,635,0.067139,65535,C 10 Segment 5,635,760,0.054932,16711935,C 10 Segment 6,760,862,0.026449,16776960,C 10 Segment 7,862,945,0.014242,255,C 10 Segment 8,945,1000,0.014242,65280
+8
+MonzogabbroExample K-feldspar.fzsa
+MonzogabbroExample K-feldspar.fzma
+0,5,K-feldspar,32.336426,Custom,1,C 1
+MonzogabbroExample Apatite.fzsa
+MonzogabbroExample Apatite.fzma
+0,5,Apatite,14.914958,Custom,1,C 2
+MonzogabbroExample Pyroxene.fzsa
+MonzogabbroExample Pyroxene.fzma
+0,5,Pyroxene,27.077230,Custom,3,C 3,C 10,C 9
+MonzogabbroExample Zirconolite.fzsa
+MonzogabbroExample Zirconolite.fzma
+0,5,Zirconolite,1.418050,Custom,1,C 4
+MonzogabbroExample Plagioclase.fzsa
+MonzogabbroExample Plagioclase.fzma
+0,5,Plagioclase,16.265869,Custom,1,C 5
+MonzogabbroExample Silica.fzsa
+MonzogabbroExample Silica.fzma
+0,5,Silica,2.884928,Custom,1,C 6
+MonzogabbroExample Amphibole.fzsa
+MonzogabbroExample Amphibole.fzma
+0,5,Amphibole,4.927572,Custom,1,C 7
+MonzogabbroExample Zirconia.fzsa
+MonzogabbroExample Zirconia.fzma
+0,5,Zirconia,0.174967,Custom,1,C 8
+24
+0
+MonzogabbroExample_Grey_map.em
+
+MonzogabbroExample_O_K_map.em
+
+MonzogabbroExample_F_K_map.em
+
+MonzogabbroExample_Na_K_map.em
+
+MonzogabbroExample_Mg_K_map.em
+
+MonzogabbroExample_Al_K_map.em
+
+MonzogabbroExample_Si_K_map.em
+
+MonzogabbroExample_P_K_map.em
+
+MonzogabbroExample_Cl_K_map.em
+
+MonzogabbroExample_K_K_map.em
+
+MonzogabbroExample_Ca_K_map.em
+
+MonzogabbroExample_Sc_K_map.em
+
+MonzogabbroExample_Ti_K_map.em
+
+MonzogabbroExample_V_K_map.em
+
+MonzogabbroExample_Cr_K_map.em
+
+MonzogabbroExample_Mn_K_map.em
+
+MonzogabbroExample_Fe_K_map.em
+
+MonzogabbroExample_Co_K_map.em
+
+MonzogabbroExample_Ni_K_map.em
+
+MonzogabbroExample_Cu_K_map.em
+
+MonzogabbroExample_Zn_K_map.em
+
+MonzogabbroExample_Ga_K_map.em
+
+MonzogabbroExample_Ge_K_map.em
+
+MonzogabbroExample_Zr_L_map.em
+
+7
+MonzogabbroExample Phase1.fzse
+MonzogabbroExample Phase1.fzme
+1,0,Phase1,3.175863,Custom,1,O K
+MonzogabbroExample Phase2.fzse
+MonzogabbroExample Phase2.fzme
+1,0,Phase2,0.020345,Custom,1,Al K
+MonzogabbroExample Phase3.fzse
+MonzogabbroExample Phase3.fzme
+1,0,Phase3,80.686442,Custom,1,Si K
+MonzogabbroExample Phase4.fzse
+MonzogabbroExample Phase4.fzme
+1,0,Phase4,2.026367,Custom,1,P K
+MonzogabbroExample Phase5.fzse
+MonzogabbroExample Phase5.fzme
+1,0,Phase5,12.935384,Custom,1,Ca K
+MonzogabbroExample Phase6.fzse
+MonzogabbroExample Phase6.fzme
+1,0,Phase6,0.002035,Custom,1,Ti K
+MonzogabbroExample Phase7.fzse
+MonzogabbroExample Phase7.fzme
+1,0,Phase7,1.153564,Custom64,Custom
