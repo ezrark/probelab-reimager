@@ -199,7 +199,7 @@ async function calculateConstants(meta, scratchCtx, font) {
 
 	const metaConstants = {
 		width: meta.width,
-		height: meta.cutoffHeight ? meta.cutoffHeight : meta.height,
+		height: meta.cutoffHeight ? (meta.cutoffHeight < meta.height ? meta.cutoffHeight : meta.height * 0.9375) : meta.height,
 		maxWidth: meta.width,
 		maxHeight: meta.height,
 		fullHeight: meta.height,

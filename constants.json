@@ -182,7 +182,7 @@
   "jeol": {
     "fileFormats": {
       "ENTRY": ".txt",
-      "IMAGE": ".tif",
+      "IMAGES": [".tif", ".jpg", ".bmp"],
       "OUTPUTIMAGE": ".png"
     }
   }

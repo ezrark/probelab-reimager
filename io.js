@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const iconv = require("iconv-lite");
+const iconv = require('iconv-lite');
 let Adodb;
 
 try {
@@ -49,7 +49,7 @@ function readNSSEntry(uri) {
 
 	for (const line of rawData.shift())
 		if (line.length > 1 && line.includes('.'))
-			switch (line.split('.')[1].toLowerCase()) {
+			switch(line.split('.')[1].toLowerCase()) {
 				case 'psref':
 				case 'siref':
 					output.data.base = line;
@@ -95,13 +95,13 @@ async function getPFEExpectedImages(databaseUri) {
 
 		return images.length;
 
-	} catch(err) {
+	} catch (err) {
 		throw 'Unable to open and read PFE mdb file';
 	}
 }
 
 async function readPFEEntry(databaseUri) {
-	const [uri, imageNum='1'] = databaseUri.split('?');
+	const [uri, imageNum = '1'] = databaseUri.split('?');
 
 	let connection;
 
@@ -125,17 +125,17 @@ async function readPFEEntry(databaseUri) {
 		const yDiff = Math.abs(yLarge - ySmall);
 
 		const points = initialPoints
-			.map(({Number, StageX, StageY, LineToRow}) => {
-				return {
-					name: Number,
-					analysis: LineToRow,
-					type: 'spot',
-					values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
-				}
-			});
+		.map(({Number, StageX, StageY, LineToRow}) => {
+			return {
+				name: Number,
+				analysis: LineToRow,
+				type: 'spot',
+				values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
+			};
+		});
 
-		return {image, points}
-	} catch(err) {
+		return {image, points};
+	} catch (err) {
 		if (connection)
 			await connection.close();
 		throw 'Unable to open and read PFE mdb file';
@@ -143,7 +143,7 @@ async function readPFEEntry(databaseUri) {
 }
 
 async function readBIM(bimUri) {
-	let [uri, index='1'] = bimUri.split('?');
+	let [uri, index = '1'] = bimUri.split('?');
 	index = parseInt(index);
 
 	const data = Buffer.from(await fs.promises.readFile(uri.slice(0, uri.length - constants.pfe.fileFormats.ENTRY.length) + constants.pfe.fileFormats.IMAGE, {encoding: null}));
@@ -198,7 +198,63 @@ function checkBIMExists(uri) {
 	return fs.accessSync(uri, fs.constants.R_OK);
 }
 
+// nothing exists to do this apparently
+function readBmp(uri) {
+	const raw = fs.readFileSync(uri);
+
+	if (raw[0] !== 66 || raw[1] !== 77)
+		throw new Error('Unsupported bmp format');
+
+	const data = new DataView(raw.buffer);
+
+//	const fileSize = data.getInt32(2, true);
+	const offset = data.getInt16(10, true);
+	const format = data.getInt32(14, true);
+
+	if (format !== 40)
+		throw new Error('Unsupported bmp format');
+
+	const width = data.getInt32(18, true);
+	const height = data.getInt32(22, true);
+	const planes = data.getInt16(26, true);
+	const colorDepth = data.getInt16(28, true);
+	const compressionMethod = data.getInt32(30, true);
+//	const imageSize = data.getInt32(34, true);
+//	const horizontalRes = data.getInt32(38, true);
+//	const verticalRes = data.getInt32(42, true);
+//	const colorPallet = data.getInt32(46, true);
+//	const importantColors = data.getInt32(50, true);
+
+	if (planes !== 1 || colorDepth !== 8)
+		throw new Error('Unsupported bmp format');
+
+	if (compressionMethod !== 0)
+		throw new Error('Unsupported compression method');
+
+//	const mask = data.buffer.slice(54, offset);
+
+	let pixels = [];
+	let w = 0;
+	let h = height;
+	for (let i = 0; i < width * height; i++, w++) {
+		if (i % width - 1 === 0) {
+			h--;
+			w = 0;
+		}
+
+		const pixelOffset = w + (h * width - 1);
+		pixels[pixelOffset] = data.getInt8(offset + i);
+	}
+
+	return {
+		pixels: Buffer.from(pixels),
+		height,
+		width
+	};
+}
+
 module.exports = {
+	readBmp,
 	readMASFile,
 	readNSSEntry,
 	getPFEExpectedImages,

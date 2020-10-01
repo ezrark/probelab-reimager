@@ -225,14 +225,50 @@ describe('#readJeolEntry', () => {
 			}
 		);
 	});
+
+	it('should read a .txt file with a .jpg', () => {
+		assert.doesNotThrow(io.readJeolEntry.bind(undefined, 'test/data/jeol-images/5.txt'));
+	});
+
+	it('should read a .txt file with a .bmp', () => {
+		assert.doesNotThrow(io.readJeolEntry.bind(undefined, 'test/data/jeol-images/4.txt'));
+	});
+
+	it('should throw when .txt file is not found', () => {
+		assert.throws(io.readJeolEntry.bind(undefined, 'test/data/jeol-images/4'));
+	});
 });
 
 describe('#checkJeolExists', () => {
+	it('should throw when file is not found', () => {
+		assert.throws(io.checkJeolExists.bind(undefined, 'test/data/jeol-images/1'));
+	});
+
 	it('should find a .tif file', () => {
 		assert.doesNotThrow(io.checkJeolExists.bind(undefined, 'test/data/jeol-images/1.tif'));
 	});
 
+	it('should find a .jpg file', () => {
+		assert.doesNotThrow(io.checkJeolExists.bind(undefined, 'test/data/jeol-images/5.jpg'));
+	});
+
+	it('should find a .bmp file', () => {
+		assert.doesNotThrow(io.checkJeolExists.bind(undefined, 'test/data/jeol-images/4.bmp'));
+	});
+});
+
+describe('#readBmp', () => {
 	it('should throw when file is not found', () => {
-		assert.throws(io.checkJeolExists.bind(undefined, 'test/data/jeol-images/1'));
+		assert.throws(io.readBmp.bind(undefined, 'test/data/jeol-images/1'));
+	});
+
+	it('should throw when file is not found', () => {
+		const {pixels, height, width} = io.readBmp('test/data/jeol-images/4.bmp');
+
+		assert.deepStrictEqual(width, 1280);
+		assert.deepStrictEqual(height, 1024);
+
+		for (const pixel of Array.from(pixels))
+			assert.match('' + pixel, /0|1|255/);
 	});
 });

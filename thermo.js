@@ -15,7 +15,7 @@ module.exports = class Thermo {
 			uuid: uuid ? uuid : GenerateUuid.v4(),
 			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
 			name,
-			scale: {},
+			scale: undefined,
 			metaConstants: {},
 			canvas: undefined,
 			ctx: undefined,
@@ -43,7 +43,7 @@ module.exports = class Thermo {
 			this.staticInit();
 			this.updateFromDisk();
 		} else {
-			this.data.scale = JSON.parse(JSON.stringify(previous.data.scale));
+			this.data.scale = previous.data.scale ? JSON.parse(JSON.stringify(previous.data.scale)) : undefined;
 			this.data.metaConstants = JSON.parse(JSON.stringify(previous.data.metaConstants));
 			this.data.integrity = previous.data.integrity;
 			this.data.magnification = previous.data.magnification;
@@ -115,7 +115,21 @@ module.exports = class Thermo {
 							metadata: {}
 						};
 				else {
-					const image = sharp(file);
+					let image;
+
+					if (file.endsWith('.bmp')) {
+						const {pixels, height, width} = io.readBmp(file);
+						image = sharp(pixels, {
+							raw: {
+								width,
+								height,
+								channels: 1
+							}
+						});
+					} else {
+						image = sharp(file);
+					}
+
 					this.data.layers['base'] = {
 						element,
 						file,
@@ -418,7 +432,7 @@ module.exports = class Thermo {
 		return this;
 	}
 
-	async toUrl(settings) {
+	async toUrl(settings = {}) {
 		settings = Sanitize.writeSettings(JSON.parse(JSON.stringify(settings)));
 		if (settings.png.use)
 			return 'data:png;base64,' + (await (await this.toSharp()).png(settings.png).toBuffer()).toString('base64');
@@ -431,8 +445,8 @@ module.exports = class Thermo {
 	}
 
 	async toSharp() {
-		const width = this.data.scale ? this.data.scale.realWidth : this.data.meta.width;
-		const height = this.data.scale ? this.data.scale.realHeight : this.data.meta.height;
+		const width = this.data.scale ? this.data.scale.realWidth : this.data.metadata.width;
+		const height = this.data.scale ? this.data.scale.realHeight : this.data.metadata.height;
 
 		const {type, data} = await this.data.ctx.getImageData(0, 0, width, height);
 		switch (type) {
@@ -638,14 +652,14 @@ module.exports = class Thermo {
 	internalSerialize(serial = {}) {
 		if (serial.scale) {
 			if (serial.scale.realWidth === undefined)
-				serial.scale.realWidth = this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width;
+				serial.scale.realWidth = this.data.scale && this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width;
 
 			if (serial.scale.realHeight === undefined)
-				serial.scale.realHeight = this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height;
+				serial.scale.realHeight = this.data.scale && this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height;
 		} else
 			serial.scale = {
-				realWidth: this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
-				realHeight: this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
+				realWidth: this.data.scale && this.data.scale.realWidth ? this.data.scale.realWidth : this.data.metadata.width,
+				realHeight: this.data.scale && this.data.scale.realHeight ? this.data.scale.realHeight : this.data.metadata.height
 			};
 
 		return {
@@ -677,8 +691,8 @@ module.exports = class Thermo {
 		};
 	}
 
-	clone() {
-		return new Thermo(this.data.files.entry, this.data.name, this.data.Canvas, undefined, undefined, this);
+	clone(uuid=undefined) {
+		return new Thermo({uri: this.data.files.entry}, this.data.name, this.data.Canvas, undefined, uuid, this);
 	}
 };
 
