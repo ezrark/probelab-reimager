@@ -10,7 +10,7 @@
     "thermo-reimager": "index.js"
   },
   "scripts": {
-    "test": "node index.js test/data",
+    "test": "node ./node_modules/mocha/bin/mocha test/test.js",
     "test-speed": "node test/speed.js"
   },
   "devDependencies": {
