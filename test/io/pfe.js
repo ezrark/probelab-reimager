@@ -21,7 +21,7 @@ describe('#readBIM', () => {
 				'19e4aa83510aa3387a46369d7cdf0bc9ed49d32be9757c274d1d8f143cc09c2b'
 			);
 		else
-			await assert.rejects(await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM'));
+			await assert.rejects(readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM'));
 	});
 
 	it('should read an arbitrary index', async () => {
@@ -31,7 +31,7 @@ describe('#readBIM', () => {
 				'cd7e733ff72952862df87a6d915746bc6b96c3982f2cee47265e5ca61d75afb7'
 			);
 		else
-			await assert.rejects(await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 3));
+			await assert.rejects(readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 3));
 	});
 
 	it('should return undefined if an index is out of range', async () => {
@@ -41,7 +41,7 @@ describe('#readBIM', () => {
 				undefined
 			);
 		else
-			await assert.rejects(await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 10));
+			await assert.rejects(readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 10));
 	});
 });
 
