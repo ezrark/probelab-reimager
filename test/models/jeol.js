@@ -74,7 +74,7 @@ describe('Initialize', () => {
 			'ctx': undefined,
 			'metaConstants': {},
 			'integrity': true,
-			'magnification': 95,
+			'magnification': 100,
 			'points': {},
 			'layers': {},
 			'files': {
@@ -238,7 +238,7 @@ describe('Thermo Functions', () => {
 					"file": ""
 				}
 			},
-			"magnification": 95,
+			"magnification": 100,
 			"name": "5",
 			"output": {
 				"height": 1024,

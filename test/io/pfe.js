@@ -16,21 +16,21 @@ async function readBim(uri, index) {
 describe('#readBIM', () => {
 	it('should read first index by default', async () => {
 		assert.deepStrictEqual(
-			await readBim('test/data/pfe-mdb/2019-08-12_Nolen.BIM'),
+			await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM'),
 			'19e4aa83510aa3387a46369d7cdf0bc9ed49d32be9757c274d1d8f143cc09c2b'
 		);
 	});
 
 	it('should read an arbitrary index', async () => {
 		assert.deepStrictEqual(
-			await readBim('test/data/pfe-mdb/2019-08-12_Nolen.BIM', 3),
+			await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 3),
 			'cd7e733ff72952862df87a6d915746bc6b96c3982f2cee47265e5ca61d75afb7'
 		);
 	});
 
 	it('should return undefined if an index is out of range', async () => {
 		assert.deepStrictEqual(
-			await readBim('test/data/pfe-mdb/2019-08-12_Nolen.BIM', 10),
+			await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 10),
 			undefined
 		);
 	});
@@ -38,39 +38,39 @@ describe('#readBIM', () => {
 
 describe('#checkBIMExists', () => {
 	it('should find a .bim file', () => {
-		assert.doesNotThrow(io.checkBIMExists.bind(undefined, 'test/data/pfe-mdb/2019-08-12_Nolen.BIM'));
+		assert.doesNotThrow(io.checkBIMExists.bind(undefined, './test/data/pfe-mdb/2019-08-12_Nolen.BIM'));
 	});
 
 	it('should throw when file is not found', () => {
-		assert.throws(io.checkBIMExists.bind(undefined, 'test/data/pfe-mdb/2019-08-'));
+		assert.throws(io.checkBIMExists.bind(undefined, './test/data/pfe-mdb/2019-08-'));
 	});
 });
 
 describe('#getPFEExpectedImages', () => {
 	it('should throw when file is not found', async () => {
-		await assert.rejects(io.getPFEExpectedImages.bind(undefined, 'test/data/pfe-mdb/not-real.mdb'));
+		await assert.rejects(io.getPFEExpectedImages.bind(undefined, './test/data/pfe-mdb/not-real.mdb'));
 	});
 
 	it('should get the number of images in the mdb/bim on windows, otherwise throw', async () => {
 		if (process.platform === 'win32')
 			assert.deepStrictEqual(
-				await io.getPFEExpectedImages('test/data/pfe-mdb/2019-08-12_Nolen.mdb'),
+				await io.getPFEExpectedImages('./test/data/pfe-mdb/2019-08-12_Nolen.mdb'),
 				9
 			);
 		else
-			await assert.rejects(io.getPFEExpectedImages.bind(undefined, 'test/data/pfe-mdb/2019-08-12_Nolen.mdb'));
+			await assert.rejects(io.getPFEExpectedImages.bind(undefined, './test/data/pfe-mdb/2019-08-12_Nolen.mdb'));
 	});
 });
 
 describe('#readPFEEntry', () => {
 	it('should throw when file is not found', async () => {
-		await assert.rejects(io.readPFEEntry.bind(undefined, 'test/data/pfe-mdb/not-real.mdb?1'));
+		await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/not-real.mdb?1'));
 	});
 
 	it('should get image data and points, otherwise throw', async () => {
 		if (process.platform === 'win32')
 			assert.deepStrictEqual(
-				await io.readPFEEntry('test/data/pfe-mdb/2019-08-12_Nolen.mdb?1'),
+				await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.mdb?1'),
 				{
 					'image': {
 						'ImageAnalogAverages': 20,
@@ -214,6 +214,6 @@ describe('#readPFEEntry', () => {
 				}
 			);
 		else
-			await assert.rejects(io.readPFEEntry.bind(undefined, 'test/data/pfe-mdb/2019-08-12_Nolen.mdb?1'));
+			await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/2019-08-12_Nolen.mdb?1'));
 	});
 });
