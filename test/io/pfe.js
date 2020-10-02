@@ -55,7 +55,9 @@ describe('#checkBIMExists', () => {
 	});
 });
 
-describe('#getPFEExpectedImages', () => {
+describe('#getPFEExpectedImages', function() {
+	this.timeout(5000);
+
 	it('should throw when file is not found', async () => {
 		await assert.rejects(io.getPFEExpectedImages.bind(undefined, './test/data/pfe-mdb/not-real.mdb'));
 	});
