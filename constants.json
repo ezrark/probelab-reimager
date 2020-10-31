@@ -175,8 +175,8 @@
   },
   "pfe": {
     "fileFormats": {
-      "ENTRY": ".mdb",
-      "IMAGE": ".bim"
+      "ENTRY": ".MDB",
+      "IMAGE": ".BIM"
     }
   },
   "jeol": {

@@ -8,7 +8,7 @@ const io = require('../../io.js');
 describe('#readMASFile', () => {
 	it('should read a .psmsa file', () => {
 		assert.deepStrictEqual(
-			io.readMASFile('test/data/1024.PS.EDS/1024_pt1.psmsa'),
+			io.readMASFile('./test/data/1024.PS.EDS/1024_pt1.psmsa'),
 			{
 				'format': {'units': '', 'data': 'EMSA/MAS Spectral Data File'},
 				'version': {'units': '', 'data': '1.0'},
@@ -119,7 +119,7 @@ describe('#readMASFile', () => {
 
 	it('should throw when file is not found', () => {
 		assert.throws(
-			io.readMASFile.bind(undefined, 'test/data/1024.PS.EDS/1024_pt1')
+			io.readMASFile.bind(undefined, './test/data/1024.PS.EDS/1024_pt1')
 		);
 	});
 });
@@ -127,7 +127,7 @@ describe('#readMASFile', () => {
 describe('#readNSSEntry', () => {
 	it('should read a .p_s file', () => {
 		assert.deepStrictEqual(
-			io.readNSSEntry('test/data/1024.PS.EDS/1024.p_s'),
+			io.readNSSEntry('./test/data/1024.PS.EDS/1024.p_s'),
 			{
 				'points': [{'type': 'spot', 'file': '1024_pt1.psmsa', 'values': [360, 253, 731, 547]}],
 				'layers': [],
@@ -138,7 +138,7 @@ describe('#readNSSEntry', () => {
 
 	it('should read a .csi file', () => {
 		assert.deepStrictEqual(
-			io.readNSSEntry('test/data/Map64x48.MAP.EDS/Map64x48.csi'),
+			io.readNSSEntry('./test/data/Map64x48.MAP.EDS/Map64x48.csi'),
 			{
 				'points': [],
 				'layers': [],
@@ -154,7 +154,7 @@ describe('#readNSSEntry', () => {
 
 	it('should read a .csi file with .simcs files', () => {
 		assert.deepStrictEqual(
-			io.readNSSEntry('test/data/SampleName.MAP.EDS/SampleName.csi'),
+			io.readNSSEntry('./test/data/SampleName.MAP.EDS/SampleName.csi'),
 			{
 				'points': [],
 				'layers': [
@@ -183,7 +183,7 @@ describe('#readNSSEntry', () => {
 
 	it('should read a .csi file with .pc* data', () => {
 		assert.deepStrictEqual(
-			io.readNSSEntry('test/data/MonzogabbroExample.MAP.EDS/pc.csi'),
+			io.readNSSEntry('./test/data/MonzogabbroExample.MAP.EDS/pc.csi'),
 			{
 				"points": [],
 				"layers": [],
@@ -199,7 +199,7 @@ describe('#readNSSEntry', () => {
 
 	it('should read a .csi file with .fz* data', () => {
 		assert.deepStrictEqual(
-			io.readNSSEntry('test/data/MonzogabbroExample.MAP.EDS/fz.csi'),
+			io.readNSSEntry('./test/data/MonzogabbroExample.MAP.EDS/fz.csi'),
 			{
 				"points": [],
 				"layers": [],
@@ -214,6 +214,6 @@ describe('#readNSSEntry', () => {
 	});
 
 	it('should throw when file is not found', () => {
-		assert.throws(io.readNSSEntry.bind(undefined, 'test/data/1024.PS.EDS/1024'));
+		assert.throws(io.readNSSEntry.bind(undefined, './test/data/1024.PS.EDS/1024'));
 	});
 });
