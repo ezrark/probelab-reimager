@@ -1,0 +1,39 @@
+5
+MonzogabbroExample.si
+MonzogabbroExample.siref
+MonzogabbroExample Grey.sitif
+0
+
+
+
+10
+MonzogabbroExample CP1.pcsa
+MonzogabbroExample CP1.pcma
+3,C 1 Segment 1,23,513,8.595785,255,C 1 Segment 2,513,921,30.621338,65280,C 1 Segment 3,921,1000,0.555420,16711680
+MonzogabbroExample CP2.pcsa
+MonzogabbroExample CP2.pcma
+1,C 2 Segment 1,35,1000,19.191488,255
+MonzogabbroExample CP3.pcsa
+MonzogabbroExample CP3.pcma
+4,C 3 Segment 1,19,262,9.234619,255,C 3 Segment 2,262,462,4.752604,65280,C 3 Segment 3,462,749,6.349691,16711680,C 3 Segment 4,749,1000,5.299886,65535
+MonzogabbroExample CP4.pcsa
+MonzogabbroExample CP4.pcma
+4,C 4 Segment 1,43,490,3.371175,255,C 4 Segment 2,490,733,0.490316,65280,C 4 Segment 3,733,917,0.718180,16711680,C 4 Segment 4,917,1000,0.026449,65535
+MonzogabbroExample CP5.pcsa
+MonzogabbroExample CP5.pcma
+2,C 5 Segment 1,15,792,25.366211,255,C 5 Segment 2,792,1000,8.229574,65280
+MonzogabbroExample CP6.pcsa
+MonzogabbroExample CP6.pcma
+3,C 6 Segment 1,86,619,8.044434,255,C 6 Segment 2,619,866,1.049805,65280,C 6 Segment 3,866,1000,1.556396,16711680
+MonzogabbroExample CP7.pcsa
+MonzogabbroExample CP7.pcma
+4,C 7 Segment 1,19,352,17.112223,255,C 7 Segment 2,352,560,1.881917,65280,C 7 Segment 3,560,792,1.772054,16711680,C 7 Segment 4,792,1000,1.326497,65535
+MonzogabbroExample CP8.pcsa
+MonzogabbroExample CP8.pcma
+1,C 8 Segment 1,921,1000,0.002035,255
+MonzogabbroExample CP9.pcsa
+MonzogabbroExample CP9.pcma
+7,C 9 Segment 1,27,235,7.403564,255,C 9 Segment 2,235,329,2.036540,65280,C 9 Segment 3,329,431,2.345785,16711680,C 9 Segment 4,431,588,3.845215,65535,C 9 Segment 5,588,733,4.465739,16711935,C 9 Segment 6,733,835,2.689616,16776960,C 9 Segment 7,835,1000,1.017253,255
+MonzogabbroExample CP10.pcsa
+MonzogabbroExample CP10.pcma
+8,C 10 Segment 1,23,203,10.992432,255,C 10 Segment 2,203,407,0.974528,65280,C 10 Segment 3,407,521,0.095622,16711680,C 10 Segment 4,521,635,0.067139,65535,C 10 Segment 5,635,760,0.054932,16711935,C 10 Segment 6,760,862,0.026449,16776960,C 10 Segment 7,862,945,0.014242,255,C 10 Segment 8,945,1000,0.014242,65280
