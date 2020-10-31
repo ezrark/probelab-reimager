@@ -1,6 +1,6 @@
 const constants = require('./constants');
 
-function scaleSettings(inputSettings) {
+function scaleSettings(inputSettings = {}) {
 	let output = {
 		belowColor: inputSettings.belowColor ? inputSettings.belowColor : constants.colors.AUTO,
 		scaleColor: inputSettings.scaleColor ? inputSettings.scaleColor : constants.colors.AUTO,
@@ -20,7 +20,7 @@ function scaleSettings(inputSettings) {
 	return output;
 }
 
-function pointSettings(inputSettings) {
+function pointSettings(inputSettings = {}) {
 	return {
 		pointType: inputSettings.pointType ? inputSettings.pointType : constants.point.types.THERMOINSTANT,
 		textColor: inputSettings.textColor ? inputSettings.textColor : constants.colors.red,
@@ -30,7 +30,7 @@ function pointSettings(inputSettings) {
 	}
 }
 
-function writeSettings(inputSettings) {
+function writeSettings(inputSettings = {}) {
 	const useTiff = typeof inputSettings.tiff === 'object';
 	const useWebp = typeof inputSettings.webp === 'object';
 	const usePng = typeof inputSettings.png === 'object';

@@ -1,0 +1,56 @@
+5
+MonzogabbroExample.si
+MonzogabbroExample.siref
+MonzogabbroExample Grey.sitif
+0
+
+
+
+8
+MonzogabbroExample K-feldspar.fzsa
+MonzogabbroExample K-feldspar.fzma
+0,5,K-feldspar,32.336426,Custom,1,C 1
+MonzogabbroExample Apatite.fzsa
+MonzogabbroExample Apatite.fzma
+0,5,Apatite,14.914958,Custom,1,C 2
+MonzogabbroExample Pyroxene.fzsa
+MonzogabbroExample Pyroxene.fzma
+0,5,Pyroxene,27.077230,Custom,3,C 3,C 10,C 9
+MonzogabbroExample Zirconolite.fzsa
+MonzogabbroExample Zirconolite.fzma
+0,5,Zirconolite,1.418050,Custom,1,C 4
+MonzogabbroExample Plagioclase.fzsa
+MonzogabbroExample Plagioclase.fzma
+0,5,Plagioclase,16.265869,Custom,1,C 5
+MonzogabbroExample Silica.fzsa
+MonzogabbroExample Silica.fzma
+0,5,Silica,2.884928,Custom,1,C 6
+MonzogabbroExample Amphibole.fzsa
+MonzogabbroExample Amphibole.fzma
+0,5,Amphibole,4.927572,Custom,1,C 7
+MonzogabbroExample Zirconia.fzsa
+MonzogabbroExample Zirconia.fzma
+0,5,Zirconia,0.174967,Custom,1,C 8
+
+7
+MonzogabbroExample Phase1.fzse
+MonzogabbroExample Phase1.fzme
+1,0,Phase1,3.175863,Custom,1,O K
+MonzogabbroExample Phase2.fzse
+MonzogabbroExample Phase2.fzme
+1,0,Phase2,0.020345,Custom,1,Al K
+MonzogabbroExample Phase3.fzse
+MonzogabbroExample Phase3.fzme
+1,0,Phase3,80.686442,Custom,1,Si K
+MonzogabbroExample Phase4.fzse
+MonzogabbroExample Phase4.fzme
+1,0,Phase4,2.026367,Custom,1,P K
+MonzogabbroExample Phase5.fzse
+MonzogabbroExample Phase5.fzme
+1,0,Phase5,12.935384,Custom,1,Ca K
+MonzogabbroExample Phase6.fzse
+MonzogabbroExample Phase6.fzme
+1,0,Phase6,0.002035,Custom,1,Ti K
+MonzogabbroExample Phase7.fzse
+MonzogabbroExample Phase7.fzme
+1,0,Phase7,1.153564,Custom64,Custom

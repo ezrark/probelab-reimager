@@ -1,4 +1,4 @@
-tests/data/*/*.tif
+test/data/*/*.tif
 .idea
 
 # Logs

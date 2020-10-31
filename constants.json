@@ -175,14 +175,14 @@
   },
   "pfe": {
     "fileFormats": {
-      "ENTRY": ".mdb",
-      "IMAGE": ".bim"
+      "ENTRY": ".MDB",
+      "IMAGE": ".BIM"
     }
   },
   "jeol": {
     "fileFormats": {
       "ENTRY": ".txt",
-      "IMAGE": ".tif",
+      "IMAGES": [".tif", ".jpg", ".bmp"],
       "OUTPUTIMAGE": ".png"
     }
   }
