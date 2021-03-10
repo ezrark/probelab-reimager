@@ -6,4 +6,5 @@ module.exports = {
 	PointShoot: require('./pointshoot.js'),
 	ExtractedMap: require('./extractedmap.js'),
 	JeolImage: require('./jeolimage.js'),
+	PFE: require('./pfe.js')
 };

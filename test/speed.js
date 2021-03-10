@@ -1,10 +1,11 @@
 const fs = require('fs');
 const fsPromise = require('fs').promises;
 
+require('sharp');
 const Canvas = require('canvas');
 
 const constants = require('../constants');
-const { PointShoot, ExtractedMap, CanvasRoot, NodeCanvas } = require('../module');
+const { PointShoot, ExtractedMap, CanvasRoot, NodeCanvas, JeolImage, PFE } = require('../module');
 
 let options = {
 	dirUri: 'test/data/',
@@ -37,7 +38,7 @@ async function getThermos(dirUri) {
 	const nodeCanvas = new NodeCanvas(Canvas);
 	const canvas = new CanvasRoot(nodeCanvas);
 	await canvas.init();
-	return await Promise.all(directory.flatMap(dir => {
+	return (await Promise.all(directory.flatMap(dir => {
 		if (dir.isDirectory()) {
 			const files = fs.readdirSync(dirUri + dir.name, {withFileTypes: true});
 			return files.filter(file => file.isFile()).map(file => {
@@ -47,9 +48,15 @@ async function getThermos(dirUri) {
 
 				if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
 					return new ExtractedMap(file, canvas).init();
+
+//				if (file.name.endsWith(constants.jeol.fileFormats.ENTRY))
+//					return new JeolImage(file, canvas).init();
+
+				if (file.name.endsWith(constants.pfe.fileFormats.ENTRY))
+					return new PFE(file, canvas).init();
 			}).filter(item => item);
 		}
-	}).filter(i => i));
+	}).filter(i => i))).flat();
 }
 
 async function bufferThermos(thermos, options, points) {
@@ -67,13 +74,17 @@ async function speed(thermos=false, options={}) {
 	}
 	await bufferThermos(thermos, options);
 	const finished = Date.now();
+
+//	for (const thermo of thermos) {
+//		await thermo.write({uri: `./test/test/${thermo.data.name}.png`, png: {}});
+//	}
 //	console.log(`All images buffered in ${finished - gotThermosTime}ms`);
 //	console.log(`Finished in ${finished - initTime}ms`);
 
 	return {initTime, gotThermosTime, finished};
 }
 
-console.log('Operation \tdefault\tbaseOptions\tbaseOptions + Points');
+console.log('Operation  \tdefault \tbaseOptions\tbaseOptions + Points');
 getThermos(options.dirUri).then(async thermos => {
 	const iterations = 10;
 	let totals = {
@@ -96,7 +107,7 @@ getThermos(options.dirUri).then(async thermos => {
 		totals.pointBase += (pointBaseOptionTimes.finished - pointBaseOptionTimes.initTime);
 
 		//console.log(`gotThermos\t${defaultTimes.gotThermosTime - defaultTimes.initTime}\t${baseOptionTimes.gotThermosTime - baseOptionTimes.initTime}\t${pointBaseOptionTimes.gotThermosTime - pointBaseOptionTimes.initTime}`);
-		console.log(`Finished  \t${defaultTimes.finished - defaultTimes.initTime}  \t${baseOptionTimes.finished - baseOptionTimes.initTime}      \t${pointBaseOptionTimes.finished - pointBaseOptionTimes.initTime}`);
+		console.log(`Finished ${thermos.length} \t${defaultTimes.finished - defaultTimes.initTime}   \t${baseOptionTimes.finished - baseOptionTimes.initTime}      \t${pointBaseOptionTimes.finished - pointBaseOptionTimes.initTime}`);
 	}
 
 	console.log(`Averaged  \t${Math.round(totals.default/iterations)}  \t${Math.round(totals.base/iterations)}      \t${Math.round(totals.pointBase/iterations)}`);
