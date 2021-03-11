@@ -195,7 +195,13 @@ function checkJeolExists(uri) {
 }
 
 function checkBIMExists(uri) {
-	return fs.accessSync(uri, fs.constants.R_OK);
+	fs.accessSync(uri, fs.constants.R_OK);
+
+	let bim = uri.split('.');
+	bim = bim.slice(0, bim.length - 1).join('.') + '.BIM';
+	fs.accessSync(bim, fs.constants.R_OK);
+
+	return true
 }
 
 // nothing exists to do this apparently
