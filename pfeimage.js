@@ -78,7 +78,7 @@ module.exports = class extends Thermo {
 
 	serialize() {
 		return this.internalSerialize({
-			name: this.data.name + '?' + this.data.files.entry.split('?').pop()
+			name: this.data.name
 		});
 	}
 };
