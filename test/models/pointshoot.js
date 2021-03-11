@@ -466,7 +466,7 @@ describe('Initialize', () => {
 				'point': {},
 				'map': {}
 			},
-			'outputFormat': '.tif'
+			'outputFormat': '.png'
 		});
 	});
 });

@@ -76,7 +76,7 @@
     "MAGNIFICATIONKEY": "magcam",
     "fileFormats": {
       "IMAGERAW": ".siref",
-      "OUTPUTIMAGE": ".tif",
+      "OUTPUTIMAGE": ".png",
       "ENTRY": ".csi",
       "SPECTRA": "Extracted Spectrum.emsa",
       "DIRECTORYCONST": ".MAP.EDS",
@@ -88,7 +88,7 @@
     "fileFormats": {
       "IMAGERAW": ".psref",
       "ENTRY": ".p_s",
-      "OUTPUTIMAGE": ".tif"
+      "OUTPUTIMAGE": ".png"
     },
     "integrity": {
       "SKIPARRAY": [
