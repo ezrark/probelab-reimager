@@ -1,3 +1,4 @@
+const path = require('path');
 const assert = require('assert');
 const {describe, it, before} = require('mocha');
 
@@ -18,7 +19,7 @@ describe('Initialize', () => {
 		assert.deepStrictEqual(ps.data, {
 			'Canvas': {},
 			'uuid': ps.data.uuid,
-			'uri': './test/data/64.PS.EDS/',
+			'uri': path.resolve('./test/data/64.PS.EDS/'),
 			'name': '64',
 			'scale': undefined,
 			'scratchCanvas': undefined,
@@ -445,15 +446,15 @@ describe('Initialize', () => {
 			},
 			'layers': {},
 			'files': {
-				'base': './test/data/64.PS.EDS/64.psref',
-				'entry': './test/data/64.PS.EDS/64.p_s',
+				'base': path.resolve('./test/data/64.PS.EDS/64.psref'),
+				'entry': path.resolve('./test/data/64.PS.EDS/64.p_s'),
 				'points': [
 					'1'
 				],
 				'layers': [
 					{
 						'element': 'base',
-						'file': './test/data/64.PS.EDS/64.psref'
+						'file': path.resolve('./test/data/64.PS.EDS/64.psref')
 					},
 					{
 						'element': 'solid',
@@ -484,7 +485,7 @@ describe('Thermo Functions', () => {
 
 	it('should correctly serialize', () => {
 		assert.deepStrictEqual(pointShoot.serialize(), {
-			"entryFile": "./test/data/64.PS.EDS/64.p_s",
+			"entryFile": path.resolve("./test/data/64.PS.EDS/64.p_s"),
 			"image": {
 				"height": 48,
 				"width": 64
@@ -494,7 +495,7 @@ describe('Thermo Functions', () => {
 			"layers": {
 				"base": {
 					"element": "base",
-					"file": "./test/data/64.PS.EDS/64.psref"
+					"file": path.resolve("./test/data/64.PS.EDS/64.psref")
 				},
 				"solid": {
 					"element": "solid",
@@ -526,7 +527,7 @@ describe('Thermo Functions', () => {
 					"y": 21
 				}
 			},
-			"uri": "./test/data/64.PS.EDS/",
+			"uri": path.resolve("./test/data/64.PS.EDS/"),
 			"uuid": pointShoot.data.uuid
 		});
 	});

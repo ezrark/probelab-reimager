@@ -1,3 +1,4 @@
+const path = require('path');
 const assert = require('assert');
 const {describe, it, before} = require('mocha');
 
@@ -22,7 +23,7 @@ describe('Initialize', () => {
 		assert.deepStrictEqual(pfe.data, {
 			'Canvas': {},
 			'uuid': pfe.data.uuid,
-			'uri': './test/data/pfe-mdb/',
+			'uri': path.resolve('./test/data/pfe-mdb/'),
 			'name': '2019-08-12_Nolen.MDB - 1',
 			'scale': undefined,
 			'scratchCanvas': undefined,
@@ -35,13 +36,13 @@ describe('Initialize', () => {
 			'points': {},
 			'layers': {},
 			'files': {
-				'base': './test/data/pfe-mdb/2019-08-12_Nolen.MDB?1',
-				'entry': './test/data/pfe-mdb/2019-08-12_Nolen.MDB?1',
+				'base': path.resolve('./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1'),
+				'entry': path.resolve('./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1'),
 				'points': [],
 				'layers': [
 					{
 						'element': 'base',
-						'file': './test/data/pfe-mdb/2019-08-12_Nolen.MDB?1'
+						'file': path.resolve('./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1')
 					},
 					{
 						'element': 'solid',
@@ -87,7 +88,7 @@ describe('Thermo Functions', () => {
 
 	it('should correctly serialize', () => {
 		assert.deepStrictEqual(pfe.serialize(), {
-			"entryFile": "./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1",
+			"entryFile": path.resolve("./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1"),
 			"image": {
 				"height": 768,
 				"width": 1024
@@ -97,7 +98,7 @@ describe('Thermo Functions', () => {
 			"layers": {
 				"base": {
 					"element": "base",
-					"file": "./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1"
+					"file": path.resolve("./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1")
 				},
 				"solid": {
 					"element": "solid",
@@ -282,7 +283,7 @@ describe('Thermo Functions', () => {
 					"y": 569
 				}
 			},
-			"uri": "./test/data/pfe-mdb/",
+			"uri": path.resolve("./test/data/pfe-mdb/"),
 			"uuid": pfe.data.uuid
 		});
 	});

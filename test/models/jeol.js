@@ -1,3 +1,4 @@
+const path = require('path');
 const assert = require('assert');
 const {describe, it, before} = require('mocha');
 
@@ -22,7 +23,7 @@ describe('Initialize', () => {
 		assert.deepStrictEqual(jeol.data, {
 			'Canvas': {},
 			'uuid': jeol.data.uuid,
-			'uri': './test/data/jeol-images/',
+			'uri': path.resolve('./test/data/jeol-images/'),
 			'name': '1',
 			'scale': undefined,
 			'scratchCanvas': undefined,
@@ -35,13 +36,13 @@ describe('Initialize', () => {
 			'points': {},
 			'layers': {},
 			'files': {
-				'base': './test/data/jeol-images/1.tif',
-				'entry': './test/data/jeol-images/1.txt',
+				'base': path.resolve('./test/data/jeol-images/1.tif'),
+				'entry': path.resolve('./test/data/jeol-images/1.txt'),
 				'points': [],
 				'layers': [
 					{
 						'element': 'base',
-						'file': './test/data/jeol-images/1.tif',
+						'file': path.resolve('./test/data/jeol-images/1.tif'),
 						'cutoffHeight': 1920
 					},
 					{
@@ -65,7 +66,7 @@ describe('Initialize', () => {
 		assert.deepStrictEqual(jeol.data, {
 			'Canvas': {},
 			'uuid': jeol.data.uuid,
-			'uri': './test/data/jeol-images/',
+			'uri': path.resolve('./test/data/jeol-images/'),
 			'name': '5',
 			'scale': undefined,
 			'scratchCanvas': undefined,
@@ -78,13 +79,13 @@ describe('Initialize', () => {
 			'points': {},
 			'layers': {},
 			'files': {
-				'base': './test/data/jeol-images/5.jpg',
-				'entry': './test/data/jeol-images/5.txt',
+				'base': path.resolve('./test/data/jeol-images/5.jpg'),
+				'entry': path.resolve('./test/data/jeol-images/5.txt'),
 				'points': [],
 				'layers': [
 					{
 						'element': 'base',
-						'file': './test/data/jeol-images/5.jpg',
+						'file': path.resolve('./test/data/jeol-images/5.jpg'),
 						'cutoffHeight': 960
 					},
 					{
@@ -108,7 +109,7 @@ describe('Initialize', () => {
 		assert.deepStrictEqual(jeol.data, {
 			'Canvas': {},
 			'uuid': jeol.data.uuid,
-			'uri': './test/data/jeol-images/',
+			'uri': path.resolve('./test/data/jeol-images/'),
 			'name': '4',
 			'scale': undefined,
 			'scratchCanvas': undefined,
@@ -121,13 +122,13 @@ describe('Initialize', () => {
 			'points': {},
 			'layers': {},
 			'files': {
-				'base': './test/data/jeol-images/4.bmp',
-				'entry': './test/data/jeol-images/4.txt',
+				'base': path.resolve('./test/data/jeol-images/4.bmp'),
+				'entry': path.resolve('./test/data/jeol-images/4.txt'),
 				'points': [],
 				'layers': [
 					{
 						'element': 'base',
-						'file': './test/data/jeol-images/4.bmp',
+						'file': path.resolve('./test/data/jeol-images/4.bmp'),
 						'cutoffHeight': 960
 					},
 					{
@@ -193,7 +194,7 @@ describe('Thermo Functions', () => {
 
 	it('should correctly serialize', () => {
 		assert.deepStrictEqual(jeolTif.serialize(), {
-			"entryFile": "./test/data/jeol-images/2.txt",
+			"entryFile": path.resolve("./test/data/jeol-images/2.txt"),
 			"image": {
 				"height": 1920,
 				"width": 2560
@@ -203,7 +204,7 @@ describe('Thermo Functions', () => {
 			"layers": {
 				"base": {
 					"element": "base",
-					"file": "./test/data/jeol-images/2.tif"
+					"file": path.resolve("./test/data/jeol-images/2.tif")
 				},
 				"solid": {
 					"element": "solid",
@@ -217,11 +218,11 @@ describe('Thermo Functions', () => {
 				"width": 2560
 			},
 			"points": {},
-			"uri": "./test/data/jeol-images/",
+			"uri": path.resolve("./test/data/jeol-images/"),
 			"uuid": jeolTif.data.uuid
 		});
 		assert.deepStrictEqual(jeolJpg.serialize(), {
-			"entryFile": "./test/data/jeol-images/5.txt",
+			"entryFile": path.resolve("./test/data/jeol-images/5.txt"),
 			"image": {
 				"height": 960,
 				"width": 1280
@@ -231,7 +232,7 @@ describe('Thermo Functions', () => {
 			"layers": {
 				"base": {
 					"element": "base",
-					"file": "./test/data/jeol-images/5.jpg"
+					"file": path.resolve("./test/data/jeol-images/5.jpg")
 				},
 				"solid": {
 					"element": "solid",
@@ -245,11 +246,11 @@ describe('Thermo Functions', () => {
 				"width": 1280
 			},
 			"points": {},
-			"uri": "./test/data/jeol-images/",
+			"uri": path.resolve("./test/data/jeol-images/"),
 			"uuid": jeolJpg.data.uuid
 		});
 		assert.deepStrictEqual(jeolBmp.serialize(), {
-			"entryFile": "./test/data/jeol-images/4.txt",
+			"entryFile": path.resolve("./test/data/jeol-images/4.txt"),
 			"image": {
 				"height": 960,
 				"width": 1280
@@ -259,7 +260,7 @@ describe('Thermo Functions', () => {
 			"layers": {
 				"base": {
 					"element": "base",
-					"file": "./test/data/jeol-images/4.bmp"
+					"file": path.resolve("./test/data/jeol-images/4.bmp")
 				},
 				"solid": {
 					"element": "solid",
@@ -273,11 +274,11 @@ describe('Thermo Functions', () => {
 				"width": 1280
 			},
 			"points": {},
-			"uri": "./test/data/jeol-images/",
+			"uri": path.resolve("./test/data/jeol-images/"),
 			"uuid": jeolBmp.data.uuid
 		});
 		assert.deepStrictEqual(jeolBroken.serialize(), {
-			"entryFile": "./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt",
+			"entryFile": path.resolve("./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt"),
 			"image": {
 				"height": 480,
 				"width": 640
@@ -287,7 +288,7 @@ describe('Thermo Functions', () => {
 			"layers": {
 				"base": {
 					"element": "base",
-					"file": "./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.bmp"
+					"file": path.resolve("./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.bmp")
 				},
 				"solid": {
 					"element": "solid",
@@ -301,7 +302,7 @@ describe('Thermo Functions', () => {
 				"width": 640
 			},
 			"points": {},
-			"uri": "./test/data/2020-09-16_JEOL bmp/",
+			"uri": path.resolve("./test/data/2020-09-16_JEOL bmp/"),
 			"uuid": jeolBroken.data.uuid
 		});
 	});

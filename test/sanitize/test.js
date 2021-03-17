@@ -1,3 +1,4 @@
+const path = require('path');
 const assert = require('assert');
 const {describe, it} = require('mocha');
 
@@ -60,7 +61,7 @@ describe('Sanitize', () => {
 				"quality": 100,
 				"use": false
 			},
-			"uri": undefined,
+			"uri": path.resolve('.'),
 			"webp": {
 				"compression": true,
 				"predictor": false,

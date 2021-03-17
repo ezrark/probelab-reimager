@@ -1,3 +1,5 @@
+const path = require('path');
+
 const sharp = require('sharp');
 
 const constants = require('./constants.json');
@@ -19,7 +21,7 @@ module.exports = class extends Thermo {
 		for (let IMAGE of constants.jeol.fileFormats.IMAGES) {
 			let testBase;
 			try {
-				testBase = this.data.uri + this.data.name + IMAGE;
+				testBase = path.join(this.data.uri, this.data.name + IMAGE);
 				io.checkJeolExists(testBase);
 
 				this.data.files.base = testBase;

@@ -1,3 +1,5 @@
+const path = require('path');
+
 const constants = require('./constants');
 
 function scaleSettings(inputSettings = {}) {
@@ -44,7 +46,7 @@ function writeSettings(inputSettings = {}) {
 	inputSettings.acq = makeAcq ? inputSettings.acq : {};
 
 	return {
-		uri: inputSettings.uri,
+		uri: path.resolve(inputSettings.uri ? inputSettings.uri : '.'),
 		pixelSizeConstant: inputSettings.pixelSizeConstant ? inputSettings.pixelSizeConstant : constants.PIXELSIZECONSTANT,
 		tiff: {
 			use: useTiff,

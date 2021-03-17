@@ -1,3 +1,4 @@
+const path = require('path');
 const fs = require('fs').promises;
 
 const sharp = require('sharp');
@@ -13,7 +14,7 @@ module.exports = class Thermo {
 		this.data = {
 			Canvas,
 			uuid: uuid ? uuid : GenerateUuid.v4(),
-			uri: uri ? uri : entryFile.uri.split('/').slice(0, -1).join('/') + '/',
+			uri: uri ? uri : path.resolve(path.dirname(entryFile.uri) + path.sep),
 			name,
 			scale: undefined,
 			metaConstants: {},
@@ -27,7 +28,7 @@ module.exports = class Thermo {
 			layers: {},
 			files: {
 				base: '',
-				entry: entryFile.uri,
+				entry: path.resolve(entryFile.uri),
 				points: [],
 				layers: []
 			},
@@ -58,7 +59,7 @@ module.exports = class Thermo {
 	staticInit() {
 		const entryData = io.readNSSEntry(this.data.files.entry);
 
-		this.data.files.base = this.data.uri + entryData.data.base;
+		this.data.files.base = path.join(this.data.uri, entryData.data.base);
 		this.data.files.layers = entryData.layers;
 
 		this.data.files.layers.push({
@@ -70,7 +71,7 @@ module.exports = class Thermo {
 		});
 
 		this.data.points = entryData.points.reduce((points, point) => {
-			point.data = io.readMASFile((this.data.uri + point.file));
+			point.data = io.readMASFile(path.join(this.data.uri, point.file));
 			point.name = point.file.split('.')[0].split('_pt').pop();
 			points[point.name] = point;
 			return points;
@@ -79,7 +80,7 @@ module.exports = class Thermo {
 		this.data.files.points = Object.keys(this.data.points);
 
 		try {
-			this.data.data.map = io.readMASFile(this.data.uri + constants.extractedMap.fileFormats.SPECTRA);
+			this.data.data.map = io.readMASFile(path.join(this.data.uri, constants.extractedMap.fileFormats.SPECTRA));
 			const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
 			if (this.data.magnification !== 0 && this.data.magnification !== mag)
 				this.data.integrity = false;
@@ -106,7 +107,7 @@ module.exports = class Thermo {
 			await Promise.all(this.data.files.layers.map(async ({file, element}) => {
 				if (element !== 'base')
 					if (element !== 'solid')
-						return this.addLayerFile(this.data.uri + file);
+						return this.addLayerFile(path.join(this.data.uri, file));
 					else
 						this.data.layers['solid'] = {
 							element,
@@ -181,9 +182,10 @@ module.exports = class Thermo {
 	}
 
 	async addLayerFile(uri) {
-		const filename = uri.toLowerCase().replace(/\\/g, '/').split('/').pop().split(' ');
-		const element = filename.pop().split('.')[0];
-		const type = filename.pop();
+		uri = path.resolve(uri);
+		const filename = path.basename(uri).toLowerCase().split(' ');
+		const element = path.extname(uri);
+		const type = filename[filename.length - 1];
 		const layerElement = `${element} ${type}`;
 
 		const image = await (await sharp(uri).raw().ensureAlpha());
@@ -473,7 +475,7 @@ module.exports = class Thermo {
 	}
 
 	async createAcqFile(settings) {
-		let outputUri = settings.uri ? settings.uri : (this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
+		let outputUri = settings.uri ? settings.uri : path.resolve(this.data.files.base.substring(0, this.data.files.base.length - (constants.pointShoot.fileFormats.IMAGERAW.length)));
 
 		const TWIPSWidth = this.data.metaConstants.width * constants.pictureSnapApp.TWIPSPERPIXEL - 90; //(this.data.metaConstants.width / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
 		const TWIPSHeight = this.data.metaConstants.height * constants.pictureSnapApp.TWIPSPERPIXEL; //(this.data.metaConstants.height / this.data.metadata.density) * constants.pictureSnapApp.TWIPSPERINCH;
@@ -534,7 +536,7 @@ module.exports = class Thermo {
 
 				if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
 					if (!settings.uri || settings.acq.use)
-						outputUri = outputUri + (settings.acq.use ? '.jpg' : this.data.outputFormat);
+						outputUri = path.join(outputUri, (settings.acq.use ? '.jpg' : this.data.outputFormat));
 
 					const ext = outputUri.split('.').pop();
 					switch (ext) {
@@ -663,7 +665,7 @@ module.exports = class Thermo {
 			};
 
 		return {
-			uri: serial.uri ? serial.uri : this.data.uri,
+			uri: serial.uri ? path.resolve(serial.uri) : this.data.uri,
 			uuid: serial.uuid ? serial.uuid : this.data.uuid,
 			name: serial.name ? serial.name : this.data.name,
 			integrity: serial.integrity ? serial.integrity : this.data.integrity,
