@@ -485,50 +485,50 @@ describe('Thermo Functions', () => {
 
 	it('should correctly serialize', () => {
 		assert.deepStrictEqual(pointShoot.serialize(), {
-			"entryFile": path.resolve("./test/data/64.PS.EDS/64.p_s"),
-			"image": {
-				"height": 48,
-				"width": 64
+			'entryFile': path.resolve('./test/data/64.PS.EDS/64.p_s'),
+			'image': {
+				'height': 48,
+				'width': 64
 			},
-			"integrity": true,
-			"jeolFile": false,
-			"layers": {
-				"base": {
-					"element": "base",
-					"file": path.resolve("./test/data/64.PS.EDS/64.psref")
+			'integrity': true,
+			'jeolFile': false,
+			'layers': {
+				'base': {
+					'element': 'base',
+					'file': path.resolve('./test/data/64.PS.EDS/64.psref')
 				},
-				"solid": {
-					"element": "solid",
-					"file": ""
+				'solid': {
+					'element': 'solid',
+					'file': ''
 				}
 			},
-			"magnification": 40,
-			"name": "64",
-			"output": {
-				"height": 48,
-				"width": 64
+			'magnification': 40,
+			'name': '64',
+			'output': {
+				'height': 48,
+				'width': 64
 			},
-			"points": {
-				"1": {
-					"file": "64_pt1.psmsa",
-					"name": "1",
-					"pos": [
+			'points': {
+				'1': {
+					'file': '64_pt1.psmsa',
+					'name': '1',
+					'pos': [
 						34,
 						21
 					],
-					"type": "spot",
-					"values": [
+					'type': 'spot',
+					'values': [
 						394,
 						241,
 						731,
 						547
 					],
-					"x": 34,
-					"y": 21
+					'x': 34,
+					'y': 21
 				}
 			},
-			"uri": path.resolve("./test/data/64.PS.EDS/"),
-			"uuid": pointShoot.data.uuid
+			'uri': path.resolve('./test/data/64.PS.EDS/'),
+			'uuid': pointShoot.data.uuid
 		});
 	});
 

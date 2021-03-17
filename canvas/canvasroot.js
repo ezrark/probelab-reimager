@@ -26,19 +26,19 @@ module.exports = class CanvasRoot {
 	}
 
 	async init() {
-		await this.registerFont(`${__dirname}/../fonts/OpenSans-Bold.ttf`, { family: 'Open Sans Bold', });
-		await this.registerFont(`${__dirname}/../fonts/Comic Sans MS.ttf`, { family: 'Comic Sans MS' });
+		await this.registerFont(`${__dirname}/../fonts/OpenSans-Bold.ttf`, {family: 'Open Sans Bold'});
+		await this.registerFont(`${__dirname}/../fonts/Comic Sans MS.ttf`, {family: 'Comic Sans MS'});
 	}
 
-	sendRemote(namespace, command, args=[]) {
-		return new Promise((resolve ,reject) => {
+	sendRemote(namespace, command, args = []) {
+		return new Promise((resolve, reject) => {
 			const uuid = GenerateUuid.v4();
 			this.data.sentCommands.set(uuid, {resolve, reject, uuid});
 			this.data.remote.send(namespace, command, args, uuid);
 		});
 	}
 
-	async getOrCreateCanvas(uuid, width=300, height=300) {
+	async getOrCreateCanvas(uuid, width = 300, height = 300) {
 		return new Canvas(this, await this.sendRemote('root', 'getOrCreateCanvas', [uuid, width, height]));
 	}
 

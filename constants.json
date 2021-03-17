@@ -160,10 +160,26 @@
       "SMALL": "small"
     },
     "colors": {
-      "WHITE": [255, 255, 255],
-      "BLACK": [0, 0, 0],
-      "ORANGE": [250, 130, 49],
-      "RED": [255, 63, 52]
+      "WHITE": [
+        255,
+        255,
+        255
+      ],
+      "BLACK": [
+        0,
+        0,
+        0
+      ],
+      "ORANGE": [
+        250,
+        130,
+        49
+      ],
+      "RED": [
+        255,
+        63,
+        52
+      ]
     }
   },
   "pictureSnapApp": {
@@ -182,7 +198,11 @@
   "jeol": {
     "fileFormats": {
       "ENTRY": ".txt",
-      "IMAGES": [".tif", ".jpg", ".bmp"],
+      "IMAGES": [
+        ".tif",
+        ".jpg",
+        ".bmp"
+      ],
       "OUTPUTIMAGE": ".png"
     }
   }

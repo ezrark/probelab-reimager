@@ -107,7 +107,7 @@ let options = {
 		compression: constants.export.tiff.compression,
 		predictor: constants.export.tiff.predictor
 	},
-	jpeg: {},
+	jpeg: {}
 };
 
 let layers = [];
@@ -122,7 +122,7 @@ for (let i = 2; i < process.argv.length; i++) {
 	let opacity;
 
 	if (process.argv[i].startsWith('--')) {
-		switch (process.argv[i]) {
+		switch(process.argv[i]) {
 			case '--version':
 				options.version = true;
 				break;
@@ -145,7 +145,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				options.pixelSizeConstant = parseFloat(process.argv[++i]);
 				break;
 			case '--barheight':
-				options.scaleBarHeight = parseInt(process.argv[++i])/100;
+				options.scaleBarHeight = parseInt(process.argv[++i]) / 100;
 				break;
 			case '--opacity':
 				options.backgroundOpacity = parseInt(process.argv[++i]);
@@ -170,14 +170,14 @@ for (let i = 2; i < process.argv.length; i++) {
 						i--;
 						opacity = 1;
 					} else
-						opacity = opacity/100;
+						opacity = opacity / 100;
 
 					if (isNaN(opacity)) {
 						i--;
 						opacity = 1;
 					}
 
-					switch (colorLabel) {
+					switch(colorLabel) {
 						case 'auto':
 						case 'a':
 						case 'red':
@@ -213,7 +213,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				});
 				break;
 			case '--pointtype':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					case 't':
@@ -236,7 +236,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '--textcolor':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					default:
@@ -261,7 +261,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '--font':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					case 'o':
@@ -278,7 +278,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '--color':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					default:
@@ -295,7 +295,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '--background':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					default:
@@ -312,7 +312,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '--position':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'd':
 					case 'default':
 					default:
@@ -362,7 +362,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 		}
 	} else if (process.argv[i].startsWith('-')) {
-		switch (process.argv[i]) {
+		switch(process.argv[i]) {
 			case '-z':
 				options.pointFontSize = parseInt(process.argv[++i]);
 				break;
@@ -373,7 +373,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				options.scaleSize = parseInt(process.argv[++i]);
 				break;
 			case '-k':
-				options.scaleBarHeight = parseInt(process.argv[++i])/100;
+				options.scaleBarHeight = parseInt(process.argv[++i]) / 100;
 				break;
 			case '-x':
 				options.pixelSizeConstant = parseFloat(process.argv[++i]);
@@ -401,14 +401,14 @@ for (let i = 2; i < process.argv.length; i++) {
 						i--;
 						opacity = 1;
 					} else
-						opacity = opacity/100;
+						opacity = opacity / 100;
 
 					if (isNaN(opacity)) {
 						i--;
 						opacity = 1;
 					}
 
-					switch (colorLabel) {
+					switch(colorLabel) {
 						case 'auto':
 						case 'a':
 						case 'red':
@@ -444,7 +444,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				});
 				break;
 			case '-c':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					default:
@@ -461,7 +461,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '-n':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					case 't':
@@ -484,7 +484,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '-e':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					default:
@@ -509,7 +509,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '-f':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					case 'o':
@@ -526,7 +526,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '-b':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'a':
 					case 'auto':
 					default:
@@ -543,7 +543,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				}
 				break;
 			case '-p':
-				switch (process.argv[++i]) {
+				switch(process.argv[++i]) {
 					case 'd':
 					case 'default':
 					default:
@@ -593,7 +593,7 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 			default:
 				for (const char of process.argv[i])
-					switch (char) {
+					switch(char) {
 						case 'v':
 							options.version = true;
 							break;
@@ -695,7 +695,8 @@ else {
 									const thermo = new JeolImage(dir, canvas);
 									thermos.push(thermo);
 									return thermo.init();
-								} catch(err) {}
+								} catch (err) {
+								}
 							}
 						} catch (err) {
 							if (err.code === 'ENOENT')

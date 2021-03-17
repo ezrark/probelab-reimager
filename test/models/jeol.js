@@ -185,7 +185,10 @@ describe('Thermo Functions', () => {
 		jeolTif = new JeolImage({name: '2.txt', uri: './test/data/jeol-images/2.txt'}, canvas);
 		jeolJpg = new JeolImage({name: '5.txt', uri: './test/data/jeol-images/5.txt'}, canvas);
 		jeolBmp = new JeolImage({name: '4.txt', uri: './test/data/jeol-images/4.txt'}, canvas);
-		jeolBroken = new JeolImage({name: 'Standard_BSE_640-800.txt', uri: './test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt'}, canvas);
+		jeolBroken = new JeolImage({
+			name: 'Standard_BSE_640-800.txt',
+			uri: './test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt'
+		}, canvas);
 		await jeolTif.init();
 		await jeolJpg.init();
 		await jeolBmp.init();
@@ -194,116 +197,116 @@ describe('Thermo Functions', () => {
 
 	it('should correctly serialize', () => {
 		assert.deepStrictEqual(jeolTif.serialize(), {
-			"entryFile": path.resolve("./test/data/jeol-images/2.txt"),
-			"image": {
-				"height": 1920,
-				"width": 2560
+			'entryFile': path.resolve('./test/data/jeol-images/2.txt'),
+			'image': {
+				'height': 1920,
+				'width': 2560
 			},
-			"integrity": true,
-			"jeolFile": true,
-			"layers": {
-				"base": {
-					"element": "base",
-					"file": path.resolve("./test/data/jeol-images/2.tif")
+			'integrity': true,
+			'jeolFile': true,
+			'layers': {
+				'base': {
+					'element': 'base',
+					'file': path.resolve('./test/data/jeol-images/2.tif')
 				},
-				"solid": {
-					"element": "solid",
-					"file": ""
+				'solid': {
+					'element': 'solid',
+					'file': ''
 				}
 			},
-			"magnification": 370,
-			"name": "2",
-			"output": {
-				"height": 2048,
-				"width": 2560
+			'magnification': 370,
+			'name': '2',
+			'output': {
+				'height': 2048,
+				'width': 2560
 			},
-			"points": {},
-			"uri": path.resolve("./test/data/jeol-images/"),
-			"uuid": jeolTif.data.uuid
+			'points': {},
+			'uri': path.resolve('./test/data/jeol-images/'),
+			'uuid': jeolTif.data.uuid
 		});
 		assert.deepStrictEqual(jeolJpg.serialize(), {
-			"entryFile": path.resolve("./test/data/jeol-images/5.txt"),
-			"image": {
-				"height": 960,
-				"width": 1280
+			'entryFile': path.resolve('./test/data/jeol-images/5.txt'),
+			'image': {
+				'height': 960,
+				'width': 1280
 			},
-			"integrity": true,
-			"jeolFile": true,
-			"layers": {
-				"base": {
-					"element": "base",
-					"file": path.resolve("./test/data/jeol-images/5.jpg")
+			'integrity': true,
+			'jeolFile': true,
+			'layers': {
+				'base': {
+					'element': 'base',
+					'file': path.resolve('./test/data/jeol-images/5.jpg')
 				},
-				"solid": {
-					"element": "solid",
-					"file": ""
+				'solid': {
+					'element': 'solid',
+					'file': ''
 				}
 			},
-			"magnification": 100,
-			"name": "5",
-			"output": {
-				"height": 1024,
-				"width": 1280
+			'magnification': 100,
+			'name': '5',
+			'output': {
+				'height': 1024,
+				'width': 1280
 			},
-			"points": {},
-			"uri": path.resolve("./test/data/jeol-images/"),
-			"uuid": jeolJpg.data.uuid
+			'points': {},
+			'uri': path.resolve('./test/data/jeol-images/'),
+			'uuid': jeolJpg.data.uuid
 		});
 		assert.deepStrictEqual(jeolBmp.serialize(), {
-			"entryFile": path.resolve("./test/data/jeol-images/4.txt"),
-			"image": {
-				"height": 960,
-				"width": 1280
+			'entryFile': path.resolve('./test/data/jeol-images/4.txt'),
+			'image': {
+				'height': 960,
+				'width': 1280
 			},
-			"integrity": true,
-			"jeolFile": true,
-			"layers": {
-				"base": {
-					"element": "base",
-					"file": path.resolve("./test/data/jeol-images/4.bmp")
+			'integrity': true,
+			'jeolFile': true,
+			'layers': {
+				'base': {
+					'element': 'base',
+					'file': path.resolve('./test/data/jeol-images/4.bmp')
 				},
-				"solid": {
-					"element": "solid",
-					"file": ""
+				'solid': {
+					'element': 'solid',
+					'file': ''
 				}
 			},
-			"magnification": 1800,
-			"name": "4",
-			"output": {
-				"height": 1024,
-				"width": 1280
+			'magnification': 1800,
+			'name': '4',
+			'output': {
+				'height': 1024,
+				'width': 1280
 			},
-			"points": {},
-			"uri": path.resolve("./test/data/jeol-images/"),
-			"uuid": jeolBmp.data.uuid
+			'points': {},
+			'uri': path.resolve('./test/data/jeol-images/'),
+			'uuid': jeolBmp.data.uuid
 		});
 		assert.deepStrictEqual(jeolBroken.serialize(), {
-			"entryFile": path.resolve("./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt"),
-			"image": {
-				"height": 480,
-				"width": 640
+			'entryFile': path.resolve('./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.txt'),
+			'image': {
+				'height': 480,
+				'width': 640
 			},
-			"integrity": true,
-			"jeolFile": true,
-			"layers": {
-				"base": {
-					"element": "base",
-					"file": path.resolve("./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.bmp")
+			'integrity': true,
+			'jeolFile': true,
+			'layers': {
+				'base': {
+					'element': 'base',
+					'file': path.resolve('./test/data/2020-09-16_JEOL bmp/Standard_BSE_640-800.bmp')
 				},
-				"solid": {
-					"element": "solid",
-					"file": ""
+				'solid': {
+					'element': 'solid',
+					'file': ''
 				}
 			},
-			"magnification": 43,
-			"name": "Standard_BSE_640-800",
-			"output": {
-				"height": 512,
-				"width": 640
+			'magnification': 43,
+			'name': 'Standard_BSE_640-800',
+			'output': {
+				'height': 512,
+				'width': 640
 			},
-			"points": {},
-			"uri": path.resolve("./test/data/2020-09-16_JEOL bmp/"),
-			"uuid": jeolBroken.data.uuid
+			'points': {},
+			'uri': path.resolve('./test/data/2020-09-16_JEOL bmp/'),
+			'uuid': jeolBroken.data.uuid
 		});
 	});
 

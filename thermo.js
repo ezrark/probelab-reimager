@@ -155,7 +155,7 @@ module.exports = class Thermo {
 			point.x = point.pos[0];
 			point.y = point.pos[1];
 			points[point.name] = point;
-			switch (point.type) {
+			switch(point.type) {
 				case 'rect':
 					point.pos = calculations.rectToXY(point.values, this.data.metadata.width, this.data.metadata.height);
 					break;
@@ -408,7 +408,7 @@ module.exports = class Thermo {
 		if (point.size <= 4)
 			settings.pointType = constants.point.types.CIRCLE;
 
-		switch (settings.pointType) {
+		switch(settings.pointType) {
 			case constants.point.types.CIRCLE:
 				await ctx.beginPath();
 				await ctx.ellipse(point.centerX, point.centerY, point.halfSize, point.halfSize, 0, 0, 2 * Math.PI);
@@ -451,7 +451,7 @@ module.exports = class Thermo {
 		const height = this.data.scale ? this.data.scale.realHeight : this.data.metadata.height;
 
 		const {type, data} = await this.data.ctx.getImageData(0, 0, width, height);
-		switch (type) {
+		switch(type) {
 			default:
 			case 'array':
 				return await sharp(Buffer.from(data), {
@@ -539,7 +539,7 @@ module.exports = class Thermo {
 						outputUri = path.join(outputUri, (settings.acq.use ? '.jpg' : this.data.outputFormat));
 
 					const ext = outputUri.split('.').pop();
-					switch (ext) {
+					switch(ext) {
 						default:
 						case 'tiff':
 						case 'tif':
@@ -591,8 +591,20 @@ module.exports = class Thermo {
 		for (const layer of layers)
 			await this.addLayer(layer);
 
-		for (const {x, y, topX, topY, botX, botY, radius, polyPoints, name, type = 'spot', pointSettings = settings} of points)
-			switch (type) {
+		for (const {
+			x,
+			y,
+			topX,
+			topY,
+			botX,
+			botY,
+			radius,
+			polyPoints,
+			name,
+			type = 'spot',
+			pointSettings = settings
+		} of points)
+			switch(type) {
 				default:
 				case 'spot':
 					await this.addPoint(x, y, name, pointSettings);
@@ -610,7 +622,7 @@ module.exports = class Thermo {
 
 		if (settings.addPoints && this.data.points)
 			for (const point of Object.values(this.data.points))
-				switch (point.type) {
+				switch(point.type) {
 					default:
 					case 'spot':
 						await this.addPoint(
@@ -670,11 +682,22 @@ module.exports = class Thermo {
 			name: serial.name ? serial.name : this.data.name,
 			integrity: serial.integrity ? serial.integrity : this.data.integrity,
 			magnification: serial.magnification ? serial.magnification : this.data.magnification,
-			points: Object.values(serial.points ? serial.points : this.data.points).reduce((points, {name, type, values, file, x, y, pos}) => {
+			points: Object.values(serial.points ? serial.points : this.data.points).reduce((points, {
+				name,
+				type,
+				values,
+				file,
+				x,
+				y,
+				pos
+			}) => {
 				points[name] = {name, type, values, file, x, y, pos};
 				return points;
 			}, {}),
-			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {file, element}) => {
+			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {
+				file,
+				element
+			}) => {
 				layers[element] = {file, element};
 				return layers;
 			}, {}),
@@ -693,7 +716,7 @@ module.exports = class Thermo {
 		};
 	}
 
-	clone(uuid=undefined) {
+	clone(uuid = undefined) {
 		return new Thermo({uri: this.data.files.entry}, this.data.name, this.data.Canvas, undefined, uuid, this);
 	}
 };

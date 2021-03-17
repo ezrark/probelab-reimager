@@ -185,13 +185,13 @@ describe('#readNSSEntry', () => {
 		assert.deepStrictEqual(
 			io.readNSSEntry('./test/data/MonzogabbroExample.MAP.EDS/pc.csi'),
 			{
-				"points": [],
-				"layers": [],
-				"data": {
-					"spectra": "",
-					"base": "MonzogabbroExample.siref",
-					"grey": "MonzogabbroExample Grey.sitif",
-					"raw": "MonzogabbroExample.si"
+				'points': [],
+				'layers': [],
+				'data': {
+					'spectra': '',
+					'base': 'MonzogabbroExample.siref',
+					'grey': 'MonzogabbroExample Grey.sitif',
+					'raw': 'MonzogabbroExample.si'
 				}
 			}
 		);
@@ -201,13 +201,13 @@ describe('#readNSSEntry', () => {
 		assert.deepStrictEqual(
 			io.readNSSEntry('./test/data/MonzogabbroExample.MAP.EDS/fz.csi'),
 			{
-				"points": [],
-				"layers": [],
-				"data": {
-					"spectra": "",
-					"base": "MonzogabbroExample.siref",
-					"grey": "MonzogabbroExample Grey.sitif",
-					"raw": "MonzogabbroExample.si"
+				'points': [],
+				'layers': [],
+				'data': {
+					'spectra': '',
+					'base': 'MonzogabbroExample.siref',
+					'grey': 'MonzogabbroExample Grey.sitif',
+					'raw': 'MonzogabbroExample.si'
 				}
 			}
 		);

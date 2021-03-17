@@ -14,7 +14,7 @@ module.exports = class NodeCanvas extends EventEmitter {
 			namespaces: {
 				root: this
 			}
-		}
+		};
 	}
 
 	async send(namespace, command, args, uuid) {
@@ -36,7 +36,7 @@ module.exports = class NodeCanvas extends EventEmitter {
 							let luminosity = 0;
 
 							for (let i = 0; i < pixels.data.length; i += 4)
-								luminosity += Math.sqrt((0.299 * pixels.data[i]^2) + (0.587 * pixels.data[i + 1]^2) + (0.114 * pixels.data[i + 2]^2)) / 16.1245154965971;
+								luminosity += Math.sqrt((0.299 * pixels.data[i] ^ 2) + (0.587 * pixels.data[i + 1] ^ 2) + (0.114 * pixels.data[i + 2] ^ 2)) / 16.1245154965971;
 
 							data = luminosity / args[2] / args[3];
 							break;
@@ -69,7 +69,7 @@ module.exports = class NodeCanvas extends EventEmitter {
 								data = await space[command]();
 					}
 				this.emit('resolve', uuid, data);
-			} catch(err) {
+			} catch (err) {
 				this.emit('reject', uuid, err);
 			}
 		} else
@@ -80,7 +80,7 @@ module.exports = class NodeCanvas extends EventEmitter {
 		return await this.data.Canvas.registerFont(uri, css);
 	}
 
-	async createCanvas(width, height, uuid=undefined) {
+	async createCanvas(width, height, uuid = undefined) {
 		if (uuid === undefined)
 			uuid = GenerateUuid.v4();
 		const space = await this.data.Canvas.createCanvas(width, height);

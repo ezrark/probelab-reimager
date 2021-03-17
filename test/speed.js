@@ -5,7 +5,7 @@ require('sharp');
 const Canvas = require('canvas');
 
 const constants = require('../constants');
-const { PointShoot, ExtractedMap, CanvasRoot, NodeCanvas, JeolImage, PFE } = require('../module');
+const {PointShoot, ExtractedMap, CanvasRoot, NodeCanvas, JeolImage, PFE} = require('../module');
 
 let options = {
 	dirUri: 'test/data/',
@@ -64,7 +64,7 @@ async function bufferThermos(thermos, options, points) {
 		await (await thermo.addLayer({name: 'base'})).createBuffer(options.position, JSON.parse(JSON.stringify(options)), points);
 }
 
-async function speed(thermos=false, options={}) {
+async function speed(thermos = false, options = {}) {
 	const initTime = Date.now();
 	let gotThermosTime = initTime;
 	if (!thermos) {
@@ -110,6 +110,6 @@ getThermos(options.dirUri).then(async thermos => {
 		console.log(`Finished ${thermos.length} \t${defaultTimes.finished - defaultTimes.initTime}   \t${baseOptionTimes.finished - baseOptionTimes.initTime}      \t${pointBaseOptionTimes.finished - pointBaseOptionTimes.initTime}`);
 	}
 
-	console.log(`Averaged  \t${Math.round(totals.default/iterations)}  \t${Math.round(totals.base/iterations)}      \t${Math.round(totals.pointBase/iterations)}`);
+	console.log(`Averaged  \t${Math.round(totals.default / iterations)}  \t${Math.round(totals.base / iterations)}      \t${Math.round(totals.pointBase / iterations)}`);
 
 });

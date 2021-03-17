@@ -17,7 +17,7 @@ module.exports = class PFE {
 
 		for (let imageNum = 1; imageNum < totalImages; imageNum++) {
 			const image = new PFEImage(this, this.data.Canvas, imageNum);
-			imageInits.push(image.init())
+			imageInits.push(image.init());
 
 			this.data.images.set(image.data.name, image);
 		}
@@ -34,4 +34,4 @@ module.exports = class PFE {
 	getImages() {
 		return this.data.images;
 	}
-}
+};

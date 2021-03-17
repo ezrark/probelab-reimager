@@ -201,7 +201,7 @@ function checkBIMExists(uri) {
 	bim = bim.slice(0, bim.length - 1).join('.') + '.BIM';
 	fs.accessSync(bim, fs.constants.R_OK);
 
-	return true
+	return true;
 }
 
 // nothing exists to do this apparently

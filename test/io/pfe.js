@@ -46,7 +46,7 @@ describe('#checkBIMExists', () => {
 	});
 });
 
-describe('#getPFEExpectedImages', function () {
+describe('#getPFEExpectedImages', function() {
 	this.timeout(5000);
 
 	it('should throw when file is not found', async () => {

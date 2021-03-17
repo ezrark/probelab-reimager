@@ -29,7 +29,7 @@ function pointSettings(inputSettings = {}) {
 		pointSize: inputSettings.pointSize ? inputSettings.pointSize : constants.point.AUTOSIZE,
 		pointFontSize: inputSettings.pointFontSize ? inputSettings.pointFontSize : constants.point.AUTOSIZE,
 		pointFont: inputSettings.pointFont ? inputSettings.pointFont : constants.fonts.OPENSANS
-	}
+	};
 }
 
 function writeSettings(inputSettings = {}) {
@@ -76,7 +76,7 @@ function writeSettings(inputSettings = {}) {
 			yPolarity: inputSettings.acq.yPolarity === undefined ? constants.pictureSnapApp.YPOLARITYDEFAULT : inputSettings.acq.yPolarity,
 			stageUnits: inputSettings.acq.stageUnits === undefined ? constants.pictureSnapApp.STAGEUNITDEFAULT : inputSettings.acq.stageUnits.toLowerCase()
 		}
-	}
+	};
 }
 
 module.exports = {

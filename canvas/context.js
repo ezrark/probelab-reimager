@@ -6,7 +6,7 @@ module.exports = class Context {
 	async getImageData(x, y, width, height) {
 		return {
 			data: await this.sendRemote('getImageData', [x, y, width, height])
-		}
+		};
 	}
 
 	findLuminosity(x, y, width, height) {

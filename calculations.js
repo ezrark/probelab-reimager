@@ -217,7 +217,13 @@ async function calculateConstants(meta, scratchCtx, font) {
 	return metaConstants;
 }
 
-async function calculateScale(metaConstants, scratchCtx, magnification, scaleType, {scaleSize, scaleBarHeight, scaleBarTop, pixelSizeConstant, font}) {
+async function calculateScale(metaConstants, scratchCtx, magnification, scaleType, {
+	scaleSize,
+	scaleBarHeight,
+	scaleBarTop,
+	pixelSizeConstant,
+	font
+}) {
 	let scale = {
 		imageHeight: scaleType === constants.scale.types.JEOL ? metaConstants.fullHeight : metaConstants.height,
 		imageWidth: metaConstants.width,
@@ -267,7 +273,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 
 	// Calculate any changes in the image to account for scale type
 	// Also positions the scale bar's x and y positions
-	switch (scaleType) {
+	switch(scaleType) {
 		case constants.scale.types.BELOWLEFT:
 			scale.x = 0;
 			scale.y = metaConstants.height;
