@@ -1,6 +1,6 @@
 {
   "name": "probelab-reimager",
-  "version": "2021.76.0",
+  "version": "2021.78.0",
   "main": "module.js",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "iconv-lite": "^0.6.2",
-    "sharp": "^0.25.4"
+    "sharp": "^0.27.2"
   },
   "optionalDependencies": {
     "database-js-adodb": "^1.1.3"
