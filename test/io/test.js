@@ -10,6 +10,10 @@ describe('IO', () => {
 	});
 
 	describe('PFE', () => {
-		require('./pfe.js');
+		if (process.platform === 'win32')
+			require('./pfe.js');
+		else
+			it('should skip PFE in non-windows environments', () => {
+			});
 	});
 });
