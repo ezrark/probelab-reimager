@@ -46,33 +46,15 @@ describe('#checkBIMExists', () => {
 	});
 });
 
-describe('#getPFEExpectedImages', function() {
-	this.timeout(5000);
-
-	it('should throw when file is not found', async () => {
-		await assert.rejects(io.getPFEExpectedImages.bind(undefined, './test/data/pfe-mdb/not-real.mdb'));
-	});
-
-	it('should get the number of images in the mdb/bim on windows, otherwise throw', async () => {
-		if (process.platform === 'win32')
-			assert.deepStrictEqual(
-				await io.getPFEExpectedImages('./test/data/pfe-mdb/2019-08-12_Nolen.mdb'),
-				9
-			);
-		else
-			await assert.rejects(io.getPFEExpectedImages.bind(undefined, './test/data/pfe-mdb/2019-08-12_Nolen.mdb'));
-	});
-});
-
 describe('#readPFEEntry', () => {
 	it('should throw when file is not found', async () => {
 		await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/not-real.mdb?1'));
 	});
 
-	it('should get image data and points, otherwise throw', async () => {
+	it('should get all image data with points on windows, otherwise throw', async () => {
 		if (process.platform === 'win32')
 			assert.deepStrictEqual(
-				await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.mdb?1'),
+				(await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.MDB'))[0],
 				{
 					'image': {
 						'ImageAnalogAverages': 20,

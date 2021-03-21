@@ -6,29 +6,43 @@ require('sharp');
 const Canvas = require('canvas');
 const CanvasRoot = require('../../canvas/canvasroot.js');
 const NodeCanvas = require('../../canvas/nodecanvasmodule.js');
+const PFE = require('../../pfe.js');
 const PFEImage = require('../../pfeimage.js');
 
 describe('Initialize', () => {
+
 	it('should fail to initialize a non-existent file', () => {
-		assert.throws(() => new PFEImage({
-			data: {
+		assert.rejects(async () => {
+			const pfe = new PFE({
 				name: '2019-08-12_HAHA_Nolen.MDB',
 				uri: './test/data/pfe-mdb/2019-08-12_HAHA_Nolen.MDB'
-			}
-		}, {}, 1));
+			}, undefined);
+			await pfe.init();
+		});
 	});
 
 	it('should fail to initialize a MDB without a BIM file', () => {
-		assert.throws(() => new PFEImage({data: {name: '2019-08.MDB', uri: './test/data/pfe-mdb/2019-08.MDB'}}, {}, 1));
+		assert.rejects(async () => {
+			const pfe = new PFE({
+				name: '2019-08.MDB',
+				uri: './test/data/pfe-mdb/2019-08.MDB'
+			}, undefined);
+			await pfe.init();
+		});
 	});
 
-	it('should create the correct base metadata for a valid MDB and image index', () => {
-		const pfe = new PFEImage({
+	it('should create the correct base metadata for a valid MDB and image index', async () => {
+		let pfe = new PFEImage({
 			data: {
 				name: '2019-08-12_Nolen.MDB',
 				uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
 			}
-		}, {}, 1);
+		}, {}, {
+			image: {
+				ImageMag: 40
+			},
+			points: {}
+		}, 1);
 
 		assert.deepStrictEqual(pfe.data, {
 			'Canvas': {},
@@ -43,6 +57,9 @@ describe('Initialize', () => {
 			'metaConstants': {},
 			'integrity': true,
 			'magnification': 40,
+			'rawImageData': {
+				ImageMag: 40
+			},
 			'points': {},
 			'layers': {},
 			'files': {
@@ -79,13 +96,11 @@ describe('Async Initialize', async () => {
 		await canvas.init();
 	});
 
-	it('should async initialize the correct base metadata for a valid MDB and image index', () => {
-		const pfe = new PFEImage({
-			data: {
-				name: '2019-08-12_Nolen.MDB',
-				uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
-			}
-		}, canvas, 1);
+	it('should async initialize the correct base metadata for a valid MDB', () => {
+		const pfe = new PFE({
+			name: '2019-08.MDB',
+			uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
+		}, undefined);
 		assert.doesNotThrow(pfe.init.bind(pfe));
 	});
 });
@@ -97,17 +112,15 @@ describe('Thermo Functions', () => {
 		const nodeCanvas = new NodeCanvas(Canvas);
 		const canvas = new CanvasRoot(nodeCanvas);
 		await canvas.init();
-		pfe = new PFEImage({
-			data: {
-				name: '2019-08-12_Nolen.MDB',
-				uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
-			}
-		}, canvas, 1);
+		pfe = new PFE({
+			name: '2019-08-12_Nolen.MDB',
+			uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
+		}, canvas);
 		await pfe.init();
 	});
 
 	it('should correctly serialize', () => {
-		assert.deepStrictEqual(pfe.serialize(), {
+		assert.deepStrictEqual(pfe.getImage(1).serialize(), {
 			'entryFile': path.resolve('./test/data/pfe-mdb/2019-08-12_Nolen.MDB?1'),
 			'image': {
 				'height': 768,
@@ -304,12 +317,12 @@ describe('Thermo Functions', () => {
 				}
 			},
 			'uri': path.resolve('./test/data/pfe-mdb/'),
-			'uuid': pfe.data.uuid
+			'uuid': pfe.getImage(1).data.uuid
 		});
 	});
 
 	it('should correctly clone', () => {
-		let clone = pfe.clone(pfe.data.uuid);
-		assert.deepStrictEqual(pfe.serialize(), clone.serialize());
+		let clone = pfe.getImage(1).clone(pfe.getImage(1).data.uuid);
+		assert.deepStrictEqual(pfe.getImage(1).serialize(), clone.serialize());
 	});
 });

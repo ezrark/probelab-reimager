@@ -83,58 +83,57 @@ function readNSSEntry(uri) {
 	return output;
 }
 
-async function getPFEExpectedImages(databaseUri) {
-	const uri = databaseUri.split('?')[0];
-
-	try {
-		const connection = Adodb.open({
-			Database: uri.replace(/\//g, '\\\\')
-		});
-
-		const images = (await connection.query(`SELECT * FROM [Image]`));
-
-		return images.length;
-
-	} catch (err) {
-		throw 'Unable to open and read PFE mdb file';
-	}
-}
-
 async function readPFEEntry(databaseUri) {
-	const [uri, imageNum = '1'] = databaseUri.split('?');
+	const uri = databaseUri.split('?')[0];
 
 	let connection;
 
 	try {
-		connection = Adodb.open({
-			Database: uri.replace(/\//g, '\\\\')
+		// Try for the connection with a 1s retry in case it is locked for some reason
+		connection = await new Promise(resolve => {
+			try {
+				const c = Adodb.open({
+					Database: uri
+				});
+				resolve(c);
+			} catch (e) {
+				setTimeout(() => {
+					const c = Adodb.open({
+						Database: uri
+					});
+					resolve(c);
+				}, 1000);
+			}
 		});
 
-		const image = (await connection.query(`SELECT * FROM [Image] WHERE ImageNumber = ${parseInt(imageNum)}`))[0];
+		let images = (await connection.query(`SELECT * FROM [Image]`)).map(async image => {
+			const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
+			const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
+			const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
+			const yLarge = image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin;
 
-		const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
-		const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
-		const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
-		const yLarge = image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin;
+			const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
 
-		const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
+			const xDiff = Math.abs(xLarge - xSmall);
+			const yDiff = Math.abs(yLarge - ySmall);
 
+			const points = initialPoints
+			.map(({Number, StageX, StageY, LineToRow}) => {
+				return {
+					name: Number,
+					analysis: LineToRow,
+					type: 'spot',
+					values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
+				};
+			});
+
+			return {image, points};
+		});
+
+		images = await Promise.all(images);
 		await connection.close();
 
-		const xDiff = Math.abs(xLarge - xSmall);
-		const yDiff = Math.abs(yLarge - ySmall);
-
-		const points = initialPoints
-		.map(({Number, StageX, StageY, LineToRow}) => {
-			return {
-				name: Number,
-				analysis: LineToRow,
-				type: 'spot',
-				values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
-			};
-		});
-
-		return {image, points};
+		return images;
 	} catch (err) {
 		if (connection)
 			await connection.close();
@@ -263,7 +262,6 @@ module.exports = {
 	readBmp,
 	readMASFile,
 	readNSSEntry,
-	getPFEExpectedImages,
 	readPFEEntry,
 	readJeolEntry,
 	readBIM,

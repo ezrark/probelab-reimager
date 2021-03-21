@@ -5,11 +5,19 @@ const io = require('./io.js');
 const Thermo = require('./thermo.js');
 
 module.exports = class extends Thermo {
-	constructor(pfe, Canvas, imageIndex) {
+	constructor(pfe, Canvas, image, imageIndex) {
 		super({uri: pfe.data.uri + `?${imageIndex}`},
 			pfe.data.name + ` - ${imageIndex}`,
 			Canvas
 		);
+
+
+		const {image: imageData, points} = image;
+
+		this.data.points = points;
+		this.data.files.points = Object.keys(points);
+		this.data.magnification = imageData.ImageMag;
+		this.data.rawImageData = imageData;
 	}
 
 	staticInit() {
@@ -24,20 +32,14 @@ module.exports = class extends Thermo {
 			file: ''
 		}];
 
-		this.data.points = {};
+		//this.data.points = {};
 		this.data.files.points = [];
 		this.data.data.map = {};
-		this.data.magnification = 40;
+		//this.data.magnification = 40;
 	}
 
 	async init() {
 		if (!this.data.layers.base) {
-			const {image: imageData, points} = await io.readPFEEntry(this.data.files.entry);
-
-			this.data.points = points;
-			this.data.files.points = Object.keys(points);
-			this.data.magnification = imageData.ImageMag;
-
 			await Promise.all(this.data.files.layers.map(async ({file, element}) => {
 				if (element !== 'base')
 					if (element !== 'solid')
@@ -52,8 +54,8 @@ module.exports = class extends Thermo {
 				else {
 					const image = sharp(await io.readBIM(this.data.files.base), {
 						raw: {
-							width: imageData.ImageIx,
-							height: imageData.ImageIy,
+							width: this.data.rawImageData.ImageIx,
+							height: this.data.rawImageData.ImageIy,
 							channels: 1
 						}
 					}).flip();
@@ -68,7 +70,7 @@ module.exports = class extends Thermo {
 					const baseUri = this.data.uri.split('/');
 					baseUri.pop();
 
-					this.data.files.base = `${baseUri.join('/')}/${this.data.name}_${imageData.ImageTitle}_${imageData.ImageNumber}`;
+					this.data.files.base = `${baseUri.join('/')}/${this.data.name}_${this.data.rawImageData.ImageTitle}_${this.data.rawImageData.ImageNumber}`;
 				}
 			}));
 		}

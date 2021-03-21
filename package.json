@@ -1,6 +1,6 @@
 {
   "name": "probelab-reimager",
-  "version": "2021.80.0",
+  "version": "2021.80.1",
   "main": "module.js",
   "repository": {
     "type": "git",
