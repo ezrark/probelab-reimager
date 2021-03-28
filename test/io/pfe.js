@@ -51,153 +51,150 @@ describe('#readPFEEntry', () => {
 		await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/not-real.mdb?1'));
 	});
 
-	it('should get all image data with points on windows, otherwise throw', async () => {
-		if (process.platform === 'win32')
-			assert.deepStrictEqual(
-				(await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.MDB'))[0],
-				{
-					'image': {
-						'ImageAnalogAverages': 20,
-						'ImageBeamCurrent': 30,
-						'ImageBeamSize': 0,
-						'ImageChannelName': 'BSE',
-						'ImageChannelNumber': 2,
-						'ImageDisplayDPI': 1,
-						'ImageIx': 1024,
-						'ImageIy': 768,
-						'ImageKilovolts': 20,
-						'ImageMag': 160,
-						'ImageNumber': 1,
-						'ImageScanRotation': 0,
-						'ImageTakeoff': 40,
-						'ImageTitle': 'PM1-phase1',
-						'ImageToRow': 12,
-						'ImageXMax': 7.420400619506836,
-						'ImageXMin': 8.135159492492676,
-						'ImageYMax': -3.707637071609497,
-						'ImageYMin': -3.1693828105926514,
-						'ImageZ1': 9.942500114440918,
-						'ImageZ2': 9.942500114440918,
-						'ImageZ3': 9.942500114440918,
-						'ImageZ4': 9.942500114440918,
-						'ImageZMax': 12122,
-						'ImageZMin': 51
+	it('should get all image data with points', async () => {
+		assert.deepStrictEqual(
+			(await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.MDB'))[0],
+			{
+				'image': {
+					'ImageAnalogAverages': 20,
+					'ImageBeamCurrent': 30,
+					'ImageBeamSize': 0,
+					'ImageChannelName': 'BSE',
+					'ImageChannelNumber': 2,
+					'ImageDisplayDPI': 1,
+					'ImageIx': 1024,
+					'ImageIy': 768,
+					'ImageKilovolts': 20,
+					'ImageMag': 160,
+					'ImageNumber': 1,
+					'ImageScanRotation': 0,
+					'ImageTakeoff': 40,
+					'ImageTitle': 'PM1-phase1',
+					'ImageToRow': 12,
+					'ImageXMax': 7.4204006,
+					'ImageXMin': 8.1351595,
+					'ImageYMax': -3.7076371,
+					'ImageYMin': -3.1693828,
+					'ImageZ1': 9.9425001,
+					'ImageZ2': 9.9425001,
+					'ImageZ3': 9.9425001,
+					'ImageZ4': 9.9425001,
+					'ImageZMax': 12122,
+					'ImageZMin': 51
+				},
+				'points': [
+					{
+						'analysis': 16,
+						'name': 125,
+						'type': 'spot',
+						'values': [
+							0.3356695,
+							0.2691472,
+							0.7147589,
+							0.5382543
+						]
 					},
-					'points': [
-						{
-							'analysis': 16,
-							'name': 125,
-							'type': 'spot',
-							'values': [
-								0.33566951751708984,
-								0.2691471576690674,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 16,
-							'name': 126,
-							'type': 'spot',
-							'values': [
-								0.27945947647094727,
-								0.24294710159301758,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 16,
-							'name': 127,
-							'type': 'spot',
-							'values': [
-								0.28276968002319336,
-								0.2794370651245117,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 17,
-							'name': 128,
-							'type': 'spot',
-							'values': [
-								0.23475933074951172,
-								0.30803704261779785,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 17,
-							'name': 129,
-							'type': 'spot',
-							'values': [
-								0.18075942993164062,
-								0.336137056350708,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 17,
-							'name': 130,
-							'type': 'spot',
-							'values': [
-								0.16026926040649414,
-								0.2927370071411133,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 18,
-							'name': 131,
-							'type': 'spot',
-							'values': [
-								0.34045934677124023,
-								0.15854716300964355,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 18,
-							'name': 132,
-							'type': 'spot',
-							'values': [
-								0.36096954345703125,
-								0.11954712867736816,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 18,
-							'name': 133,
-							'type': 'spot',
-							'values': [
-								0.30946969985961914,
-								0.1230471134185791,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						},
-						{
-							'analysis': 19,
-							'name': 134,
-							'type': 'spot',
-							'values': [
-								0.4402594566345215,
-								0.3992471694946289,
-								0.7147588729858398,
-								0.5382542610168457
-							]
-						}
-					]
-				}
-			);
-		else
-			await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/2019-08-12_Nolen.mdb?1'));
+					{
+						'analysis': 16,
+						'name': 126,
+						'type': 'spot',
+						'values': [
+							0.2794595,
+							0.2429471,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 16,
+						'name': 127,
+						'type': 'spot',
+						'values': [
+							0.2827697,
+							0.2794371,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 17,
+						'name': 128,
+						'type': 'spot',
+						'values': [
+							0.2347593,
+							0.3080371,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 17,
+						'name': 129,
+						'type': 'spot',
+						'values': [
+							0.1807594,
+							0.3361371,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 17,
+						'name': 130,
+						'type': 'spot',
+						'values': [
+							0.1602693,
+							0.2927370,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 18,
+						'name': 131,
+						'type': 'spot',
+						'values': [
+							0.3404594,
+							0.1585472,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 18,
+						'name': 132,
+						'type': 'spot',
+						'values': [
+							0.3609696,
+							0.1195472,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 18,
+						'name': 133,
+						'type': 'spot',
+						'values': [
+							0.3094697,
+							0.1230471,
+							0.7147589,
+							0.5382543
+						]
+					},
+					{
+						'analysis': 19,
+						'name': 134,
+						'type': 'spot',
+						'values': [
+							0.4402595,
+							0.3992472,
+							0.7147589,
+							0.5382543
+						]
+					}
+				]
+			}
+		);
 	});
 });
