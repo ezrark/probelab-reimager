@@ -1,3 +1,16 @@
+# Probelab-ReImager
+This is the backend module and command line version for Probelab-ReImager. Most options are available via cli but more
+control is offered through the module interface.
+
+Iconv-lite no longer needed, pre-compressed version only supporting win1251 for JEOL files included. This reduces
+dependency size by ~400kb minified.
+
+Full PFE MDB support has been added for Windows, MacOS, and Linux. Windows uses the provided driver and MacOS/Linux uses
+[mdb-sql](https://github.com/mdbtools/mdbtools)
+
+### Code Acknowledgments
+Thanks to [Evan Miller](https://github.com/evanmiller) for his upkeep of MDB tools, quick fixes and responses.
+
 ```
 Usage: thermo-reimager [options] [directory]
 

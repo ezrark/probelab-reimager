@@ -1,11 +1,24 @@
 const fs = require('fs');
 
-const iconv = require('iconv-lite');
+const iconv = require('./external/win1251.js'); //iconv-lite generated win1251 ONLY (v0.7.0-pre / Mar 27, 2021)
 let Adodb;
 
+// Load adodb in windows environments, otherwise load mdb-sql
+// If both fail to load, use a mock-up that will return nothing
 try {
 	Adodb = require('database-js-adodb');
 } catch (err) {
+	try {
+		Adodb = require('./external/mdb-sql.js');
+	} catch (e) {
+		console.log('Unable to load adodb or mdb-sql');
+		Adodb = {
+			open: () => ({
+				query: () => [],
+				close: () => {}
+			})
+		}
+	}
 }
 
 const constants = require('./constants.json');
@@ -90,15 +103,15 @@ async function readPFEEntry(databaseUri) {
 
 	try {
 		// Try for the connection with a 1s retry in case it is locked for some reason
-		connection = await new Promise(resolve => {
+		connection = await new Promise(async resolve => {
 			try {
-				const c = Adodb.open({
+				const c = await Adodb.open({
 					Database: uri
 				});
 				resolve(c);
 			} catch (e) {
-				setTimeout(() => {
-					const c = Adodb.open({
+				setTimeout(async () => {
+					const c = await Adodb.open({
 						Database: uri
 					});
 					resolve(c);
@@ -107,10 +120,20 @@ async function readPFEEntry(databaseUri) {
 		});
 
 		let images = (await connection.query(`SELECT * FROM [Image]`)).map(async image => {
-			const xSmall = image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax;
-			const xLarge = image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin;
-			const ySmall = image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax;
-			const yLarge = image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin;
+			image.ImageXMax = parseFloat(image.ImageXMax.toFixed(7));
+			image.ImageXMin = parseFloat(image.ImageXMin.toFixed(7));
+			image.ImageYMax = parseFloat(image.ImageYMax.toFixed(7));
+			image.ImageYMin = parseFloat(image.ImageYMin.toFixed(7));
+
+			image.ImageZ1 = parseFloat(image.ImageZ1.toFixed(7));
+			image.ImageZ2 = parseFloat(image.ImageZ2.toFixed(7));
+			image.ImageZ3 = parseFloat(image.ImageZ3.toFixed(7));
+			image.ImageZ4 = parseFloat(image.ImageZ4.toFixed(7));
+
+			const xSmall = (image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax);
+			const xLarge = (image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin);
+			const ySmall = (image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax);
+			const yLarge = (image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin);
 
 			const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
 
@@ -123,7 +146,12 @@ async function readPFEEntry(databaseUri) {
 					name: Number,
 					analysis: LineToRow,
 					type: 'spot',
-					values: [Math.abs(xLarge - StageX), Math.abs(ySmall - StageY), xDiff, yDiff]
+					values: [
+						parseFloat(Math.abs(xLarge - StageX).toFixed(7)),
+						parseFloat(Math.abs(ySmall - StageY).toFixed(7)),
+						parseFloat(xDiff.toFixed(7)),
+						parseFloat(yDiff.toFixed(7))
+					]
 				};
 			});
 
@@ -137,7 +165,7 @@ async function readPFEEntry(databaseUri) {
 	} catch (err) {
 		if (connection)
 			await connection.close();
-		throw 'Unable to open and read PFE mdb file';
+		throw new Error('Unable to open and read PFE mdb file');
 	}
 }
 
