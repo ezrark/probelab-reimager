@@ -23,7 +23,7 @@
   },
   "optionalDependencies": {
     "database-js-adodb": "^1.1.3",
-    "node-mdb-sql": "bob620/node-mdb-sql"
+    "node-mdb-sql": "node-mdb-sql"
   },
   "peerDependencies": {
     "canvas": "^2.7.0"
