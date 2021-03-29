@@ -9,7 +9,7 @@ try {
 	Adodb = require('database-js-adodb');
 } catch (err) {
 	try {
-		Adodb = require('./external/mdb-sql.js');
+		Adodb = require('node-mdb-sql');
 	} catch (e) {
 		console.log('Unable to load adodb or mdb-sql');
 		Adodb = {
