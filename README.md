@@ -11,6 +11,8 @@ Full PFE MDB support has been added for Windows, MacOS, and Linux. Windows uses 
 ### Code Acknowledgments
 Thanks to [Evan Miller](https://github.com/evanmiller) for his upkeep of MDB tools, quick fixes and responses.
 
+### Documentation
+
 ```
 Usage: thermo-reimager [options] [directory]
 
