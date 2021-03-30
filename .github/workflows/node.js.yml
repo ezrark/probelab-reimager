@@ -27,7 +27,7 @@ jobs:
       - run: npm ci
 
       - if: "!contains(matrix.os, 'windows')"
-      - run: sudo npm test
+        run: sudo npm test
 
       - if: "contains(matrix.os, 'windows')"
-      - run: npm test
+        run: npm test
