@@ -25,4 +25,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
+      - if: "!contains(matrix.os, 'windows')"
       - run: sudo npm test
+      - if: "contains(matrix.os, 'windows')"
+      - run: npm test
