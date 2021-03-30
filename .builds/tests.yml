@@ -1,0 +1,13 @@
+name: All Mocha Tests For Windows and MacOS
+image: ubuntu/20.04
+sources:
+  - https://github.com/bob620/probelab-reimager
+
+tasks:
+  - setup: |
+      curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+      sudo apt-get install -y nodejs
+      cd probelab-reimager
+      npm ci
+  - test: |
+      npm test
