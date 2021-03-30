@@ -10,4 +10,5 @@ tasks:
       cd probelab-reimager
       npm ci
   - test: |
-      npm test
+      cd probelab-reimager
+      sudo npm test
