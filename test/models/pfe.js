@@ -105,7 +105,8 @@ describe('Async Initialize', async () => {
 	});
 });
 
-describe('Thermo Functions', () => {
+describe('Thermo Functions', function() {
+	this.timeout(10000);
 	let pfe;
 
 	before(async () => {
@@ -117,7 +118,7 @@ describe('Thermo Functions', () => {
 			uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
 		}, canvas);
 		await pfe.init();
-	}).timeout(10000);
+	});
 
 	it('should correctly serialize', () => {
 		assert.deepStrictEqual(pfe.getImage(1).serialize(), {
