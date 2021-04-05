@@ -1,6 +1,6 @@
 {
   "name": "probelab-reimager",
-  "version": "2021.88.1",
+  "version": "2021.88.2",
   "main": "module.js",
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
   },
   "optionalDependencies": {
     "database-js-adodb": "^1.1.3",
-    "node-mdb-sql": "0.0.3"
+    "node-mdb-sql": "0.0.4"
   },
   "peerDependencies": {
     "canvas": "^2.7.0"
