@@ -13,6 +13,7 @@ describe('Sanitize', () => {
 			'font': 'Open Sans Bold',
 			'pixelSizeConstant': 116.73,
 			'scaleBarHeight': 0,
+			"scaleBarLabelSize": 1,
 			'scaleBarTop': false,
 			'scaleColor': false,
 			'scaleSize': 0

@@ -105,6 +105,7 @@
     }
   },
   "scale": {
+    "SCALEBARLABELSIZE": 1,
     "AUTOSIZE": 0,
     "SCALEBARTOP": false,
     "background": {

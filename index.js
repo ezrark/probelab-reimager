@@ -26,6 +26,7 @@ function help() {
 	console.log('-o, --opacity [0-100]                    \tOpacity of the background for the scale (default 0)');
 	console.log('-s, --scale [µm]                         \tScale to display, < 1 for auto');
 	console.log('-k, --barheight [0-100]                  \tSet scale bar to a % of the text font height, < 1 for auto(8)');
+	console.log('-m, --scaletextheight [0-500]            \tSet scale bar to a % of the text font height, < 1 for auto(100)');
 	console.log('-x, --pixelsize [num]                    \tSets the pixel size constant for the probe calibration equation');
 	console.log('-n, --pointtype [pointType]              \tSets the type used to define points (Only over 128 res)');
 	console.log('-e, --textcolor [textColor]              \tSets the color to display the point names in');
@@ -91,6 +92,7 @@ let options = {
 	belowColor: constants.colors.AUTO,
 	scaleSize: constants.scale.AUTOSIZE,
 	scaleBarHeight: constants.scale.AUTOSIZE,
+	scaleBarLabelSize: constants.scale.SCALEBARLABELSIZE,
 	scaleBarTop: constants.scale.SCALEBARTOP,
 	pixelSizeConstant: constants.PIXELSIZECONSTANT,
 	backgroundOpacity: constants.scale.background.AUTOOPACITY,
@@ -146,6 +148,9 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 			case '--barheight':
 				options.scaleBarHeight = parseInt(process.argv[++i]) / 100;
+				break;
+			case '--scaletextheight':
+				options.scaleBarLabelSize = parseInt(process.argv[++i]) / 100;
 				break;
 			case '--opacity':
 				options.backgroundOpacity = parseInt(process.argv[++i]);
@@ -383,6 +388,9 @@ for (let i = 2; i < process.argv.length; i++) {
 				break;
 			case '-i':
 				options.addPoints = true;
+				break;
+			case '-m':
+				options.scaleBarLabelSize = parseInt(process.argv[++i]) / 100;
 				break;
 			case '-a':
 				options.acq = {};

@@ -8,6 +8,7 @@ function scaleSettings(inputSettings = {}) {
 		scaleColor: inputSettings.scaleColor ? inputSettings.scaleColor : constants.colors.AUTO,
 		scaleSize: inputSettings.scaleSize ? inputSettings.scaleSize : constants.scale.AUTOSIZE,
 		scaleBarHeight: inputSettings.scaleBarHeight ? inputSettings.scaleBarHeight : constants.scale.AUTOSIZE,
+		scaleBarLabelSize: inputSettings.scaleBarLabelSize ? inputSettings.scaleBarLabelSize : constants.scale.SCALEBARLABELSIZE,
 		scaleBarTop: inputSettings.scaleBarTop ? inputSettings.scaleBarTop : constants.scale.SCALEBARTOP,
 		pixelSizeConstant: inputSettings.pixelSizeConstant ? inputSettings.pixelSizeConstant : constants.PIXELSIZECONSTANT,
 		backgroundOpacity: inputSettings.backgroundOpacity ? inputSettings.backgroundOpacity : constants.scale.background.AUTOOPACITY,
