@@ -17,14 +17,14 @@ describe('#readBIM', () => {
 	it('should read first index by default', async () => {
 		assert.deepStrictEqual(
 			await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM'),
-			'19e4aa83510aa3387a46369d7cdf0bc9ed49d32be9757c274d1d8f143cc09c2b'
+			'8dc612cf7881db7fb7c54c2ed7c5cf0a299a0513e742e5ac9d0a5dfac2624da5'
 		);
 	});
 
 	it('should read an arbitrary index', async () => {
 		assert.deepStrictEqual(
 			await readBim('./test/data/pfe-mdb/2019-08-12_Nolen.BIM', 3),
-			'cd7e733ff72952862df87a6d915746bc6b96c3982f2cee47265e5ca61d75afb7'
+			'6f7c988ea17a7153768b0aa7ba42b959f0e5c9f4f5e088df191a439a50e2115a'
 		);
 	});
 
