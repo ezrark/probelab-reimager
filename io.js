@@ -183,26 +183,24 @@ async function readBIM(bimUri) {
 		const height = data.readUInt32LE(offset + 4);
 		offset += 8;
 
-		try {
-			if (fileIndex === index) {
-				let pixels = [];
-				let largest = 0;
+		if (fileIndex === index) {
+			let pixels = [];
+			let max = Number.NEGATIVE_INFINITY;
+			let min = Number.POSITIVE_INFINITY;
 
-				for (let i = 0; i < width * height; i++) {
-					const first = data.readUIntLE(offset + (i * 4), 2);
+			for (let i = 0; i < width * height; i++) {
+				const value = data.readInt32LE(offset + (i * 4));
 
-					if (first > largest)
-						largest = first;
+				if (value > max)
+					max = value;
+				else if (value < min)
+					min = value;
 
-					pixels.push(first);
-				}
-
-				if (largest !== 255)
-					pixels = pixels.map(pixel => Math.round(pixel / largest * 255));
-
-				return Buffer.from(pixels);
+				pixels.push(value);
 			}
-		} catch(err) {
+
+			max = max - min;
+			return Buffer.from(pixels.map(pixel => ((pixel - min) / max) * 255));
 		}
 		offset += width * height * 4;
 		fileIndex++;
