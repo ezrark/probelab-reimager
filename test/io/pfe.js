@@ -4,6 +4,7 @@ const assert = require('assert');
 const {describe, it} = require('mocha');
 
 const io = require('../../io.js');
+const PFE = require('../../pfe.js');
 
 async function readBim(uri, index) {
 	const pic = await io.readBIM(`${uri}${index !== undefined ? `?${index}` : ''}`);
@@ -50,7 +51,27 @@ describe('#readPFEEntry', () => {
 	it('should throw when file is not found', async () => {
 		await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/not-real.mdb?1'));
 	});
+/*
+	it('should get all image data with pojhkintggggggs', async () => {
+		const pfe = new PFE({
+			name: '2019-08-12_Nolen.MDB',
+			uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
+		}, undefined);
+		const test = await pfe.init();
 
+		console.log();
+	});
+
+	it('should get all image data with pojhkints', async () => {
+		const pfe = new PFE({
+			name: 'Inqua-Intav_01-26-2010.MDB',
+			uri: 'C:/Users/brude/Downloads/New folder/Inqua-Intav_01-26-2010.MDB'
+		}, undefined);
+		const test = await pfe.init();
+
+		console.log();
+	});
+*/
 	it('should get all image data with points', async () => {
 		assert.deepStrictEqual(
 			(await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.MDB'))[0],
@@ -80,19 +101,26 @@ describe('#readPFEEntry', () => {
 					'ImageZ3': 9.9425001,
 					'ImageZ4': 9.9425001,
 					'ImageZMax': 12122,
-					'ImageZMin': 51
+					'ImageZMin': 51,
+					'xDiff': 0.7147589,
+					'yDiff': 0.5382543
 				},
 				'points': [
 					{
 						'analysis': 16,
-						'name': 125,
-						'type': 'spot',
-						'values': [
-							0.3356695,
-							0.2691472,
-							0.7147589,
-							0.5382543
-						]
+						'name': '125',
+						'stage': {
+							'orientation': {
+								x: 'reverse',
+								y: 'reverse'
+							},
+							'reference': {
+								x: 7.79949,
+								y: -3.4384899,
+								z: 9.9425001
+							}
+						},
+						'type': 'spot'
 					},
 					{
 						'analysis': 16,

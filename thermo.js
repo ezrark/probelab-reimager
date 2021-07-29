@@ -151,9 +151,19 @@ module.exports = class Thermo {
 		this.data.metadata = this.data.layers.base.metadata;
 
 		this.data.points = Object.values(this.data.points).reduce((points, point) => {
-			point.pos = calculations.pointToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-			point.x = point.pos[0];
-			point.y = point.pos[1];
+			point.pos = [];
+
+			if (point.x1 === undefined) {
+				point.pos = calculations.pointToXY(point.values, this.data.metadata.width, this.data.metadata.height);
+				point.x = point.pos[0];
+				point.y = point.pos[1];
+			} else {
+				point.x = point.x1;
+				point.y = point.y1;
+				point.pos[0] = point.x;
+				point.pos[1] = point.y;
+			}
+
 			points[point.name] = point;
 			switch(point.type) {
 				case 'rect':
