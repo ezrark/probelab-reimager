@@ -3,6 +3,7 @@ const sharp = require('sharp');
 const constants = require('./constants.json');
 const io = require('./io.js');
 const Thermo = require('./thermo.js');
+const calculations = require('./calculations');
 
 module.exports = class extends Thermo {
 	constructor(pfe, Canvas, image, imageIndex) {
@@ -74,6 +75,22 @@ module.exports = class extends Thermo {
 				}
 			}));
 		}
+
+		this.data.points = Object.values(this.data.points).reduce((points, point) => {
+			const pos = calculations.pointToXYTest(point, {
+				width: this.data.layers.base.metadata.width,
+				height: this.data.layers.base.metadata.height,
+				x: [this.data.rawImageData.ImageXMin, this.data.rawImageData.ImageXMax],
+				y: [this.data.rawImageData.ImageYMin, this.data.rawImageData.ImageYMax],
+				xDiff: this.data.rawImageData.xDiff,
+				yDiff: this.data.rawImageData.yDiff
+			});
+			point.x1 = pos[0];
+			point.y1 = pos[1];
+			points[point.name] = point;
+
+			return points;
+		}, {});
 
 		return await this.internalInit();
 	}

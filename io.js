@@ -120,6 +120,7 @@ async function readPFEEntry(databaseUri) {
 		});
 
 		let images = (await connection.query(`SELECT * FROM [Image]`)).map(async image => {
+			// Normalize all the incoming image location data
 			image.ImageXMax = parseFloat(image.ImageXMax.toFixed(7));
 			image.ImageXMin = parseFloat(image.ImageXMin.toFixed(7));
 			image.ImageYMax = parseFloat(image.ImageYMax.toFixed(7));
@@ -130,28 +131,50 @@ async function readPFEEntry(databaseUri) {
 			image.ImageZ3 = parseFloat(image.ImageZ3.toFixed(7));
 			image.ImageZ4 = parseFloat(image.ImageZ4.toFixed(7));
 
-			const xSmall = (image.ImageXMin <= image.ImageXMax ? image.ImageXMin : image.ImageXMax);
-			const xLarge = (image.ImageXMin <= image.ImageXMax ? image.ImageXMax : image.ImageXMin);
-			const ySmall = (image.ImageYMin <= image.ImageYMax ? image.ImageYMin : image.ImageYMax);
-			const yLarge = (image.ImageYMin <= image.ImageYMax ? image.ImageYMax : image.ImageYMin);
+			// Default to anti-cartesian (JEOL)
+			let yDirection = constants.stageOrientation.direction.OBVERSE;
+			let xDirection = constants.stageOrientation.direction.OBVERSE;
+			let xSmall = image.ImageXMin;
+			let xLarge = image.ImageXMax;
+			let ySmall = image.ImageYMin;
+			let yLarge = image.ImageYMax;
+
+			// Make sure we have the correct orientation
+			if (image.ImageXMin > image.ImageXMax) {
+				xSmall = image.ImageXMax;
+				xLarge = image.ImageXMin;
+				xDirection = constants.stageOrientation.direction.REVERSE;
+			}
+
+			if (image.ImageYMin > image.ImageYMax) {
+				ySmall = image.ImageYMax;
+				yLarge = image.ImageYMin;
+				yDirection = constants.stageOrientation.direction.REVERSE;
+			}
+
+			// Image size in measurable distance
+			image.xDiff = parseFloat(Math.abs(xLarge - xSmall).toFixed(7));
+			image.yDiff = parseFloat(Math.abs(yLarge - ySmall).toFixed(7));
 
 			const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
 
-			const xDiff = Math.abs(xLarge - xSmall);
-			const yDiff = Math.abs(yLarge - ySmall);
-
 			const points = initialPoints
-			.map(({Number, StageX, StageY, LineToRow}) => {
+			.map(({Number, StageX, StageY, StageZ, LineToRow}) => {
 				return {
-					name: Number,
+					name: '' + Number,
 					analysis: LineToRow,
 					type: 'spot',
-					values: [
-						parseFloat(Math.abs(xLarge - StageX).toFixed(7)),
-						parseFloat(Math.abs(ySmall - StageY).toFixed(7)),
-						parseFloat(xDiff.toFixed(7)),
-						parseFloat(yDiff.toFixed(7))
-					]
+					stage: {
+						orientation: {
+							x: xDirection,
+							y: yDirection
+						},
+						reference: {
+							x: parseFloat(StageX.toFixed(7)),
+							y: parseFloat(StageY.toFixed(7)),
+							z: parseFloat(StageZ.toFixed(7))
+						}
+					},
 				};
 			});
 

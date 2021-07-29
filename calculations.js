@@ -51,6 +51,13 @@ function pointToXY(values, width, height) {
 	];
 }
 
+function pointToXYTest(point, image) {
+	return [
+		Math.floor(Math.abs((image.x[0] - point.stage.reference.x) / image.xDiff) * image.width),
+		Math.floor(Math.abs((image.y[1] - point.stage.reference.y) / image.yDiff) * image.height)
+	];
+}
+
 function circleToXY(values, width, height) {
 	const [x, y] = pointToXY(values.slice(0, 4), width, height);
 	const [x2, y2] = pointToXY(values.slice(4, 8), width, height);
@@ -375,6 +382,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 }
 
 module.exports = {
+	pointToXYTest,
 	rectToXY,
 	polyToXY,
 	circleToXY,
