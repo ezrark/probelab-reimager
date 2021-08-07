@@ -268,6 +268,8 @@ module.exports = class Thermo {
 
 		settings = Sanitize.scaleSettings(JSON.parse(JSON.stringify(settings)));
 
+		settings.realImageWidth = this.data.rawImageData.xDiff;
+
 		if (this.data.scratchCtx === undefined)
 			await this.init();
 

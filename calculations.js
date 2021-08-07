@@ -1,7 +1,7 @@
 const constants = require('./constants');
 const scales = [1000, 500, 250, 100, 50, 25, 10, 5, 1, 0.5, 0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.001];
 
-function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize = calculatePixelSize(magnification, width, pixelSizeConstant)) {
+function estimateVisualScale(magnification, width, realImageWidth, pixelSize = calculatePixelSize(width, realImageWidth, magnification)) {
 	let scaleIndex = 0;
 
 	if (40 < magnification && magnification <= 100)
@@ -31,16 +31,23 @@ function estimateVisualScale(magnification, width, pixelSizeConstant, pixelSize 
 	if (500000 < magnification)
 		scaleIndex = 13;
 
-	if (Math.round(scales[scaleIndex] / pixelSize) > .3 * width)
+	if (Math.round(pixelSize * scales[scaleIndex]) > .3 * width)
 		scaleIndex += 1;
 
-	return [scales[scaleIndex], Math.round(scales[scaleIndex] / pixelSize), pixelSize];
+	return [scales[scaleIndex], Math.round(scales[scaleIndex]) / pixelSize, pixelSize];
 }
 
-function calculatePixelSize(magnification, width, pixelSizeConstant) {
+function calculatePixelSize(imageWidth, viewWidth, mag) {
 	//  Calculated formula    "1 scale"
-	// (Constant * mag^-1) * (1024/width)
-	return (pixelSizeConstant * Math.pow(magnification, -1)) * (1024 / width);
+	// (Constant * mag^-1) * (1024/imageWidth)
+	//return (pixelSizeConstant * mag^-1 * (1024 / imageWidth);
+	// pixelSizeInMicrons = (viewWidth^-1 / imageWidth) * 1000
+	//   pixelSizeConstant = mag / pixelSizeInMicrons
+	//
+	// Allows for calculation of pixel size if given view and image width
+	//  idk how to calculate magnification and/or without viewWidth
+	//const pixelSizeInMicrons = (Math.pow(viewWidth, -1) / imageWidth) * 1000;
+	return (Math.pow(viewWidth, -1) / imageWidth) * 1000;
 }
 
 // Values: [pos-x, pos-y, max-x, max-y]
@@ -235,6 +242,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 	scaleBarHeight,
 	scaleBarTop,
 	pixelSizeConstant,
+	realImageWidth,
 	font,
 	scaleBarLabelSize
 }) {
@@ -273,7 +281,7 @@ async function calculateScale(metaConstants, scratchCtx, magnification, scaleTyp
 		scaleBarHeight = 1;
 
 	// General easy calculations and estimations
-	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, metaConstants.width, pixelSizeConstant);
+	[scale.visualScale, scale.scaleLength, scale.pixelSize] = estimateVisualScale(magnification, metaConstants.width, realImageWidth);
 
 	// Multiply the scaling of the font height
 	if (scaleBarLabelSize !== 1) {
