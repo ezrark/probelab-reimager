@@ -113,11 +113,27 @@ describe('Thermo Functions', function() {
 		const nodeCanvas = new NodeCanvas(Canvas);
 		const canvas = new CanvasRoot(nodeCanvas);
 		await canvas.init();
+//		pfe = new PFE({
+//			name: '2018-04-05_EPMA Training',
+//			uri: './test/data/2018-04-05_EPMA/2018-04-05_EPMA Training.MDB'
+//		}, canvas);
+//		await pfe.init();
+
+//		await (pfe.getImage(1)).addScale();
+
+
 		pfe = new PFE({
 			name: '2019-08-12_Nolen.MDB',
 			uri: './test/data/pfe-mdb/2019-08-12_Nolen.MDB'
 		}, canvas);
 		await pfe.init();
+
+		await (pfe.getImage(1)).addScale();
+		await (pfe.getImage(2)).addScale();
+		await (pfe.getImage(3)).addScale();
+		await (pfe.getImage(4)).addScale();
+
+		console.log();
 	});
 
 	it('should correctly serialize', () => {
