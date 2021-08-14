@@ -6,12 +6,13 @@ const Thermo = require('./thermo.js');
 const calculations = require('./calculations');
 
 module.exports = class extends Thermo {
-	constructor(pfe, Canvas, image, imageIndex) {
+	constructor(pfe, Canvas, image, imageIndex, uuid = undefined) {
 		super({uri: pfe.data.uri + `?${imageIndex}`},
 			pfe.data.name + ` - ${imageIndex}`,
-			Canvas
+			Canvas,
+			undefined,
+			uuid
 		);
-
 
 		const {image: imageData, points} = image;
 

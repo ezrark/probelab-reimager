@@ -18,7 +18,7 @@ module.exports = class PFE {
 		let i = 0;
 		for (let imageData of images) {
 			i++;
-			const image = new PFEImage(this, this.data.Canvas, imageData, i);
+			const image = new PFEImage(this, this.data.Canvas, imageData, i, imageData.uuid);
 			imageInits.push(image.init());
 
 			this.data.images.set(i, image);
