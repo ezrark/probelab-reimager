@@ -5,6 +5,19 @@
       "REVERSE": "reverse"
     }
   },
+  "software": {
+    "id": {
+      "PFE": "pfe",
+      "THERMO": "nss"
+    }
+  },
+  "position": {
+    "types": {
+      "SPOT": "spot",
+      "POLYGON": "poly",
+      "CIRCLE": "circle"
+    }
+  },
   "PIXELSIZECONSTANT": 116.73,
   "SCALEBARHEIGHTPERCENT": 0.15,
   "FONTWIDTHMUTIPLIER": 0.03,

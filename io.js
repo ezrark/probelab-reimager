@@ -1,5 +1,8 @@
 const fs = require('fs');
 
+const generateUuid = require('./generateuuid.js');
+const Position = require('./position.js');
+
 const iconv = require('./external/win1251.js'); //iconv-lite generated win1251 ONLY (v0.7.0-pre / Mar 27, 2021)
 let Adodb;
 
@@ -7,21 +10,35 @@ let Adodb;
 // If both fail to load, use a mock-up that will return nothing
 try {
 	Adodb = require('database-js-adodb');
-} catch (err) {
+} catch(err) {
 	try {
 		Adodb = require('node-mdb-sql');
-	} catch (e) {
+	} catch(e) {
 		console.log('Unable to load adodb or mdb-sql');
 		Adodb = {
 			open: () => ({
 				query: () => [],
-				close: () => {}
+				close: () => {
+				}
 			})
-		}
+		};
 	}
 }
 
 const constants = require('./constants.json');
+
+function convertRawThermoToPositionType(rawType) {
+	switch(rawType.toLowerCase()) {
+		case 'spot':
+		default:
+			return constants.position.types.SPOT;
+		case 'circ':
+			return constants.position.types.CIRCLE;
+		case 'poly':
+		case 'rect':
+			return constants.position.types.POLYGON;
+	}
+}
 
 function readMASFile(uri) {
 	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).split('#');
@@ -40,7 +57,7 @@ function readMASFile(uri) {
 	}, {});
 }
 
-function readNSSEntry(uri) {
+function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
 	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('#').map(text => {
 		const data = text.split('\r\n');
 		if (data.length === 1)
@@ -50,6 +67,7 @@ function readNSSEntry(uri) {
 	});
 
 	let output = {
+		imageUuid,
 		points: [],
 		layers: [],
 		data: {
@@ -84,13 +102,22 @@ function readNSSEntry(uri) {
 			}
 
 	for (const element of rawData) {
-		let type = element.shift().split(' ')[1].toLowerCase();
+		let type = element.shift().split(' ')[1].toLowerCase().trim();
 		if (type !== 'imgint')
-			output.points.push({
-				type,
-				file: element.shift(),
-				values: element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat()
-			});
+			output.points.push(
+				new Position.Thermo(element.shift(), 0, convertRawThermoToPositionType(type),
+					element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat(),
+					{
+						orientation: {
+							x: constants.stageOrientation.direction.REVERSE,
+							y: constants.stageOrientation.direction.REVERSE
+						}
+					},
+					{
+						uuid: imageUuid,
+						software: constants.software.id.THERMO
+					}
+				));
 	}
 
 	return output;
@@ -109,7 +136,7 @@ async function readPFEEntry(databaseUri) {
 					Database: uri
 				});
 				resolve(c);
-			} catch (e) {
+			} catch(e) {
 				setTimeout(async () => {
 					const c = await Adodb.open({
 						Database: uri
@@ -120,6 +147,8 @@ async function readPFEEntry(databaseUri) {
 		});
 
 		let images = (await connection.query(`SELECT * FROM [Image]`)).map(async image => {
+			const imageUuid = generateUuid.v4();
+
 			// Normalize all the incoming image location data
 			image.ImageXMax = parseFloat(image.ImageXMax.toFixed(7));
 			image.ImageXMin = parseFloat(image.ImageXMin.toFixed(7));
@@ -159,33 +188,26 @@ async function readPFEEntry(databaseUri) {
 			const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
 
 			const points = initialPoints
-			.map(({Number, StageX, StageY, StageZ, LineToRow}) => {
-				return {
-					name: '' + Number,
-					analysis: LineToRow,
-					type: 'spot',
-					stage: {
+				.map(({Number, StageX, StageY, LineToRow}) => {
+					return new Position.Jeol(`${Number}`, LineToRow, constants.position.types.SPOT, [StageX, StageY], {
 						orientation: {
 							x: xDirection,
 							y: yDirection
-						},
-						reference: {
-							x: parseFloat(StageX.toFixed(7)),
-							y: parseFloat(StageY.toFixed(7)),
-							z: parseFloat(StageZ.toFixed(7))
 						}
-					},
-				};
-			});
+					}, {
+						uuid: imageUuid,
+						software: constants.software.id.PFE
+					});
+				});
 
-			return {image, points};
+			return {image, points, uuid: imageUuid};
 		});
 
 		images = await Promise.all(images);
 		await connection.close();
 
 		return images;
-	} catch (err) {
+	} catch(err) {
 		if (connection)
 			await connection.close();
 		throw new Error('Unable to open and read PFE mdb file');

@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const sharp = require('sharp');
 
 const constants = require('./constants');
+const Position = require('./position.js');
 const calculations = require('./calculations');
 const Sanitize = require('./sanitize');
 const GenerateUuid = require('./generateuuid');
@@ -24,6 +25,7 @@ module.exports = class Thermo {
 			scratchCtx: undefined,
 			integrity: true,
 			magnification: 0,
+			stageData: {},
 			points: {},
 			layers: {},
 			files: {
@@ -70,15 +72,25 @@ module.exports = class Thermo {
 			file: ''
 		});
 
+		// Parse Points
 		this.data.points = entryData.points.reduce((points, point) => {
-			point.data = io.readMASFile(path.join(this.data.uri, point.file));
-			point.name = point.file.split('.')[0].split('_pt').pop();
-			points[point.name] = point;
+			const data = io.readMASFile(path.join(this.data.uri, point.getName()));
+
+			// On hold until I can calculate pathfinder image distances
+			if (this.data.stageData.xDiff === undefined) {
+//				this.data.stageData.xDiff = ;
+//				this.data.stageData.yDiff = ;
+			}
+
+			// Massage the name
+			point.data.name = point.getName().split('.')[0].split('_pt').pop();
+			points[point.getUuid()] = point;
 			return points;
 		}, {});
 
 		this.data.files.points = Object.keys(this.data.points);
 
+		// Try to look for any maps
 		try {
 			this.data.data.map = io.readMASFile(path.join(this.data.uri, constants.extractedMap.fileFormats.SPECTRA));
 			const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
@@ -89,6 +101,7 @@ module.exports = class Thermo {
 		} catch (err) {
 		}
 
+		// Try to parse and use points for an integrity check
 		try {
 			const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
 			if (this.data.magnification !== 0 && this.data.magnification !== mag)
@@ -151,32 +164,7 @@ module.exports = class Thermo {
 		this.data.metadata = this.data.layers.base.metadata;
 
 		this.data.points = Object.values(this.data.points).reduce((points, point) => {
-			point.pos = [];
-
-			if (point.x1 === undefined) {
-				point.pos = calculations.pointToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-				point.x = point.pos[0];
-				point.y = point.pos[1];
-			} else {
-				point.x = point.x1;
-				point.y = point.y1;
-				point.pos[0] = point.x;
-				point.pos[1] = point.y;
-			}
-
-			points[point.name] = point;
-			switch(point.type) {
-				case 'rect':
-					point.pos = calculations.rectToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-					break;
-				case 'circle':
-					point.pos = calculations.circleToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-					break;
-				case 'polygon':
-					point.pos = calculations.polyToXY(point.values, this.data.metadata.width, this.data.metadata.height);
-					break;
-			}
-
+			points[point.getUuid()] = point.calculateForImage(this);
 			return points;
 		}, {});
 
@@ -601,63 +589,33 @@ module.exports = class Thermo {
 		for (const layer of layers)
 			await this.addLayer(layer);
 
-		for (const {
-			x,
-			y,
-			topX,
-			topY,
-			botX,
-			botY,
-			radius,
-			polyPoints,
-			name,
-			type = 'spot',
-			pointSettings = settings
-		} of points)
-			switch(type) {
-				default:
-				case 'spot':
-					await this.addPoint(x, y, name, pointSettings);
-					break;
-				case 'rect':
-					await this.addRectangle(topX, topY, botX, botY, name, pointSettings);
-					break;
-				case 'circle':
-					await this.addCircle(x, y, radius, name, pointSettings);
-					break;
-				case 'polygon':
-					await this.addPoly(polyPoints, name, pointSettings);
-					break;
-			}
-
 		if (settings.addPoints && this.data.points)
+			points = points.concat(this.data.points);
+
+		if (points.length > 0)
 			for (const point of Object.values(this.data.points))
 				switch(point.type) {
 					default:
-					case 'spot':
+					case constants.position.types.SPOT:
 						await this.addPoint(
-							...point.pos,
+							point.references[0].x,
+							point.references[0].y,
 							point.name,
 							settings
 						);
 						break;
-					case 'rect':
-						await this.addRectangle(
-							...point.pos,
-							point.name,
-							settings
-						);
-						break;
-					case 'circle':
+					case constants.position.types.CIRCLE:
 						await this.addCircle(
-							...point.pos,
+							point.references[0].x,
+							point.references[0].y,
+							point.radius,
 							point.name,
 							settings
 						);
 						break;
-					case 'polygon':
-						await this.addPoly(
-							point.pos,
+					case constants.position.types.POLYGON:
+						await this.addRectangle(
+							point.references,
 							point.name,
 							settings
 						);
