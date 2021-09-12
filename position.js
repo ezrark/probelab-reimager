@@ -34,27 +34,48 @@ class Position {
 		return this.data.analysis;
 	}
 
-	calculateForImage(thermo, settings = {}) {
+	calculateForImage(thermo) {
 		const analysisNumber = this.getAnalysisNumber();
 
-		// Return a static point structure for the given image
+		// Return a static point structure for the given image using what we know
 		return {
 			uuid: this.getUuid(),
 			name: `${this.getName()}${analysisNumber !== 0 ? ` - ${analysisNumber}` : ''}`,
 			label: this.getName(),
 			analysis: analysisNumber,
-			type,
-			reference: this.data.reference.map(({x, y, r}) => {
-				x = x;
-				y = y;
+			type: this.getType(),
+			data: this.data.data,
+			relativeReference: this.data.reference.map(({x, y, r}) => {
+				x = (x - (this.data.orientation.x === constants.stageOrientation.direction.OBVERSE ? -(thermo.data.stageMetadata.minX) : thermo.data.stageMetadata.minX)) / thermo.data.stageMetadata.pixelSize;
+				y = (y - (this.data.orientation.y === constants.stageOrientation.direction.OBVERSE ? -(thermo.data.stageMetadata.minY) : thermo.data.stageMetadata.maxY)) / thermo.data.stageMetadata.pixelSize;
+
+				x = x * (this.data.orientation.x === constants.stageOrientation.direction.UNKNOWN ? 1000 : 1)
+				y = y * (this.data.orientation.y === constants.stageOrientation.direction.UNKNOWN ? 1000 : 1)
+
+				x = x * (this.data.orientation.x === constants.stageOrientation.direction.REVERSE ? -1 : 1)
 
 				if (r !== undefined) {
-					r = r
+					r = r / thermo.data.stageMetadata.pixelSize
+					return {x, y, r}
 				}
 
-				return {x, y, r};
+				return {x, y};
+			}),
+			absoluteReference: this.data.reference.map(({x, y, r}) => {
+				if (r !== undefined)
+					return {x, y, r}
+				return {x, y};
 			})
 		};
+	}
+
+	extraData(data) {
+		this.data.data = data;
+		return this;
+	}
+
+	update() {
+		return this;
 	}
 }
 
@@ -62,7 +83,6 @@ class Thermo extends Position {
 	constructor(name = '', analysis = 0, type = constants.position.types.SPOT, rawReference = [], stage = {}, source = {}, uuid = v4()) {
 		super(name, analysis, type, rawReference, stage, source, uuid);
 
-		// FIXME: Calculate for given Image
 		switch(type) {
 			case constants.position.types.SPOT:
 				this.data.reference = [
@@ -92,6 +112,25 @@ class Thermo extends Position {
 				break;
 		}
 	}
+
+	// Requires an update based on the pixelSizeConstant given by the user due to Pathfinder/NSS not giving the pixel size
+	update(thermo) {
+		this.data.pixelSize = thermo.data.stageMetadata.pixelSize;
+		this.data.reference = this.data.reference.map(({x, y, r}) => {
+			// Absolute position in mm
+			x = (x * thermo.data.metadata.width * thermo.data.stageMetadata.pixelSize / 1000) + (parseFloat(this.data.data.xposition.data) - (thermo.data.metadata.width / 2 * thermo.data.stageMetadata.pixelSize / 1000)) * 1000;
+			y = (y * thermo.data.metadata.height * thermo.data.stageMetadata.pixelSize / 1000) + (parseFloat(this.data.data.yposition.data) - (thermo.data.metadata.height / 2 * thermo.data.stageMetadata.pixelSize / 1000)) * 1000;
+
+			if (r !== undefined) {
+				r = r * thermo.data.stageMetadata.pixelSize;
+				return {x, y, r};
+			}
+
+			return {x, y};
+		})
+
+		return this;
+	}
 }
 
 class Jeol extends Position {
@@ -104,7 +143,6 @@ class PFE extends Position {
 	constructor(name = '', analysis = 0, type = constants.position.types.SPOT, rawReference = [], stage = {}, source = {}, uuid = v4()) {
 		super(name, analysis, type, rawReference, stage, source, uuid);
 
-		// FIXME: Calculate for given Image
 		switch(type) {
 			case constants.position.types.SPOT:
 				this.data.reference = [
