@@ -9,6 +9,7 @@ module.exports = class extends Thermo {
 	constructor(pfe, Canvas, image, imageIndex, uuid = undefined) {
 		super({uri: pfe.data.uri + `?${imageIndex}`},
 			pfe.data.name + ` - ${imageIndex}`,
+			0,
 			Canvas,
 			undefined,
 			uuid
@@ -77,21 +78,20 @@ module.exports = class extends Thermo {
 			}));
 		}
 
-		this.data.points = Object.values(this.data.points).reduce((points, point) => {
-			const pos = calculations.pointToXYTest(point, {
-				width: this.data.layers.base.metadata.width,
-				height: this.data.layers.base.metadata.height,
-				x: [this.data.rawImageData.ImageXMin, this.data.rawImageData.ImageXMax],
-				y: [this.data.rawImageData.ImageYMin, this.data.rawImageData.ImageYMax],
-				xDiff: this.data.rawImageData.xDiff,
-				yDiff: this.data.rawImageData.yDiff
-			});
-			point.x1 = pos[0];
-			point.y1 = pos[1];
-			points[point.name] = point;
+		// Set metadata to be in um
+		this.data.stageMetadata = {
+			pixelSize: parseFloat((this.data.rawImageData.pixelSize).toFixed(10)),
+			maxX: parseFloat((this.data.rawImageData.ImageXMax * 1000).toFixed(15)),
+			minX: parseFloat((this.data.rawImageData.ImageXMin * 1000).toFixed(15)),
+			maxY: parseFloat((this.data.rawImageData.ImageYMax * 1000).toFixed(15)),
+			minY: parseFloat((this.data.rawImageData.ImageYMin * 1000).toFixed(15))
+		};
 
-			return points;
-		}, {});
+		const xDiffToCenter = this.data.rawImageData.xDiff / 2 * 1000;
+		const yDiffToCenter = this.data.rawImageData.yDiff / 2 * 1000;
+
+		this.data.stageMetadata.centerX = this.data.stageMetadata.minX + (this.data.rawImageData.xDirection === constants.stageOrientation.direction.REVERSE ? -xDiffToCenter : xDiffToCenter);
+		this.data.stageMetadata.centerY = this.data.stageMetadata.minY + (this.data.rawImageData.xDirection === constants.stageOrientation.direction.REVERSE ? -yDiffToCenter : -yDiffToCenter);
 
 		return await this.internalInit();
 	}

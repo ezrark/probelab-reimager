@@ -10,6 +10,7 @@ module.exports = class extends Thermo {
 	constructor(entryFile, Canvas) {
 		super(entryFile,
 			entryFile.name.substring(0, entryFile.name.length - constants.jeol.fileFormats.ENTRY.length),
+			0,
 			Canvas
 		);
 
