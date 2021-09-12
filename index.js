@@ -10,6 +10,7 @@ const constants = require('./constants.json');
 const ExtractedMap = require('./extractedmap.js');
 const PointShoot = require('./pointshoot.js');
 const JeolImage = require('./jeolimage.js');
+const PFE = require('./pfe.js');
 const CanvasRoot = require('./canvas/canvasroot.js');
 const NodeCanvas = require('./canvas/nodecanvasmodule.js');
 
@@ -104,12 +105,14 @@ let options = {
 	pointFont: constants.fonts.OPENSANS,
 	font: constants.fonts.OPENSANS,
 	acq: undefined,
-	tiff: {
-		quality: constants.export.tiff.quality,
-		compression: constants.export.tiff.compression,
-		predictor: constants.export.tiff.predictor
-	},
-	jpeg: {}
+//	tiff: {
+//		quality: constants.export.tiff.quality,
+//		compression: constants.export.tiff.compression,
+//		predictor: constants.export.tiff.predictor
+//	},
+	png: {
+		use: true
+	}
 };
 
 let layers = [];
@@ -666,13 +669,13 @@ else {
 								}
 
 								if (name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
-									const thermo = new PointShoot(file, canvas);
+									const thermo = new PointShoot(file, options.pixelSizeConstant, canvas);
 									thermos.push(thermo);
 									return thermo.init();
 								}
 
 								if (name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
-									const thermo = new ExtractedMap(file, canvas);
+									const thermo = new ExtractedMap(file, options.pixelSizeConstant, canvas);
 									thermos.push(thermo);
 									return thermo.init();
 								}
@@ -692,10 +695,12 @@ else {
 							if (name.endsWith(constants.extractedMap.fileFormats.LAYER))
 								thermos.map(thermo => thermo.addLayerFile(dir.uri));
 
-							if (name.endsWith(constants.pfe.fileFormats.ENTRY)) {
-								const thermo = new PFEImage(dir.uri + '?5', canvas);
-								thermos.push(thermo);
-								return thermo.init();
+							// Not working with PFE shit
+							if (name.endsWith(constants.pfe.fileFormats.ENTRY.toLowerCase())) {
+								const thermo = new PFE(dir, canvas);
+								const idk = thermo.init();
+								thermos.push(idk);
+								return idk
 							}
 
 							if (name.endsWith(constants.jeol.fileFormats.ENTRY)) {
@@ -731,6 +736,7 @@ else {
 
 async function writeThermos(thermos, options, points, layers) {
 	for (const thermo of thermos) {
+		await thermo;
 		await thermo.createWrite(options.position, JSON.parse(JSON.stringify(options)), points, layers);
 		console.log(`Wrote ${thermo.data.name}`);
 	}
