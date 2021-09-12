@@ -2,7 +2,8 @@
   "stageOrientation": {
     "direction": {
       "OBVERSE": "obverse",
-      "REVERSE": "reverse"
+      "REVERSE": "reverse",
+      "UNKNOWN": "unknown"
     }
   },
   "software": {
