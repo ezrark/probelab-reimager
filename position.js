@@ -10,6 +10,7 @@ class Position {
 			name,
 			analysis,
 			rawReference,
+			originalReference: [],
 			reference: [],
 			orientation: {
 				x: stage.orientation.x,
@@ -65,7 +66,14 @@ class Position {
 				if (r !== undefined)
 					return {x, y, r}
 				return {x, y};
-			})
+			}),
+			getUuid: this.getUuid.bind(this),
+			getType: this.getType.bind(this),
+			getName: this.getName.bind(this),
+			getAnalysisNumber: this.getAnalysisNumber.bind(this),
+			calculateForImage: this.calculateForImage.bind(this),
+			extraData: this.extraData.bind(this),
+			update: this.update.bind(this)
 		};
 	}
 
@@ -111,12 +119,14 @@ class Thermo extends Position {
 					});
 				break;
 		}
+
+		this.data.originalReference = JSON.parse(JSON.stringify(this.data.reference));
 	}
 
 	// Requires an update based on the pixelSizeConstant given by the user due to Pathfinder/NSS not giving the pixel size
 	update(thermo) {
 		this.data.pixelSize = thermo.data.stageMetadata.pixelSize;
-		this.data.reference = this.data.reference.map(({x, y, r}) => {
+		this.data.reference = this.data.originalReference.map(({x, y, r}) => {
 			// Absolute position in mm
 			x = (x * thermo.data.metadata.width * thermo.data.stageMetadata.pixelSize / 1000) + (parseFloat(this.data.data.xposition.data) - (thermo.data.metadata.width / 2 * thermo.data.stageMetadata.pixelSize / 1000)) * 1000;
 			y = (y * thermo.data.metadata.height * thermo.data.stageMetadata.pixelSize / 1000) + (parseFloat(this.data.data.yposition.data) - (thermo.data.metadata.height / 2 * thermo.data.stageMetadata.pixelSize / 1000)) * 1000;
@@ -169,6 +179,8 @@ class PFE extends Position {
 					});
 				break;
 		}
+
+		this.data.originalReference = JSON.parse(JSON.stringify(this.data.reference));
 	}
 }
 
