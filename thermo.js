@@ -11,7 +11,7 @@ const GenerateUuid = require('./generateuuid');
 const io = require('./io');
 
 module.exports = class Thermo {
-	constructor(entryFile, name, Canvas, uri = undefined, uuid = undefined, previous = undefined) {
+	constructor(entryFile, name, pixelSizeConstant = constants.PIXELSIZECONSTANT, Canvas, uri = undefined, uuid = undefined, previous = undefined) {
 		this.data = {
 			Canvas,
 			uuid: uuid ? uuid : GenerateUuid.v4(),
@@ -19,6 +19,7 @@ module.exports = class Thermo {
 			name,
 			scale: undefined,
 			metaConstants: {},
+			pixelSizeConstant,
 			canvas: undefined,
 			ctx: undefined,
 			scratchCanvas: undefined,
@@ -35,6 +36,7 @@ module.exports = class Thermo {
 				layers: []
 			},
 			metadata: {},
+			stageMetadata: {},
 			data: {
 				point: {},
 				map: {}
@@ -50,10 +52,12 @@ module.exports = class Thermo {
 			this.data.metaConstants = JSON.parse(JSON.stringify(previous.data.metaConstants));
 			this.data.integrity = previous.data.integrity;
 			this.data.magnification = previous.data.magnification;
+			this.data.pixelSizeConstant = previous.data.pixelSizeConstant;
 			this.data.points = JSON.parse(JSON.stringify(previous.data.points));
 			this.data.layers = JSON.parse(JSON.stringify(previous.data.layers));
 			this.data.files = JSON.parse(JSON.stringify(previous.data.files));
 			this.data.metadata = JSON.parse(JSON.stringify(previous.data.metadata));
+			this.data.stageMetadata = JSON.parse(JSON.stringify(previous.data.stageMetadata));
 			this.data.data = JSON.parse(JSON.stringify(previous.data.data));
 		}
 	}
@@ -82,6 +86,9 @@ module.exports = class Thermo {
 //				this.data.stageData.yDiff = ;
 			}
 
+			// Add in the extra metadata from the point file
+			point.extraData(data);
+
 			// Massage the name
 			point.data.name = point.getName().split('.')[0].split('_pt').pop();
 			points[point.getUuid()] = point;
@@ -103,7 +110,7 @@ module.exports = class Thermo {
 
 		// Try to parse and use points for an integrity check
 		try {
-			const mag = parseInt(this.data.points[this.data.files.points[0]].data[constants.pointShoot.MAGNIFICATIONKEY].data);
+			const mag = parseInt(this.data.points[this.data.files.points[0]].data.data[constants.pointShoot.MAGNIFICATIONKEY].data);
 			if (this.data.magnification !== 0 && this.data.magnification !== mag)
 				this.data.integrity = false;
 			else
@@ -161,10 +168,35 @@ module.exports = class Thermo {
 	}
 
 	async internalInit() {
+		// PixelSizeConstant is to calculate the absolute position of points on Pathfinder data
 		this.data.metadata = this.data.layers.base.metadata;
 
+		// Make sure we have a pixel size (Pathfinder/NSS only ones without this by default)
+		if (this.data.stageMetadata.pixelSize === undefined) {
+			this.data.stageMetadata.pixelSize = parseFloat((calculations.calculatePixelSize(this.data.magnification, this.data.metadata.width, this.data.pixelSizeConstant)).toFixed(10));
+			let positionData = Object.values(this.data.points).length > 0 ? Object.values(this.data.points)[0].data.data : this.data.data.map;
+			if (positionData.xposition === undefined)
+				positionData = {
+					xposition: {
+						data: '0'
+					},
+					yposition: {
+						data: '0'
+					}
+				};
+
+			this.data.stageMetadata.centerX = parseFloat(positionData.xposition.data) * 1000;
+			this.data.stageMetadata.centerY = parseFloat(positionData.yposition.data) * 1000;
+			this.data.stageMetadata.maxX = this.data.stageMetadata.centerX + ((this.data.metadata.width / 2) * this.data.stageMetadata.pixelSize);
+			this.data.stageMetadata.minX = this.data.stageMetadata.centerX - ((this.data.metadata.width / 2) * this.data.stageMetadata.pixelSize);
+			this.data.stageMetadata.maxY = this.data.stageMetadata.centerY - ((this.data.metadata.height / 2) * this.data.stageMetadata.pixelSize);
+			this.data.stageMetadata.minY = this.data.stageMetadata.centerY + ((this.data.metadata.height / 2) * this.data.stageMetadata.pixelSize);
+		}
+
 		this.data.points = Object.values(this.data.points).reduce((points, point) => {
-			points[point.getUuid()] = point.calculateForImage(this);
+			// We need to update the point and then calculate it for this image.
+			// Reason being that we can't calculate the pixelSize without a constant that can be set by the user
+			points[point.getUuid()] = point.update(this).calculateForImage(this);
 			return points;
 		}, {});
 
@@ -176,6 +208,7 @@ module.exports = class Thermo {
 
 		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, this.data.metaConstants.maxWidth, this.data.metaConstants.maxHeight);
 		this.data.ctx = await canvas.getContext('2d');
+
 		return this;
 	}
 
@@ -534,7 +567,7 @@ module.exports = class Thermo {
 
 				if (settings.tiff.use || settings.webp.use || settings.png.use || settings.jpeg.use) {
 					if (!settings.uri || settings.acq.use)
-						outputUri = path.join(outputUri, (settings.acq.use ? '.jpg' : this.data.outputFormat));
+						outputUri = outputUri + (settings.acq.use ? '.jpg' : this.data.outputFormat);
 
 					const ext = outputUri.split('.').pop();
 					switch(ext) {
@@ -598,24 +631,24 @@ module.exports = class Thermo {
 					default:
 					case constants.position.types.SPOT:
 						await this.addPoint(
-							point.references[0].x,
-							point.references[0].y,
+							point.relativeReference[0].x,
+							point.relativeReference[0].y,
 							point.name,
 							settings
 						);
 						break;
 					case constants.position.types.CIRCLE:
 						await this.addCircle(
-							point.references[0].x,
-							point.references[0].y,
-							point.radius,
+							point.relativeReference[0].x,
+							point.relativeReference[0].y,
+							point.relativeReference[0].r,
 							point.name,
 							settings
 						);
 						break;
 					case constants.position.types.POLYGON:
 						await this.addRectangle(
-							point.references,
+							point.relativeReference,
 							point.name,
 							settings
 						);
@@ -652,14 +685,14 @@ module.exports = class Thermo {
 			magnification: serial.magnification ? serial.magnification : this.data.magnification,
 			points: Object.values(serial.points ? serial.points : this.data.points).reduce((points, {
 				name,
+				label,
+				analysis,
 				type,
-				values,
-				file,
-				x,
-				y,
-				pos
+				uuid,
+				relativeReference,
+				absoluteReference
 			}) => {
-				points[name] = {name, type, values, file, x, y, pos};
+				points[name] = {uuid, name, type, label, analysis, relativeReference, absoluteReference};
 				return points;
 			}, {}),
 			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {
@@ -685,7 +718,7 @@ module.exports = class Thermo {
 	}
 
 	clone(uuid = undefined) {
-		return new Thermo({uri: this.data.files.entry}, this.data.name, this.data.Canvas, undefined, uuid, this);
+		return new Thermo({uri: this.data.files.entry}, this.data.name, undefined, this.data.Canvas, undefined, uuid, this);
 	}
 };
 
