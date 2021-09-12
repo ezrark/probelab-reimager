@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const generateUuid = require('./generateuuid.js');
 const Position = require('./position.js');
@@ -78,28 +79,87 @@ function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
 		}
 	};
 
-	for (const line of rawData.shift())
-		if (line.length > 1 && line.includes('.'))
-			switch(line.split('.')[1].toLowerCase()) {
-				case 'psref':
-				case 'siref':
-					output.data.base = line;
-					break;
-				case 'si':
-					output.data.raw = line;
-					break;
-				case 'sitif':
-					output.data.grey = line;
-					break;
-				case 'simcs':
-					const name = line.toLowerCase().split(' ');
-					output.layers.push({
-						element: `${name.pop().split('.')[0]} ${name.pop()}`,
-						file: line
-					});
-					break;
+	// csi
+	// p_s
+	// lsctl
+	// map
 
+	// Types
+	//   LS - Linescan
+	//     REF - (tif)
+	//     MSA - (EMSA)
+	//   FZ - XPhase
+	//     M - (tif)
+	//     MA - Map Analysis? (tif)
+	//     ME - (tif)
+	//     S - (ESMA)
+	//     SA - spectrum analysis? (EMSA)
+	//     SE - (EMSA)
+	//   PC - Compass
+	//     M - (tif)
+	//     MA - Map Analysis? (tif)
+	//     ME - (tif)
+	//     S - (EMSA)
+	//     SA - (EMSA)
+	//     SE - (EMSA)
+	//   SI - Spectral Imaging
+	//     SITIF - (tif)
+	//     REF - (tif)
+	//     MSA - (EMSA)
+	//     MCS - (?)
+	//   PS - Point ID
+	//     REF - (tif)
+	//     MSA - (EMSA)
+
+	// Files
+	//   EMSA - EMSA for map data (EMSA)
+	//   CSI  - directory index for maps
+	//   P_S  - directory index for PS
+	//   EM   - Element Map (tif)
+
+	for (const line of rawData.shift())
+		if (line.length > 1 && line.includes('.')) {
+			const extension = path.extname(line).toLowerCase().slice(1);
+			if (extension.length > 2) {
+				// Identify typed files
+				const type = extension.slice(0, 2);
+				const format = extension.slice(2);
+				let name;
+
+				switch(format) {
+					case 'm':
+					case 'ma':
+					case 'me':
+						name = line.toLowerCase().split(' ');
+						output.layers.push({
+							element: `${name.pop().split('.')[0]} ${name.pop()}`,
+							file: line
+						});
+						break;
+					case 's':
+					case 'sa':
+					case 'se':
+						break;
+					case 'ref':
+						output.data.base = line;
+						break;
+					case 'tif':
+						output.data.grey = line;
+						break;
+					case 'mcs':
+						name = line.toLowerCase().split(' ');
+						output.layers.push({
+							element: `${name.pop().split('.')[0]} ${name.pop()}`,
+							file: line
+						});
+						break;
+				}
+			} else {
+				// Generic files
+				if (extension === 'si')
+					output.data.raw = line;
 			}
+		}
 
 	for (const element of rawData) {
 		let type = element.shift().split(' ')[1].toLowerCase().trim();
@@ -109,8 +169,8 @@ function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
 					element.map(line => line.length > 1 ? line.split(',').filter(x => x !== undefined && x.length > 0).map(num => parseInt(num)) : []).flat(),
 					{
 						orientation: {
-							x: constants.stageOrientation.direction.REVERSE,
-							y: constants.stageOrientation.direction.REVERSE
+							x: constants.stageOrientation.direction.UNKNOWN,
+							y: constants.stageOrientation.direction.UNKNOWN
 						}
 					},
 					{
@@ -184,12 +244,18 @@ async function readPFEEntry(databaseUri) {
 			// Image size in measurable distance
 			image.xDiff = parseFloat(Math.abs(xLarge - xSmall).toFixed(7));
 			image.yDiff = parseFloat(Math.abs(yLarge - ySmall).toFixed(7));
+			image.pixelSize = parseFloat(((image.xDiff * 1000) / image.ImageIx).toFixed(10));
+			image.centerX = image.ImageXMin + (image.xDiff / 2);
+			image.centerY = image.ImageYMin + (image.yDiff / 2);
+			image.xDirection = xDirection;
+			image.yDirection = yDirection;
 
 			const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
 
+			// Calculate in um
 			const points = initialPoints
 				.map(({Number, StageX, StageY, LineToRow}) => {
-					return new Position.Jeol(`${Number}`, LineToRow, constants.position.types.SPOT, [StageX, StageY], {
+					return new Position.PFE(`${Number}`, LineToRow, constants.position.types.SPOT, [StageX * 1000, StageY * 1000], {
 						orientation: {
 							x: xDirection,
 							y: yDirection
