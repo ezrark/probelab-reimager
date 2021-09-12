@@ -479,7 +479,7 @@ describe('Thermo Functions', () => {
 		const nodeCanvas = new NodeCanvas(Canvas);
 		const canvas = new CanvasRoot(nodeCanvas);
 		await canvas.init();
-		pointShoot = new PointShoot({name: '64.p_s', uri: './test/data/64.PS.EDS/64.p_s'}, canvas);
+		pointShoot = new PointShoot({name: '64.p_s', uri: './test/data/64.PS.EDS/64.p_s'}, undefined, canvas);
 		await pointShoot.init();
 	});
 
