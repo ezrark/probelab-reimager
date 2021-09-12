@@ -47,7 +47,7 @@ function writeSettings(inputSettings = {}) {
 	inputSettings.acq = makeAcq ? inputSettings.acq : {};
 
 	return {
-		uri: path.resolve(inputSettings.uri ? inputSettings.uri : '.'),
+		uri: inputSettings.uri ? path.resolve(inputSettings.uri) : undefined,
 		pixelSizeConstant: inputSettings.pixelSizeConstant ? inputSettings.pixelSizeConstant : constants.PIXELSIZECONSTANT,
 		tiff: {
 			use: useTiff,
