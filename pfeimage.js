@@ -78,20 +78,42 @@ module.exports = class extends Thermo {
 			}));
 		}
 
+		let maxX = this.data.rawImageData.ImageXMax;
+		let minX = this.data.rawImageData.ImageXMin;
+		let maxY = this.data.rawImageData.ImageYMax;
+		let minY = this.data.rawImageData.ImageYMin;
+
+		if (this.data.rawImageData.xDirection === constants.stageOrientation.direction.REVERSE) {
+			maxX = this.data.rawImageData.ImageXMin;
+			minX = this.data.rawImageData.ImageXMax;
+		}
+
+		if (this.data.rawImageData.yDirection === constants.stageOrientation.direction.REVERSE) {
+			maxY = this.data.rawImageData.ImageYMin;
+			minY = this.data.rawImageData.ImageYMax;
+		}
+
 		// Set metadata to be in um
 		this.data.stageMetadata = {
-			pixelSize: parseFloat((this.data.rawImageData.pixelSize).toFixed(10)),
-			maxX: parseFloat((this.data.rawImageData.ImageXMax * 1000).toFixed(15)),
-			minX: parseFloat((this.data.rawImageData.ImageXMin * 1000).toFixed(15)),
-			maxY: parseFloat((this.data.rawImageData.ImageYMax * 1000).toFixed(15)),
-			minY: parseFloat((this.data.rawImageData.ImageYMin * 1000).toFixed(15))
+			x: {
+				pixelSize: parseFloat((this.data.rawImageData.pixelSizeX).toFixed(10)),
+				max: parseFloat((maxX * 1000).toFixed(15)),
+				min: parseFloat((minX * 1000).toFixed(15)),
+				center: 0
+			},
+			y: {
+				pixelSize: parseFloat((this.data.rawImageData.pixelSizeY).toFixed(10)),
+				max: parseFloat((maxY * 1000).toFixed(15)),
+				min:parseFloat((minY * 1000).toFixed(15)),
+				center: 0
+			}
 		};
 
 		const xDiffToCenter = this.data.rawImageData.xDiff / 2 * 1000;
 		const yDiffToCenter = this.data.rawImageData.yDiff / 2 * 1000;
 
-		this.data.stageMetadata.centerX = this.data.stageMetadata.minX + (this.data.rawImageData.xDirection === constants.stageOrientation.direction.REVERSE ? -xDiffToCenter : xDiffToCenter);
-		this.data.stageMetadata.centerY = this.data.stageMetadata.minY + (this.data.rawImageData.xDirection === constants.stageOrientation.direction.REVERSE ? -yDiffToCenter : -yDiffToCenter);
+		this.data.stageMetadata.x.center = this.data.stageMetadata.x.min + xDiffToCenter;
+		this.data.stageMetadata.y.center = this.data.stageMetadata.y.min +  yDiffToCenter;
 
 		return await this.internalInit();
 	}

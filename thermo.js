@@ -36,7 +36,10 @@ module.exports = class Thermo {
 				layers: []
 			},
 			metadata: {},
-			stageMetadata: {},
+			stageMetadata: {
+				x: {},
+				y: {}
+			},
 			data: {
 				point: {},
 				map: {}
@@ -172,8 +175,9 @@ module.exports = class Thermo {
 		this.data.metadata = this.data.layers.base.metadata;
 
 		// Make sure we have a pixel size (Pathfinder/NSS only ones without this by default)
-		if (this.data.stageMetadata.pixelSize === undefined) {
-			this.data.stageMetadata.pixelSize = parseFloat((calculations.calculatePixelSize(this.data.magnification, this.data.metadata.width, this.data.pixelSizeConstant)).toFixed(10));
+		if (this.data.stageMetadata.x.pixelSize === undefined) {
+			this.data.stageMetadata.x.pixelSize = parseFloat((calculations.calculatePixelSize(this.data.magnification, this.data.metadata.width, this.data.pixelSizeConstant)).toFixed(10));
+			this.data.stageMetadata.y.pixelSize = this.data.stageMetadata.x.pixelSize;
 			let positionData = Object.values(this.data.points).length > 0 ? Object.values(this.data.points)[0].data.data : this.data.data.map;
 			if (positionData.xposition === undefined)
 				positionData = {
@@ -185,12 +189,12 @@ module.exports = class Thermo {
 					}
 				};
 
-			this.data.stageMetadata.centerX = parseFloat(positionData.xposition.data) * 1000;
-			this.data.stageMetadata.centerY = parseFloat(positionData.yposition.data) * 1000;
-			this.data.stageMetadata.maxX = this.data.stageMetadata.centerX + ((this.data.metadata.width / 2) * this.data.stageMetadata.pixelSize);
-			this.data.stageMetadata.minX = this.data.stageMetadata.centerX - ((this.data.metadata.width / 2) * this.data.stageMetadata.pixelSize);
-			this.data.stageMetadata.maxY = this.data.stageMetadata.centerY - ((this.data.metadata.height / 2) * this.data.stageMetadata.pixelSize);
-			this.data.stageMetadata.minY = this.data.stageMetadata.centerY + ((this.data.metadata.height / 2) * this.data.stageMetadata.pixelSize);
+			this.data.stageMetadata.x.center = parseFloat(positionData.xposition.data) * 1000;
+			this.data.stageMetadata.y.center = parseFloat(positionData.yposition.data) * 1000;
+			this.data.stageMetadata.x.max = this.data.stageMetadata.x.center + ((this.data.metadata.width / 2) * this.data.stageMetadata.x.pixelSize);
+			this.data.stageMetadata.x.min = this.data.stageMetadata.x.center - ((this.data.metadata.width / 2) * this.data.stageMetadata.x.pixelSize);
+			this.data.stageMetadata.y.max = this.data.stageMetadata.y.center + ((this.data.metadata.height / 2) * this.data.stageMetadata.y.pixelSize);
+			this.data.stageMetadata.y.min = this.data.stageMetadata.y.center - ((this.data.metadata.height / 2) * this.data.stageMetadata.y.pixelSize);
 		}
 
 		this.data.points = Object.values(this.data.points).reduce((points, point) => {
