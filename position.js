@@ -47,24 +47,27 @@ class Position {
 			type: this.getType(),
 			data: this.data.data,
 			relativeReference: this.data.reference.map(({x, y, r}) => {
-				x = (x - (this.data.orientation.x === constants.stageOrientation.direction.OBVERSE ? -(thermo.data.stageMetadata.minX) : thermo.data.stageMetadata.minX)) / thermo.data.stageMetadata.pixelSize;
-				y = (y - (this.data.orientation.y === constants.stageOrientation.direction.OBVERSE ? -(thermo.data.stageMetadata.minY) : thermo.data.stageMetadata.maxY)) / thermo.data.stageMetadata.pixelSize;
+				x = (thermo.data.stageMetadata.x.max - x) / thermo.data.stageMetadata.x.pixelSize;
+				y = (y - thermo.data.stageMetadata.y.min) / thermo.data.stageMetadata.y.pixelSize;
 
-				x = x * (this.data.orientation.x === constants.stageOrientation.direction.UNKNOWN ? 1000 : 1)
-				y = y * (this.data.orientation.y === constants.stageOrientation.direction.UNKNOWN ? 1000 : 1)
+				// Handles Obverse + Unknown
+				if (this.data.orientation.x !== constants.stageOrientation.direction.REVERSE)
+					x = thermo.data.metadata.width - x;
 
-				x = x * (this.data.orientation.x === constants.stageOrientation.direction.REVERSE ? -1 : 1)
+				// Handles Obverse
+				if (this.data.orientation.y === constants.stageOrientation.direction.OBVERSE)
+					y = thermo.data.metadata.height - y;
 
 				if (r !== undefined) {
-					r = r / thermo.data.stageMetadata.pixelSize
-					return {x, y, r}
+					r = r / thermo.data.stageMetadata.x.pixelSize;
+					return {x, y, r};
 				}
 
 				return {x, y};
 			}),
 			absoluteReference: this.data.reference.map(({x, y, r}) => {
 				if (r !== undefined)
-					return {x, y, r}
+					return {x, y, r};
 				return {x, y};
 			}),
 			getUuid: this.getUuid.bind(this),
@@ -125,19 +128,19 @@ class Thermo extends Position {
 
 	// Requires an update based on the pixelSizeConstant given by the user due to Pathfinder/NSS not giving the pixel size
 	update(thermo) {
-		this.data.pixelSize = thermo.data.stageMetadata.pixelSize;
+		this.data.pixelSize = thermo.data.stageMetadata.x.pixelSize;
 		this.data.reference = this.data.originalReference.map(({x, y, r}) => {
-			// Absolute position in mm
-			x = (x * thermo.data.metadata.width * thermo.data.stageMetadata.pixelSize / 1000) + (parseFloat(this.data.data.xposition.data) - (thermo.data.metadata.width / 2 * thermo.data.stageMetadata.pixelSize / 1000)) * 1000;
-			y = (y * thermo.data.metadata.height * thermo.data.stageMetadata.pixelSize / 1000) + (parseFloat(this.data.data.yposition.data) - (thermo.data.metadata.height / 2 * thermo.data.stageMetadata.pixelSize / 1000)) * 1000;
+			// Absolute position in um
+			x = (x * thermo.data.metadata.width * thermo.data.stageMetadata.x.pixelSize) + thermo.data.stageMetadata.x.min;
+			y = (y * thermo.data.metadata.height * thermo.data.stageMetadata.y.pixelSize) + thermo.data.stageMetadata.y.min;
 
 			if (r !== undefined) {
-				r = r * thermo.data.stageMetadata.pixelSize;
+				r = r * thermo.data.stageMetadata.x.pixelSize;
 				return {x, y, r};
 			}
 
 			return {x, y};
-		})
+		});
 
 		return this;
 	}

@@ -244,7 +244,10 @@ async function readPFEEntry(databaseUri, attempt = 0) {
 			// Image size in measurable distance
 			image.xDiff = parseFloat(Math.abs(xLarge - xSmall).toFixed(7));
 			image.yDiff = parseFloat(Math.abs(yLarge - ySmall).toFixed(7));
-			image.pixelSize = parseFloat(((image.xDiff * 1000) / image.ImageIx).toFixed(10));
+			// X-based pixel size
+			// May cause slight (1-2 pixel) point shift but not noticeable on images larger than 128px
+			image.pixelSizeX = parseFloat(((image.xDiff * 1000) / image.ImageIx).toFixed(10));
+			image.pixelSizeY = parseFloat(((image.yDiff * 1000) / image.ImageIy).toFixed(10));
 			image.centerX = image.ImageXMin + (image.xDiff / 2);
 			image.centerY = image.ImageYMin + (image.yDiff / 2);
 			image.xDirection = xDirection;
