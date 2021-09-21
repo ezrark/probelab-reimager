@@ -183,7 +183,7 @@ function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
 	return output;
 }
 
-async function readPFEEntry(databaseUri) {
+async function readPFEEntry(databaseUri, attempt = 0) {
 	const uri = databaseUri.split('?')[0];
 
 	let connection;
@@ -276,6 +276,12 @@ async function readPFEEntry(databaseUri) {
 	} catch(err) {
 		if (connection)
 			await connection.close();
+
+		// Failed due to bad password? retry a few times
+		// Seems to only impact old MDBs
+		if (err.process.code === -2147217843 && attempt < 20)
+			return await readPFEEntry(databaseUri, attempt + 1);
+
 		throw new Error('Unable to open and read PFE mdb file');
 	}
 }
