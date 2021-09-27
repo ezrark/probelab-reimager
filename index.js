@@ -7,8 +7,7 @@ const Canvas = require('canvas');
 
 const constants = require('./constants.json');
 
-const ExtractedMap = require('./extractedmap.js');
-const PointShoot = require('./pointshoot.js');
+const NSS = require('./nss.js');
 const JeolImage = require('./jeolimage.js');
 const PFE = require('./pfe.js');
 const CanvasRoot = require('./canvas/canvasroot.js');
@@ -668,14 +667,8 @@ else {
 									return thermo.init();
 								}
 
-								if (name.endsWith(constants.pointShoot.fileFormats.ENTRY)) {
-									const thermo = new PointShoot(file, options.pixelSizeConstant, canvas);
-									thermos.push(thermo);
-									return thermo.init();
-								}
-
-								if (name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
-									const thermo = new ExtractedMap(file, options.pixelSizeConstant, canvas);
+								if (name.endsWith(constants.pointShoot.fileFormats.ENTRY) || name.endsWith(constants.extractedMap.fileFormats.ENTRY)) {
+									const thermo = new NSS(file, options.pixelSizeConstant, canvas);
 									thermos.push(thermo);
 									return thermo.init();
 								}

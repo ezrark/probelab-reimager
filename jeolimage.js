@@ -9,7 +9,7 @@ const Thermo = require('./thermo.js');
 module.exports = class extends Thermo {
 	constructor(entryFile, Canvas) {
 		super(entryFile,
-			entryFile.name.substring(0, entryFile.name.length - constants.jeol.fileFormats.ENTRY.length),
+			path.parse(entryFile.name).name,
 			0,
 			Canvas
 		);

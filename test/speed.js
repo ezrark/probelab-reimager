@@ -5,7 +5,7 @@ require('sharp');
 const Canvas = require('canvas');
 
 const constants = require('../constants');
-const {PointShoot, ExtractedMap, CanvasRoot, NodeCanvas, JeolImage, PFE} = require('../module');
+const {NSS, ExtractedMap, CanvasRoot, NodeCanvas, JeolImage, PFE} = require('../module');
 
 let options = {
 	dirUri: 'test/data/',
@@ -44,7 +44,7 @@ async function getThermos(dirUri) {
 			return files.filter(file => file.isFile()).map(file => {
 				file.uri = dirUri + dir.name + '/' + file.name;
 				if (file.name.endsWith(constants.pointShoot.fileFormats.ENTRY))
-					return new PointShoot(file, canvas).init();
+					return new NSS(file, canvas).init();
 
 				if (file.name.endsWith(constants.extractedMap.fileFormats.ENTRY))
 					return new ExtractedMap(file, canvas).init();

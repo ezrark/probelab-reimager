@@ -1,11 +1,13 @@
 const constants = require('./constants');
 
+const path = require('path');
+
 const Thermo = require('./thermo');
 
 module.exports = class extends Thermo {
 	constructor(entryFile, pixelSizeConstant = constants.PIXELSIZECONSTANT, Canvas, uri = undefined) {
 		super(entryFile,
-			entryFile.name.substring(0, entryFile.name.length - constants.extractedMap.fileFormats.ENTRY.length),
+			path.parse(entryFile.name).name,
 			pixelSizeConstant,
 			Canvas,
 			uri

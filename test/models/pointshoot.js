@@ -6,7 +6,7 @@ require('sharp');
 const Canvas = require('canvas');
 const CanvasRoot = require('../../canvas/canvasroot.js');
 const NodeCanvas = require('../../canvas/nodecanvasmodule.js');
-const PointShoot = require('../../pointshoot.js');
+const PointShoot = require('../../nss.js');
 
 describe('Initialize', () => {
 	it('should fail to initialize a non-existent file', () => {
