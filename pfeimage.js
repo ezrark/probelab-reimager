@@ -8,7 +8,7 @@ const calculations = require('./calculations');
 module.exports = class extends Thermo {
 	constructor(pfe, Canvas, image, imageIndex, uuid = undefined) {
 		super({uri: pfe.data.uri + `?${imageIndex}`},
-			pfe.data.name + ` - ${imageIndex}`,
+			image.image.ImageTitle,
 			0,
 			Canvas,
 			undefined,

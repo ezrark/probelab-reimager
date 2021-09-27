@@ -68,6 +68,9 @@ module.exports = class Thermo {
 	staticInit() {
 		const entryData = io.readNSSEntry(this.data.files.entry);
 
+		if (entryData.name !== undefined)
+			this.data.name = entryData.name;
+
 		this.data.files.base = path.join(this.data.uri, entryData.data.base);
 		this.data.files.layers = entryData.layers;
 
@@ -103,7 +106,7 @@ module.exports = class Thermo {
 		// Try to look for any maps
 		try {
 			this.data.data.map = io.readMASFile(path.join(this.data.uri, constants.extractedMap.fileFormats.SPECTRA));
-			const mag = parseInt(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
+			const mag = parseFloat(this.data.data.map[constants.extractedMap.MAGNIFICATIONKEY].data);
 			if (this.data.magnification !== 0 && this.data.magnification !== mag)
 				this.data.integrity = false;
 			else
@@ -113,7 +116,7 @@ module.exports = class Thermo {
 
 		// Try to parse and use points for an integrity check
 		try {
-			const mag = parseInt(this.data.points[this.data.files.points[0]].data.data[constants.pointShoot.MAGNIFICATIONKEY].data);
+			const mag = this.data.points[this.data.files.points[0]].data.data.magnification;
 			if (this.data.magnification !== 0 && this.data.magnification !== mag)
 				this.data.integrity = false;
 			else
@@ -694,9 +697,10 @@ module.exports = class Thermo {
 				type,
 				uuid,
 				relativeReference,
-				absoluteReference
+				absoluteReference,
+				data
 			}) => {
-				points[name] = {uuid, name, type, label, analysis, relativeReference, absoluteReference};
+				points[name] = {uuid, name, type, label, analysis, relativeReference, absoluteReference, data};
 				return points;
 			}, {}),
 			layers: Object.values(serial.layers ? serial.layers : this.data.layers).reduce((layers, {

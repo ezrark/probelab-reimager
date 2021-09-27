@@ -81,7 +81,31 @@ class Position {
 	}
 
 	extraData(data) {
-		this.data.data = data;
+		this.data.data = {
+			beam: {
+				diameter: parseFloat(data.beamdiam.data),
+				acceleratingVoltage: parseFloat(data.beamkv.data),
+//				x: parseFloat(data.beamx.data),
+//				y: parseFloat(data.beamy.data)
+			},
+//			crystal: {
+//				area: parseFloat(data.crystarea.data),
+//				material: data.crystmatl.data,
+//				thickness: parseFloat(data.crystthick.data)
+//			},
+			date: data.date.data,
+//			detector: {
+//				name: data.detname.data,
+//				signalType: data.signaltype.data
+//			},
+			magnification: parseFloat(data.magcam.data),
+			probeCurrent: parseFloat(data.probecur.data),
+//			time: {
+//				live: parseFloat(data.livetime.data),
+//				dead: parseFloat(data.deadtime.data),
+//				real: parseFloat(data.realtime.data)
+//			}
+		};
 		return this;
 	}
 

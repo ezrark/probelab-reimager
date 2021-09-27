@@ -11,10 +11,10 @@ let Adodb;
 // If both fail to load, use a mock-up that will return nothing
 try {
 	Adodb = require('database-js-adodb');
-} catch(err) {
+} catch (err) {
 	try {
 		Adodb = require('node-mdb-sql');
-	} catch(e) {
+	} catch (e) {
 		console.log('Unable to load adodb or mdb-sql');
 		Adodb = {
 			open: () => ({
@@ -47,18 +47,29 @@ function readMASFile(uri) {
 	return rawData.filter(data => data).reduce((output, line) => {
 		const [rawName, data] = line.split(':');
 		const [name, units] = rawName.toLowerCase().trim().split('-');
+		const normalizedName = name.trim();
 
 		if (name && data && name !== 'spectrum' && name !== 'endofdata')
-			output[name.trim()] = {
-				units: units ? units.trim() : '',
-				data: data.trim()
-			};
+			if (output[normalizedName] === undefined)
+				output[normalizedName] = {
+					units: units ? units.trim() : '',
+					data: data.trim()
+				};
+			else {
+				if (typeof output[normalizedName].data === 'string')
+					output[normalizedName].data = [output[normalizedName].data];
+
+				output[normalizedName].data.push(data.trim());
+			}
 
 		return output;
 	}, {});
 }
 
 function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
+	if (uri.endsWith('.map'))
+		return readNSSMapEntry(uri, imageUuid);
+
 	let rawData = fs.readFileSync(uri, {encoding: 'utf8'}).replace(/�/gi, '\u00a0').split('#').map(text => {
 		const data = text.split('\r\n');
 		if (data.length === 1)
@@ -83,6 +94,9 @@ function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
 	// p_s
 	// lsctl
 	// map
+	// grid
+	// tnp
+	// fss
 
 	// Types
 	//   LS - Linescan
@@ -183,6 +197,32 @@ function readNSSEntry(uri, imageUuid = generateUuid.v4()) {
 	return output;
 }
 
+function readNSSMapEntry(uri, imageUuid = generateUuid.v4()) {
+	const inputData = readMASFile(uri);
+
+	let output = {
+		imageUuid,
+		points: [],
+		layers: [],
+		data: {
+			spectra: '',
+			base: inputData.refimg.data,
+			grey: inputData.mapimg.data.shift(),
+			raw: ''
+		},
+		name: inputData.title.data
+	};
+
+	output.layers = inputData.mapimg.data.map(name => {
+		return {
+			element: `${name.split('.')[0]} ${name}`,
+			file: name
+		};
+	});
+
+	return output;
+}
+
 async function readPFEEntry(databaseUri, attempt = 0) {
 	const uri = databaseUri.split('?')[0];
 
@@ -196,7 +236,7 @@ async function readPFEEntry(databaseUri, attempt = 0) {
 					Database: uri
 				});
 				resolve(c);
-			} catch(e) {
+			} catch (e) {
 				setTimeout(async () => {
 					const c = await Adodb.open({
 						Database: uri
@@ -254,20 +294,34 @@ async function readPFEEntry(databaseUri, attempt = 0) {
 			image.yDirection = yDirection;
 
 			const initialPoints = await connection.query(`SELECT * FROM [Line] WHERE ${xSmall} <= StageX AND ${xLarge} >= StageX AND ${ySmall} <= StageY AND ${yLarge} >= StageY`);
+			const analysisData = (await connection.query('SELECT * FROM [Element]')).reduce((analysis, analysisData) => {
+				analysisData[analysis.ElementToRow] = analysis
+				return analysisData
+			}, {});
 
 			// Calculate in um
 			const points = initialPoints
-				.map(({Number, StageX, StageY, LineToRow}) => {
-					return new Position.PFE(`${Number}`, LineToRow, constants.position.types.SPOT, [StageX * 1000, StageY * 1000], {
-						orientation: {
-							x: xDirection,
-							y: yDirection
-						}
-					}, {
-						uuid: imageUuid,
-						software: constants.software.id.PFE
-					});
+			.map(({Number, StageX, StageY, LineToRow, DateTime}) => {
+				return (new Position.PFE(`${Number}`, LineToRow, constants.position.types.SPOT, [StageX * 1000, StageY * 1000], {
+					orientation: {
+						x: xDirection,
+						y: yDirection
+					}
+				}, {
+					uuid: imageUuid,
+					software: constants.software.id.PFE
+				})).extraData({
+					beamdiam: {data: analysisData.BeamSizeArray},
+					beamkv: {data: analysisData.KilovoltsArray},
+//					beamx: {data: 0},
+//					beamy: {data: 0},
+					magcam: {data: 0},
+					date: {
+						data: DateTime
+					},
+					probecur: {data: analysisData.BeamCurrentArray}
 				});
+			});
 
 			return {image, points, uuid: imageUuid};
 		});
@@ -276,7 +330,7 @@ async function readPFEEntry(databaseUri, attempt = 0) {
 		await connection.close();
 
 		return images;
-	} catch(err) {
+	} catch (err) {
 		if (connection)
 			await connection.close();
 
@@ -412,6 +466,7 @@ module.exports = {
 	readBmp,
 	readMASFile,
 	readNSSEntry,
+	readNSSMapEntry,
 	readPFEEntry,
 	readJeolEntry,
 	readBIM,
