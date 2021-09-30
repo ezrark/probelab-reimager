@@ -59,7 +59,7 @@ class Position {
 					y = thermo.data.metadata.height - y;
 
 				if (r !== undefined) {
-					r = r / thermo.data.stageMetadata.x.pixelSize;
+					r = (r / thermo.data.stageMetadata.x.pixelSize) * thermo.data.metadata.width;
 					return {x, y, r};
 				}
 
@@ -139,6 +139,7 @@ class Thermo extends Position {
 				];
 				break;
 			case constants.position.types.POLYGON:
+			case constants.position.types.RECTANGLE:
 				for (let i = 0; i < this.data.rawReference.length; i += 4)
 					this.data.reference.push({
 						x: this.data.rawReference[i] / this.data.rawReference[2],
@@ -199,6 +200,7 @@ class PFE extends Position {
 				];
 				break;
 			case constants.position.types.POLYGON:
+			case constants.position.types.RECTANGLE:
 				for (let i = 0; i < this.data.rawReference.length; i += 2)
 					this.data.reference.push({
 						x: this.data.rawReference[i],

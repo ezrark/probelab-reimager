@@ -33,11 +33,12 @@ function convertRawThermoToPositionType(rawType) {
 		case 'spot':
 		default:
 			return constants.position.types.SPOT;
-		case 'circ':
+		case 'circle':
 			return constants.position.types.CIRCLE;
-		case 'poly':
-		case 'rect':
+		case 'polygon':
 			return constants.position.types.POLYGON;
+		case 'rect':
+			return constants.position.types.RECTANGLE;
 	}
 }
 

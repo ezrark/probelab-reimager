@@ -15,7 +15,8 @@
   "position": {
     "types": {
       "SPOT": "spot",
-      "POLYGON": "poly",
+      "POLYGON": "polygon",
+      "RECTANGLE": "rect",
       "CIRCLE": "circle"
     }
   },
