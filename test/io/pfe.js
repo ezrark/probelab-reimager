@@ -47,13 +47,13 @@ describe('#checkBIMExists', () => {
 });
 
 describe('#readPFEEntry', () => {
-	it('should throw when file is not found', async () => {
-		await assert.rejects(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/not-real.mdb?1'));
+	it('should throw when file is not found', () => {
+		assert.throws(io.readPFEEntry.bind(undefined, './test/data/pfe-mdb/not-real.mdb?1'));
 	});
 
-	it('should get all image data with points', async () => {
+	it('should get all image data with points', () => {
 		assert.deepStrictEqual(
-			(await io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.MDB'))[0],
+			io.readPFEEntry('./test/data/pfe-mdb/2019-08-12_Nolen.MDB')[0],
 			{
 				'image': {
 					'ImageAnalogAverages': 20,
