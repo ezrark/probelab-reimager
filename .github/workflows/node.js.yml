@@ -13,6 +13,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ windows-latest, windows-2022, ubuntu-latest, ubuntu-22.04 ]
         node-version: [ 14.x, 16.x, 18.x ]
@@ -30,5 +31,5 @@ jobs:
       - if: "!contains(matrix.os, 'windows')"
         run: sudo npm test
 
-      - if: "contains(matrix.os, 'windows')"
+      - if: contains(matrix.os, 'windows')
         run: npm test
