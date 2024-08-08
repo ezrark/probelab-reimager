@@ -1,10 +1,10 @@
 {
   "name": "probelab-reimager",
-  "version": "2021.209.0",
+  "version": "2024.1.0",
   "main": "module.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Bob620/thermo-reimager.git"
+    "url": "git+https://github.com/ezrark/thermo-reimager.git"
   },
   "bin": {
     "thermo-reimager": "index.js"

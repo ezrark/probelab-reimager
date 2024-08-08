@@ -1,7 +1,7 @@
 name: All Mocha Tests For Windows and MacOS
 image: ubuntu/20.04
 sources:
-  - https://github.com/bob620/probelab-reimager
+  - https://github.com/ezrark/probelab-reimager
 
 tasks:
   - setup: |
