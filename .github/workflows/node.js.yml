@@ -16,20 +16,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ windows-latest, windows-2022, ubuntu-latest, ubuntu-22.04 ]
-        node-version: [ 14.x, 16.x, 18.x ]
+        node-version: [ 14.x, 16.x, 18.x, 20.x ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-
-      - if: "!contains(matrix.os, 'windows')"
-        run: sudo npm test
-
-      - if: contains(matrix.os, 'windows')
-        run: npm test
+      - run: npm run build --if-present
+      - run: npm test
