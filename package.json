@@ -14,7 +14,7 @@
     "test-speed": "node test/speed.js"
   },
   "devDependencies": {
-    "canvas": "^2.7.0",
+    "canvas": "^2.11.2",
     "mocha": "^8.3.1",
     "nyc": "^15.1.0"
   },
@@ -26,6 +26,6 @@
     "node-mdb-sql": "0.0.4"
   },
   "peerDependencies": {
-    "canvas": "^2.7.0"
+    "canvas": "^2.11.2"
   }
 }
