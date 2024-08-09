@@ -1,5 +1,6 @@
 const GenerateUuid = require('../generateuuid');
 const Canvas = require('./canvas');
+const fs = require('fs');
 
 module.exports = class CanvasRoot {
 	constructor(remote) {
@@ -26,8 +27,9 @@ module.exports = class CanvasRoot {
 	}
 
 	async init() {
-		await this.registerFont(`${__dirname}/../fonts/OpenSans-Bold.ttf`, {family: 'Open Sans Bold'});
-		await this.registerFont(`${__dirname}/../fonts/Comic Sans MS.ttf`, {family: 'Comic Sans MS'});
+		// await this.registerFont('./fonts/ARIAL-Bold.ttf', {family: 'Open Sans Bold'});
+		await this.registerFont('./fonts/ARIALBD.TTF', {family: 'Arial Bold'});
+		await this.registerFont('${__dirname}/../fonts/Comic Sans MS.ttf', {family: 'Comic Sans MS'});
 	}
 
 	sendRemote(namespace, command, args = []) {

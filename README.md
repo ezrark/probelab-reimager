@@ -60,7 +60,7 @@ o, orange
 g, green
 
 Fonts:
-o, opensans     Good, free sans font
+o, ARIAL     Good, free sans font
 c, comicsans    Why
 
 Positions:

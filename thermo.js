@@ -174,7 +174,7 @@ module.exports = class Thermo {
 		this.data.scratchCtx = await scratchCanvas.getContext('2d');
 
 		if (!this.data.metaConstants.width)
-			this.data.metaConstants = await calculations.calculateConstants(this.data.metadata, this.data.scratchCtx, constants.fonts.OPENSANS);
+			this.data.metaConstants = await calculations.calculateConstants(this.data.metadata, this.data.scratchCtx, constants.fonts.ARIAL);
 
 		const canvas = this.data.canvas = await this.data.Canvas.getOrCreateCanvas(this.data.uuid, this.data.metaConstants.maxWidth, this.data.metaConstants.maxHeight);
 		this.data.ctx = await canvas.getContext('2d');

@@ -22,8 +22,8 @@ let options = {
 	textColor: constants.colors.red,
 	pointSize: constants.point.AUTOSIZE,
 	pointFontSize: constants.point.AUTOSIZE,
-	pointFont: constants.fonts.OPENSANS,
-	font: constants.fonts.OPENSANS,
+	pointFont: constants.fonts.ARIAL,
+	font: constants.fonts.ARIAL,
 	tiff: {
 		quality: constants.export.tiff.quality,
 		compression: constants.export.tiff.compression,

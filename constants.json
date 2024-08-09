@@ -49,7 +49,7 @@
     }
   },
   "fonts": {
-    "OPENSANS": "Open Sans Bold",
+    "ARIAL": "Arial Bold",
     "COMICSANSMS": "Comic Sans MS"
   },
   "export": {

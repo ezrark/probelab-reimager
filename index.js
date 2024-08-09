@@ -60,7 +60,7 @@ function help() {
 	console.log('g, green \t');
 	console.log();
 	console.log('Fonts:');
-	console.log('o, opensans \tGood, free sans font');
+	console.log('o, ARIAL \tGood, free sans font');
 	console.log('c, comicsans\tWhy');
 	console.log();
 	console.log('Positions:');
@@ -101,8 +101,8 @@ let options = {
 	textColor: constants.colors.red,
 	pointSize: constants.point.AUTOSIZE,
 	pointFontSize: constants.point.AUTOSIZE,
-	pointFont: constants.fonts.OPENSANS,
-	font: constants.fonts.OPENSANS,
+	pointFont: constants.fonts.ARIAL,
+	font: constants.fonts.ARIAL,
 	acq: undefined,
 	tiff: {
 		quality: constants.export.tiff.quality,
@@ -270,10 +270,10 @@ for (let i = 2; i < process.argv.length; i++) {
 					case 'a':
 					case 'auto':
 					case 'o':
-					case 'opensans':
+					case 'ARIAL':
 					default:
-						options.pointFont = constants.fonts.OPENSANS;
-						options.font = constants.fonts.OPENSANS;
+						options.pointFont = constants.fonts.ARIAL;
+						options.font = constants.fonts.ARIAL;
 						break;
 					case 'c':
 					case 'comicsans':
@@ -521,10 +521,10 @@ for (let i = 2; i < process.argv.length; i++) {
 					case 'a':
 					case 'auto':
 					case 'o':
-					case 'opensans':
+					case 'ARIAL':
 					default:
-						options.pointFont = constants.fonts.OPENSANS;
-						options.font = constants.fonts.OPENSANS;
+						options.pointFont = constants.fonts.ARIAL;
+						options.font = constants.fonts.ARIAL;
 						break;
 					case 'c':
 					case 'comicsans':

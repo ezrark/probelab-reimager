@@ -10,7 +10,7 @@ describe('Sanitize', () => {
 			'RGBA': false,
 			'backgroundOpacity': NaN,
 			'belowColor': false,
-			'font': 'Open Sans Bold',
+			'font': 'Arial Bold',
 			'pixelSizeConstant': 116.73,
 			'scaleBarHeight': 0,
 			"scaleBarLabelSize": 1,
@@ -22,7 +22,7 @@ describe('Sanitize', () => {
 
 	it('should', () => {
 		assert.deepStrictEqual(pointSettings(), {
-			'pointFont': 'Open Sans Bold',
+			'pointFont': 'Arial Bold',
 			'pointFontSize': 0,
 			'pointSize': 0,
 			'pointType': 'fancyCross',

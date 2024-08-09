@@ -12,7 +12,7 @@ function scaleSettings(inputSettings = {}) {
 		scaleBarTop: inputSettings.scaleBarTop ? inputSettings.scaleBarTop : constants.scale.SCALEBARTOP,
 		pixelSizeConstant: inputSettings.pixelSizeConstant ? inputSettings.pixelSizeConstant : constants.PIXELSIZECONSTANT,
 		backgroundOpacity: inputSettings.backgroundOpacity ? inputSettings.backgroundOpacity : constants.scale.background.AUTOOPACITY,
-		font: inputSettings.font ? inputSettings.font : constants.fonts.OPENSANS,
+		font: inputSettings.font ? inputSettings.font : constants.fonts.ARIAL,
 		RGBA: ''
 	};
 
@@ -29,7 +29,7 @@ function pointSettings(inputSettings = {}) {
 		textColor: inputSettings.textColor ? inputSettings.textColor : constants.colors.red,
 		pointSize: inputSettings.pointSize ? inputSettings.pointSize : constants.point.AUTOSIZE,
 		pointFontSize: inputSettings.pointFontSize ? inputSettings.pointFontSize : constants.point.AUTOSIZE,
-		pointFont: inputSettings.pointFont ? inputSettings.pointFont : constants.fonts.OPENSANS
+		pointFont: inputSettings.pointFont ? inputSettings.pointFont : constants.fonts.ARIAL
 	};
 }
 
