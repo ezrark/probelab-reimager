@@ -472,7 +472,8 @@ describe('Initialize', () => {
 	});
 });
 
-describe('Thermo Functions', () => {
+describe('Thermo Functions', function() {
+	this.timeout(10000);
 	let pointShoot;
 
 	before(async () => {

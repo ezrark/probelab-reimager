@@ -9,7 +9,7 @@ describe('Models', () => {
 		require('./jeol.js');
 	});
 
-	// describe('PFE', () => {
-	// 	require('./pfe.js');
-	// });
+	describe('PFE', () => {
+		require('./pfe.js');
+	});
 });
