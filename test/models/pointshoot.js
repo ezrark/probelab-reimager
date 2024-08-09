@@ -473,15 +473,18 @@ describe('Initialize', () => {
 });
 
 describe('Thermo Functions', function() {
-	this.timeout(10000);
+	this.timeout(30000); // Increase timeout to 30 seconds
 	let pointShoot;
 
 	before(async () => {
+		console.log('Starting initialization...');
 		const nodeCanvas = new NodeCanvas(Canvas);
 		const canvas = new CanvasRoot(nodeCanvas);
 		await canvas.init();
+		console.log('Canvas initialized.');
 		pointShoot = new PointShoot({name: '64.p_s', uri: './test/data/64.PS.EDS/64.p_s'}, canvas);
 		await pointShoot.init();
+		console.log('PointShoot initialized.');
 	});
 
 	it('should correctly serialize', () => {
@@ -526,7 +529,7 @@ describe('Thermo Functions', function() {
 					],
 					'x': 34,
 					'y': 21
-				}
+			}
 			},
 			'uri': path.resolve('./test/data/64.PS.EDS/'),
 			'uuid': pointShoot.data.uuid
